@@ -48,9 +48,9 @@ export default function Navbar() {
           <Menu as="div" className="relative">
             <Menu.Button className="flex items-center gap-2 hover:text-blue-600">
               <img
-                src="/user-avatar.png"
+                src="/user.png"
                 alt="User"
-                className="w-8 h-8 rounded-full border"
+                className="w-9 h-9 rounded-full border"
               />
               <ChevronDownIcon className="w-4 h-4" />
             </Menu.Button>
