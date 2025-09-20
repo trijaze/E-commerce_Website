@@ -16,12 +16,7 @@ export default function Home() {
     
     <div className="space-y-12">
       {/* Hero Banner */}
-
-      
       <Hero />
- 
-
-
       {/* Danh sách sản phẩm */}
       <section className="container mx-auto px-4 py-4">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
