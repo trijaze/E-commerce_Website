@@ -24,6 +24,8 @@ export default function Home() {
     },
   ];
   const { loading } = useAppSelector((s) => s.products);
+//  const {items, loading } = useAppSelector((s) => s.products);
+
 
   useEffect(() => {
     dispatch(fetchProducts({ take: 12 }));

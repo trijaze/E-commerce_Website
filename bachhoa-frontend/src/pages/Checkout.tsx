@@ -16,7 +16,6 @@ export default function Checkout() {
     // create payment (stripe)
     try {
       const res = await paymentApi.createStripeIntent(order.id);
-      // In a real app you'd use stripe client here, but for scaffold we'll just clear and navigate
       dispatch(clear());
       navigate('/orders');
     } catch (e) {

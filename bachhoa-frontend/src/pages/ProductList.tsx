@@ -25,8 +25,9 @@ export default function ProductList() {
       image: '/beef.jpg',
     },
   ];
-
   const {loading } = useAppSelector((s) => s.products);
+//  const {items,loading } = useAppSelector((s) => s.products);
+
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [filter, setFilter] = useState<string>('');
 
