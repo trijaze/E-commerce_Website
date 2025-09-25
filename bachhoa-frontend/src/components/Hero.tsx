@@ -3,7 +3,7 @@ import React from 'react';
 const Hero: React.FC = () => {
   return (
     <section className="relative w-full bg-green-700 text-white py-16 md:py-24">
-      <div className="max-w-3xl mx-auto text-center px-4">
+      <div className="max-w-5xl mx-auto text-center px-4">
         <h1 className="heading-font text-4xl md:text-5xl font-bold mb-4">
           Mua sắm dễ dàng – Tươi ngon mỗi ngày
         </h1>
