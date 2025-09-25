@@ -103,7 +103,7 @@ export default function Cart() {
             </div>
             <div className="border-t pt-4 flex justify-between font-bold text-lg text-gray-800">
               <span>Tổng cộng:</span>
-              <span>{formatCurrency(total)}</span>
+              <span>{formatCurrency(total)} VNĐ</span>
             </div>
             <button
               onClick={() => navigate('/checkout')}
