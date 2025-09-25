@@ -1,3 +1,4 @@
+// \src\pages\Home.tsx
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchProducts } from '../features/products/productSlice';
@@ -6,7 +7,23 @@ import ProductCard from '../components/ProductCard';
 
 export default function Home() {
   const dispatch = useAppDispatch();
-  const { items, loading } = useAppSelector((s) => s.products);
+  const items = [
+    {
+      id: 1,
+      name: 'Nho',
+      price: 120000,
+      qty: 1,
+      image: '/grape.jpg',
+    },
+    {
+      id: 2,
+      name: 'Thịt bò',
+      price: 150000,
+      qty: 2,
+      image: '/beef.jpg',
+    },
+  ];
+  const { loading } = useAppSelector((s) => s.products);
 
   useEffect(() => {
     dispatch(fetchProducts({ take: 12 }));

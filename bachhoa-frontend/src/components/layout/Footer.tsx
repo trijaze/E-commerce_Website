@@ -15,7 +15,7 @@ export default function Footer() {
                   className="w-9 h-9 object-contain"
                 />
               </div>
-              <span className="heading-font text-2xl font-bold">BachHoaHub</span>
+              <span className="heading-font text-2xl font-bold">BachHoa Online</span>
             </a>
             <p className="text-green-200 mb-4">
               Siêu thị trực tuyến cung cấp sản phẩm tươi sống, nhu yếu phẩm và hàng tiêu dùng với chất lượng đảm bảo.
@@ -82,7 +82,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-green-700 mt-12 text-center text-green-300">
-          <p className="py-1">&copy; {new Date().getFullYear()} BachHoaHub - All rights reserved.</p>
+          <p className="py-1">&copy; {new Date().getFullYear()} BachHoaOnline - All rights reserved.</p>
         </div>
       </div>
     </footer>

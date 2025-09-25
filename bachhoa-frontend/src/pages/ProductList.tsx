@@ -8,7 +8,25 @@ import { categoryApi } from '../api/categoryApi';
 
 export default function ProductList() {
   const dispatch = useAppDispatch();
-  const { items, loading } = useAppSelector((s) => s.products);
+
+  const items = [
+    {
+      id: 1,
+      name: 'Nho',
+      price: 120000,
+      qty: 1,
+      image: '/grape.jpg',
+    },
+    {
+      id: 2,
+      name: 'Thịt bò',
+      price: 150000,
+      qty: 2,
+      image: '/beef.jpg',
+    },
+  ];
+
+  const {loading } = useAppSelector((s) => s.products);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [filter, setFilter] = useState<string>('');
 
