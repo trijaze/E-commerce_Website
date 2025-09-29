@@ -1,0 +1,162 @@
+@startuml
+' ================== USER & AUTH ==================
+class Users {
+  +user_id : int
+  +username : nvarchar
+  +email : nvarchar
+  +password_hash : nvarchar
+  +role : nvarchar
+  +is_active : bool
+  +created_at : datetime
+}
+
+class UserAddresses {
+  +address_id : int
+  +label : nvarchar
+  +address_line : nvarchar
+  +city : nvarchar
+  +country : nvarchar
+  +postal_code : nvarchar
+  +is_default : bool
+}
+
+class UserSessions {
+  +session_id : guid
+  +token_hash : nvarchar
+  +ip_address : nvarchar
+  +user_agent : nvarchar
+  +expires_at : datetime
+  +is_revoked : bool
+}
+
+class AuditLogs {
+  +log_id : bigint
+  +action : nvarchar
+  +target_table : nvarchar
+  +target_id : nvarchar
+  +created_at : datetime
+}
+
+' ================== CATALOG ==================
+class Suppliers {
+  +supplier_id : int
+  +name : nvarchar
+  +contact_name : nvarchar
+}
+
+class Categories {
+  +category_id : int
+  +parent_id : int
+  +name : nvarchar
+  +description : nvarchar
+}
+
+class Products {
+  +product_id : int
+  +sku : nvarchar
+  +name : nvarchar
+  +description : nvarchar
+  +base_price : decimal
+}
+
+class ProductVariants {
+  +variant_id : int
+  +variant_sku : nvarchar
+  +attributes : json
+  +price : decimal
+  +stock : int
+}
+
+class ProductImages {
+  +image_id : int
+  +image_url : nvarchar
+  +is_main : bool
+}
+
+' ================== SHOPPING ==================
+class Cart {
+  +cart_id : int
+  +created_at : datetime
+}
+
+class CartItems {
+  +cart_item_id : bigint
+  +quantity : int
+  +unit_price : decimal
+}
+
+' ================== CHECKOUT & ORDERS ==================
+class Orders {
+  +order_id : bigint
+  +order_number : nvarchar
+  +subtotal : decimal
+  +total_amount : decimal
+  +status : nvarchar
+  +created_at : datetime
+}
+
+class OrderItems {
+  +order_item_id : bigint
+  +product_name : nvarchar
+  +unit_price : decimal
+  +quantity : int
+}
+
+class Payments {
+  +payment_id : bigint
+  +payment_method : nvarchar
+  +amount : decimal
+  +status : nvarchar
+  +transaction_ref : nvarchar
+}
+
+class Shipments {
+  +shipment_id : bigint
+  +carrier : nvarchar
+  +tracking_number : nvarchar
+  +status : nvarchar
+  +shipped_at : datetime
+}
+
+' ================== REVIEWS ==================
+class Reviews {
+  +review_id : bigint
+  +rating : tinyint
+  +title : nvarchar
+  +comment : nvarchar
+  +is_approved : bool
+  +created_at : datetime
+}
+
+class InventoryLogs {
+  +log_id : bigint
+  +before_stock : int
+  +change_amount : int
+  +after_stock : int
+  +reason : nvarchar
+  +created_at : datetime
+}
+
+' =============== RELATIONSHIPS ==================
+Users "1" -- "0..*" UserAddresses
+Users "1" -- "0..*" UserSessions
+Users "1" -- "0..*" Cart
+Users "1" -- "0..*" Orders
+Users "1" -- "0..*" Reviews
+Users "1" -- "0..*" AuditLogs
+
+Categories "1" -- "0..*" Products
+Suppliers "1" -- "0..*" Products
+Products "1" -- "0..*" ProductVariants
+Products "1" -- "0..*" ProductImages
+Products "1" -- "0..*" Reviews
+ProductVariants "1" -- "0..*" ProductImages
+ProductVariants "1" -- "0..*" CartItems
+ProductVariants "1" -- "0..*" OrderItems
+ProductVariants "1" -- "0..*" InventoryLogs
+
+Cart "1" -- "0..*" CartItems
+Orders "1" -- "0..*" OrderItems
+Orders "1" -- "0..*" Payments
+Orders "1" -- "0..*" Shipments
+@enduml
