@@ -68,12 +68,12 @@ export default function Cart() {
                     min={1}
                     value={it.qty}
                     onChange={(e) =>
-                      dispatch(updateQty({ id: it.id, qty: Number(e.target.value) }))
+                      dispatch(updateQty({ id: it.id.toString(), qty: Number(e.target.value) }))
                     }
                     className="w-16 border rounded-lg px-2 py-1 text-center focus:ring focus:ring-blue-300"
                   />
                   <button
-                    onClick={() => dispatch(remove(it.id))}
+                    onClick={() => dispatch(remove(it.id.toString()))}
                     className="text-red-500 hover:text-red-700 font-medium"
                   >
                     Xóa

@@ -1,15 +1,27 @@
 // src/components/layout/Navbar.tsx
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate} from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { useState, Fragment } from 'react';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
+
 
 export default function Navbar() {
   const cartCount = useAppSelector((s) =>
     s.cart.items.reduce((a, b) => a + b.qty, 0)
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault(); // Ngăn trang tải lại
+    if (searchTerm.trim()) {
+      navigate(`/products/search?q=${searchTerm.trim()}`);
+      setSearchTerm(''); // Reset ô tìm kiếm
+    }
+  };
 
   const navItems = [
     { to: "/products", label: "Products" },
@@ -26,6 +38,23 @@ export default function Navbar() {
           <img src="/logo.png" alt="logo" className="w-10 h-10 object-contain" />
           <div className="font-semibold text-lg">Bách Hóa Online</div>
         </Link>
+
+        {/* Search bar */}
+        <div className="flex-grow flex justify-center">
+          <form onSubmit={handleSearch} className="relative w-full max-w-lg">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm sản phẩm..."
+              className="w-full px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <button type="submit" className="absolute top-0 right-0 mt-2 mr-4">
+              {/* Icon kính lúp (SVG) */}
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
+          </form>
+        </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
@@ -69,9 +98,8 @@ export default function Navbar() {
                   {({ active }) => (
                     <Link
                       to="/profile"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
-                      }`}
+                      className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
+                        }`}
                     >
                       Profile
                     </Link>
@@ -81,9 +109,8 @@ export default function Navbar() {
                   {({ active }) => (
                     <Link
                       to="/settings"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
-                      }`}
+                      className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
+                        }`}
                     >
                       Settings
                     </Link>
@@ -93,9 +120,8 @@ export default function Navbar() {
                   {({ active }) => (
                     <button
                       onClick={() => console.log("Logout clicked")}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
-                        active ? 'bg-gray-100 text-red-600' : 'text-red-500'
-                      }`}
+                      className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100 text-red-600' : 'text-red-500'
+                        }`}
                     >
                       Logout
                     </button>
@@ -117,9 +143,8 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ${
-          mobileMenuOpen ? 'max-h-96' : 'max-h-0'
-        }`}
+        className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-96' : 'max-h-0'
+          }`}
       >
         <div className="flex flex-col bg-white px-4 py-2 gap-3">
           {navItems.map((item) => (
