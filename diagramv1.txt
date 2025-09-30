@@ -1,140 +1,140 @@
 @startuml
 ' ================== USER & AUTH ==================
 class Users {
-  +user_id : int
+  +userId : int
   +username : nvarchar
   +email : nvarchar
-  +password_hash : nvarchar
+  +passwordHash : nvarchar
   +role : nvarchar
-  +is_active : bool
-  +created_at : datetime
+  +isActive : bool
+  +createdAt : datetime
 }
 
 class UserAddresses {
-  +address_id : int
+  +addressId : int
   +label : nvarchar
-  +address_line : nvarchar
+  +addressLine : nvarchar
   +city : nvarchar
   +country : nvarchar
-  +postal_code : nvarchar
-  +is_default : bool
+  +postalCode : nvarchar
+  +isDefault : bool
 }
 
 class UserSessions {
-  +session_id : guid
-  +token_hash : nvarchar
-  +ip_address : nvarchar
-  +user_agent : nvarchar
-  +expires_at : datetime
-  +is_revoked : bool
+  +sessionId : guid
+  +tokenHash : nvarchar
+  +ipAddress : nvarchar
+  +userAgent : nvarchar
+  +expiresAt : datetime
+  +isRevoked : bool
 }
 
 class AuditLogs {
-  +log_id : bigint
+  +logId : bigint
   +action : nvarchar
-  +target_table : nvarchar
-  +target_id : nvarchar
-  +created_at : datetime
+  +targetTable : nvarchar
+  +targetId : nvarchar
+  +createdAt : datetime
 }
 
 ' ================== CATALOG ==================
 class Suppliers {
-  +supplier_id : int
+  +supplierId : int
   +name : nvarchar
-  +contact_name : nvarchar
+  +contactName : nvarchar
 }
 
 class Categories {
-  +category_id : int
-  +parent_id : int
+  +categoryId : int
+  +parentId : int
   +name : nvarchar
   +description : nvarchar
 }
 
 class Products {
-  +product_id : int
+  +productId : int
   +sku : nvarchar
   +name : nvarchar
   +description : nvarchar
-  +base_price : decimal
+  +basePrice : decimal
 }
 
 class ProductVariants {
-  +variant_id : int
-  +variant_sku : nvarchar
+  +variantId : int
+  +variantSku : nvarchar
   +attributes : json
   +price : decimal
   +stock : int
 }
 
 class ProductImages {
-  +image_id : int
-  +image_url : nvarchar
-  +is_main : bool
+  +imageId : int
+  +imageUrl : nvarchar
+  +isMain : bool
 }
 
 ' ================== SHOPPING ==================
 class Cart {
-  +cart_id : int
-  +created_at : datetime
+  +cartId : int
+  +createdAt : datetime
 }
 
 class CartItems {
-  +cart_item_id : bigint
+  +cartItemId : bigint
   +quantity : int
-  +unit_price : decimal
+  +unitPrice : decimal
 }
 
 ' ================== CHECKOUT & ORDERS ==================
 class Orders {
-  +order_id : bigint
-  +order_number : nvarchar
+  +orderId : bigint
+  +orderNumber : nvarchar
   +subtotal : decimal
-  +total_amount : decimal
+  +totalAmount : decimal
   +status : nvarchar
-  +created_at : datetime
+  +createdAt : datetime
 }
 
 class OrderItems {
-  +order_item_id : bigint
-  +product_name : nvarchar
-  +unit_price : decimal
+  +orderItemId : bigint
+  +productName : nvarchar
+  +unitPrice : decimal
   +quantity : int
 }
 
 class Payments {
-  +payment_id : bigint
-  +payment_method : nvarchar
+  +paymentId : bigint
+  +paymentMethod : nvarchar
   +amount : decimal
   +status : nvarchar
-  +transaction_ref : nvarchar
+  +transactionRef : nvarchar
 }
 
 class Shipments {
-  +shipment_id : bigint
+  +shipmentId : bigint
   +carrier : nvarchar
-  +tracking_number : nvarchar
+  +trackingNumber : nvarchar
   +status : nvarchar
-  +shipped_at : datetime
+  +shippedAt : datetime
 }
 
 ' ================== REVIEWS ==================
 class Reviews {
-  +review_id : bigint
+  +reviewId : bigint
   +rating : tinyint
   +title : nvarchar
   +comment : nvarchar
-  +is_approved : bool
-  +created_at : datetime
+  +isApproved : bool
+  +createdAt : datetime
 }
 
 class InventoryLogs {
-  +log_id : bigint
-  +before_stock : int
-  +change_amount : int
-  +after_stock : int
+  +logId : bigint
+  +beforeStock : int
+  +changeAmount : int
+  +afterStock : int
   +reason : nvarchar
-  +created_at : datetime
+  +createdAt : datetime
 }
 
 ' =============== RELATIONSHIPS ==================

@@ -1,5 +1,5 @@
 // src/pages/Profile.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authApi } from '../api/authApi';
 
 export default function Profile() {
