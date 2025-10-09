@@ -18,7 +18,7 @@ export default function ProductDetail() {
   const [variantIdx, setVariantIdx] = useState(0);
   const [mainImgIdx, setMainImgIdx] = useState(0);
 
-  // --- Số lượng: cho phép xóa hẳn "1" rồi gõ "9"; cấm "0"
+  // --- Số lượng sản phẩm
   const [qtyInput, setQtyInput] = useState('1');
   const [qtyTouched, setQtyTouched] = useState(false);
 
@@ -27,6 +27,7 @@ export default function ProductDetail() {
     const n = parseInt(qtyInput, 10);
     return Number.isNaN(n) ? undefined : n;
   }, [qtyInput]);
+
   const qtyInvalid = qtyInput === '0';
   const canBuy = !qtyInvalid && qtyInput !== '' && (qtyNum ?? 0) >= 1;
 
@@ -35,16 +36,18 @@ export default function ProductDetail() {
     setQtyInput(v);
     if (!qtyTouched) setQtyTouched(true);
   };
+
   const handleQtyBlur = () => {
     if (qtyInput === '' || qtyInput === '0') {
       setQtyInput('1');
       setQtyTouched(false);
     }
   };
+
   const decQty = () => setQtyInput(String(Math.max(1, (qtyNum ?? 1) - 1)));
   const incQty = () => setQtyInput(String((qtyNum ?? 1) + 1));
 
-  // thumbnails ref
+  // --- Thumbnails scroll
   const thumbsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -139,12 +142,11 @@ export default function ProductDetail() {
 
   // ===================== REVIEW =====================
   const [reviews, setReviews] = useState<
-    { id: number; name: string; rating: number; comment: string; createdAt: string }[]
+    { id: number; userName: string; rating: number; comment: string; createdAt: string }[]
   >([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
 
-  // load review list
   useEffect(() => {
     if (!productId) return;
     fetch(`/api/reviews?productId=${productId}`)
@@ -179,7 +181,7 @@ export default function ProductDetail() {
     }
   };
 
-  // ===================== GALLERY SCROLL =====================
+  // ===================== SCROLL THUMBNAILS =====================
   useEffect(() => {
     const el = thumbsRef.current;
     const btn = el?.querySelector<HTMLButtonElement>(
@@ -192,9 +194,7 @@ export default function ProductDetail() {
   }, [mainImgIdx]);
 
   // ===================== RENDER =====================
-  if (loading) {
-    return <div className="p-6">Đang tải...</div>;
-  }
+  if (loading) return <div className="p-6">Đang tải...</div>;
   if (error) return <div className="p-6 text-red-600">Lỗi: {error}</div>;
   if (!detail) return <div className="p-6">Không tìm thấy sản phẩm.</div>;
 
@@ -202,16 +202,15 @@ export default function ProductDetail() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6">
-      {/* breadcrumb */}
+      {/* Breadcrumb */}
       <div className="mb-3 text-sm text-gray-500">
-        <Link to="/" className="hover:underline">Trang chủ</Link> /{' '}
-        <Link to="/products" className="hover:underline">Sản phẩm</Link> /{' '}
-        <span className="text-gray-700">{detail.name}</span>
+        <Link to="/" className="hover:underline">Trang chủ</Link> /
+        <Link to="/products" className="hover:underline ml-1">Sản phẩm</Link> /
+        <span className="ml-1 text-gray-700">{detail.name}</span>
       </div>
 
-      {/* === layout === */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* ảnh */}
+        {/* Ảnh sản phẩm */}
         <div>
           <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-gray-50">
             <img src={hero} alt={detail.name} className="h-full w-full object-cover" />
@@ -219,28 +218,33 @@ export default function ProductDetail() {
           <div ref={thumbsRef} className="mt-2 flex gap-2 overflow-x-auto">
             {images.map((img, i) => (
               <button
-                key={i}
+                key={img.imageId ?? `img-${i}`}
                 data-idx={i}
                 onClick={() => setMainImgIdx(i)}
                 className={`h-16 w-24 overflow-hidden rounded-xl border ${
                   i === mainImgIdx ? 'ring-2 ring-emerald-500' : ''
                 }`}
               >
-                <img src={img.imageUrl} alt={`Ảnh ${i + 1}`} className="h-full w-full object-cover" />
+                <img
+                  src={img.imageUrl}
+                  alt={`Ảnh ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
               </button>
             ))}
           </div>
         </div>
 
-        {/* panel phải */}
+        {/* Panel phải */}
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <h1 className="text-2xl font-semibold">{detail.name}</h1>
           <div className="mt-2 flex items-center gap-3">
-            <div className="text-emerald-600 text-3xl font-bold">{priceRangeLabel}</div>
+            <div className="text-emerald-600 text-3xl font-bold">
+              {priceRangeLabel}
+            </div>
             {showDiscount && <span className="text-red-500 font-semibold">-{pct}%</span>}
           </div>
 
-          {/* Biến thể */}
           {variants?.length > 0 && (
             <div className="mt-5">
               <div className="mb-1 text-sm font-medium">Chọn biến thể</div>
@@ -250,7 +254,7 @@ export default function ProductDetail() {
                 onChange={(e) => setVariantIdx(Number(e.target.value))}
               >
                 {variants.map((v, i) => (
-                  <option key={v.variantId ?? i} value={i}>
+                  <option key={v.variantId ?? `variant-${i}`} value={i}>
                     {formatVariantLabel(v)}
                   </option>
                 ))}
@@ -258,7 +262,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Số lượng + CTA */}
           <div className="mt-4 flex items-center gap-3">
             <div className="flex items-stretch">
               <button type="button" onClick={decQty} className="h-10 w-10 rounded-l-xl border bg-white">-</button>
@@ -308,7 +311,11 @@ export default function ProductDetail() {
               onChange={(e) => setRating(Number(e.target.value))}
               className="ml-2 rounded border px-2 py-1"
             >
-              {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}</option>)}
+              {[5, 4, 3, 2, 1].map((n) => (
+                <option key={`rate-${n}`} value={n}>
+                  {n}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -333,11 +340,13 @@ export default function ProductDetail() {
         ) : (
           <ul className="space-y-3">
             {reviews.map((r) => (
-              <li key={r.id} className="rounded-xl border p-3">
-                <div className="font-semibold text-gray-800">{r.name}</div>
+              <li key={`review-${r.id}`} className="rounded-xl border p-3">
+                <div className="font-semibold text-gray-800">{r.userName}</div>
                 <div className="text-yellow-500 text-sm">⭐ {r.rating}/5</div>
                 <div className="text-gray-700 mt-1">{r.comment}</div>
-                <div className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()}</div>
+                <div className="text-xs text-gray-400">
+                  {new Date(r.createdAt).toLocaleString()}
+                </div>
               </li>
             ))}
           </ul>

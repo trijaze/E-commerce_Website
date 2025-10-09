@@ -10,7 +10,7 @@ export default defineConfig({
     proxy: {
       // HOA: proxy sang Tomcat /ecommerce-hoa
       '/api': {
-        target: 'http://localhost:8080/',
+        target: 'http://localhost:8080/ecommerce-hoa',
         changeOrigin: true
       }
     }
