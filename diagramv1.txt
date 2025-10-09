@@ -1,0 +1,135 @@
+@startuml
+' ================== USER & AUTH ==================
+class Users {
+  +userId : int
+  +username : nvarchar
+  + phoneNumber : nvarchar
+  +passwordHash : nvarchar
+  +role : nvarchar
+}
+
+class UserAddresses {
+  +addressId : int
+  + label: nvarchar
+  + addressLine : nvarchar
+  +city : nvarchar
+  +country : nvarchar
+  +postalCode : nvarchar
+  +isDefault : bool
+  
+}
+
+
+
+class AuditLogs {
+  +logId : bigint
+  +action : nvarchar
+  +targetTable : nvarchar
+  +targetId : nvarchar
+  +createdAt : datetime
+}
+
+' ================== CATALOG ==================
+class Suppliers {
+  +supplierId : int
+  +name : nvarchar
+  +contactName : nvarchar
+}
+
+class Categories {
+  +categoryId : int
+  +parentId : int
+  +name : nvarchar
+  +description : nvarchar
+}
+
+class Products {
+  +productId : int
+  +sku : nvarchar
+  +name : nvarchar
+  +description : nvarchar
+  +basePrice : decimal
+}
+
+class ProductVariants {
+  +variantId : int
+  +attributes : json
+  +price : decimal
+}
+
+class ProductImages {
+  +imageId : int
+  +imageUrl : nvarchar
+  +isMain : bool
+}
+
+' ================== SHOPPING ==================
+class Cart {
+  +cartId : int
+  +createdAt : datetime
+}
+
+class CartItems {
+  +cartItemId : bigint
+  +quantity : int
+  +unitPrice : decimal
+}
+
+' ================== CHECKOUT & ORDERS ==================
+class Orders {
+  +orderId : bigint
+  + orderNumber: nvarchar
+  +subtotal : decimal
+  +totalAmount : decimal
+  +status : nvarchar
+  +createdAt : datetime
+  + paymentMethod : nvarchar
+}
+
+class OrderItems {
+  +orderItemId : bigint
+  +productName : nvarchar
+  +unitPrice : decimal
+  +quantity : int
+}
+
+
+class Shipments {
+  +shipmentId : bigint
+  +carrier : nvarchar
+  +trackingNumber : nvarchar
+  +status : nvarchar
+  +shippedAt : datetime
+}
+
+' ================== REVIEWS ==================
+class Reviews {
+  +reviewId : bigint
+  +rating : tinyint
+  +title : nvarchar
+  +comment : nvarchar
+  +isApproved : bool
+  +createdAt : datetime
+}
+
+
+' =============== RELATIONSHIPS ==================
+Users "1" -- "0..*" UserAddresses
+Users "1" -- "1" Cart
+Users "1" -- "0..*" Orders
+Users "1" -- "0..*" Reviews
+Users "1" -- "0..*" AuditLogs
+
+Categories "1" -- "0..*" Products
+Suppliers "1" -- "0..*" Products
+Products "1" -- "0..*" ProductVariants
+Products "1" -- "0..*" ProductImages
+ProductVariants "1" -- "0..*" Reviews
+ProductVariants "1" -- "0..*" ProductImages
+ProductVariants "1" -- "0..*" CartItems
+ProductVariants "1" -- "0..*" OrderItems
+
+Cart <-- CartItems
+Orders "1" -- "0..*" OrderItems
+Orders "1" -- "0..*" Shipments
+@enduml
