@@ -1,4 +1,4 @@
-<img width="1755" height="2475" alt="image" src="https://github.com/user-attachments/assets/f5df30fb-da32-4436-9476-d8001421ee5c" />﻿
+﻿
 
 ## ⚙️ Yêu cầu
 - Node.js >= 20
@@ -100,6 +100,7 @@ const initialState: AuthState = {
 
 ```
 <img width="1755" height="1180" alt="image" src="https://github.com/user-attachments/assets/c75c7548-0498-4d05-a142-f34da8edfcfb" />
+
 
 
 
