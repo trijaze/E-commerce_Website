@@ -1,4 +1,4 @@
-﻿
+<img width="1755" height="2475" alt="image" src="https://github.com/user-attachments/assets/f5df30fb-da32-4436-9476-d8001421ee5c" />﻿
 
 ## ⚙️ Yêu cầu
 - Node.js >= 20
@@ -78,13 +78,28 @@ npm install @reduxjs/toolkit
 
 
 ## Giao diện Review 
-<img width="1755" height="2475" alt="image" src="https://github.com/user-attachments/assets/8f71baac-62ce-4732-8e5e-aa89355943a1" />
+
+
+<img width="1755" height="2475" alt="image" src="https://github.com/user-attachments/assets/15a983f0-8613-43f7-9525-e426cf4a3644" />
 
 
 
+## Giao diện User Profile +> Do chưa xây đăng ký và đăng nhập nên đã import mẫu sẵn thông tin ở authSlice.tsx bằng code 
+```bash
+const initialState: AuthState = {
+  user: {
+    id: '1',
+    name: 'Trịnh Trần Phương Tuấn',
+    email: 'ttpt@test.com',
+    role: 'USER',
+    createdAt: '2024-10-09T00:00:00Z'
+  },
+  loading: false,
+  error: null
+};
 
-
-## Giao diện User Profile
+```
 <img width="1755" height="1180" alt="image" src="https://github.com/user-attachments/assets/c75c7548-0498-4d05-a142-f34da8edfcfb" />
+
 
 
