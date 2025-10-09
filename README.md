@@ -70,18 +70,13 @@ npm install @reduxjs/toolkit
 ```
 
 ## Giao diện Sản Phẩm
-<img width="1755" height="2329" alt="image" src="https://github.com/user-attachments/assets/fa1b90dd-2da4-48c9-b3d0-bd31c2905994" />
-
-
-
+<img width="1504" height="763" alt="image" src="https://github.com/user-attachments/assets/b07f5687-6dcb-4be9-990c-042476b22331" />
 
 
 
 ## Giao diện Review 
 
-
-<img width="1755" height="2475" alt="image" src="https://github.com/user-attachments/assets/15a983f0-8613-43f7-9525-e426cf4a3644" />
-
+<img width="1466" height="703" alt="image" src="https://github.com/user-attachments/assets/aaeeaa34-d646-4f0a-8791-6a5a98cb9bb7" />
 
 
 ## Giao diện User Profile +> Do chưa xây đăng ký và đăng nhập nên đã import mẫu sẵn thông tin ở authSlice.tsx bằng code 
@@ -100,6 +95,7 @@ const initialState: AuthState = {
 
 ```
 <img width="1755" height="1180" alt="image" src="https://github.com/user-attachments/assets/c75c7548-0498-4d05-a142-f34da8edfcfb" />
+
 
 
 
