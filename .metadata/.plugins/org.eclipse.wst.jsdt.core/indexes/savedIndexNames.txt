@@ -1,2 +1,0 @@
-INDEX VERSION 1.4+D:\Project\E-commerce\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
-349485661.index
