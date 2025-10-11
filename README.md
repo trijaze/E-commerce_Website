@@ -1,4 +1,4 @@
-Quá ổn. Dưới đây là **README.md** đã chỉnh cho **monorepo** (cả frontend + backend), giữ nguyên phần bạn đưa và bổ sung phần BE/DB. Chỉ cần **dán đè** vào `README.md` ở gốc repo.
+
 
 ````md
 # Bách Hóa Online – E-commerce Website
@@ -188,3 +188,4 @@ E-commerce_Website/
 * Có thể mở rộng hiển thị tồn kho theo biến thể từ `view_variant_stock.available`.
 
 ````
+
