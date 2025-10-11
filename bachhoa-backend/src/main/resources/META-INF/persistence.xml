@@ -1,44 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" version="2.2">
-  <persistence-unit name="ecommercePU">
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+  <!-- PHẢI TRÙNG JPAUtil -->
+  <persistence-unit name="ecommercePU" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-    <!-- KHAI BÁO ENTITY -->
+    <!-- Theo JPA XSD: class* phải đứng TRƯỚC exclude-unlisted-classes & properties -->
     <class>vn.bachhoa.products.model.Product</class>
     <class>vn.bachhoa.products.model.ProductImage</class>
     <class>vn.bachhoa.products.model.ProductVariant</class>
 
+    <!-- Cho phép auto-scan các @Entity khác nếu có -->
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
     <properties>
+      <!-- JDBC MySQL 8 -->
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.url"
+                value="jdbc:mysql://localhost:3306/bachhoa?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Asia/Ho_Chi_Minh&amp;createDatabaseIfNotExist=true"/>
+      <property name="javax.persistence.jdbc.user" value="ecom"/>
+      <property name="javax.persistence.jdbc.password" value="StrongPass!23"/>
+
       <!-- Hibernate -->
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
-      <property name="hibernate.hbm2ddl.auto" value="validate"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>   <!-- dev: update, prod: validate -->
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
-
-      <!-- DÙNG HikariCP qua Hibernate (không dùng javax.persistence.jdbc.*) -->
-      <property name="hibernate.connection.provider_class"
-                value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
-
-      <!-- Khai báo DataSource cho Hikari -->
-      <property name="hibernate.hikari.dataSourceClassName"
-                value="com.mysql.cj.jdbc.MysqlDataSource"/>
-
-      <!-- Thuộc tính của MysqlDataSource (KHÔNG dùng driver/url ở javax.persistence.*) -->
-      <property name="hibernate.hikari.dataSource.serverName" value="localhost"/>
-      <property name="hibernate.hikari.dataSource.portNumber" value="3306"/>
-      <property name="hibernate.hikari.dataSource.databaseName" value="bachhoa"/>
-      <property name="hibernate.hikari.dataSource.user" value="ecom"/>
-      <property name="hibernate.hikari.dataSource.password" value="StrongPass!23"/>
-
-      <!-- Các option MySQL cần thiết -->
-      <property name="hibernate.hikari.dataSource.useSSL" value="false"/>
-      <property name="hibernate.hikari.dataSource.allowPublicKeyRetrieval" value="true"/>
-      <property name="hibernate.hikari.dataSource.serverTimezone" value="UTC"/>
-      <property name="hibernate.hikari.maximumPoolSize" value="10"/>
-      <!-- tùy chọn:
-      <property name="hibernate.hikari.minimumIdle" value="2"/>
-      <property name="hibernate.hikari.poolName" value="BachHoaPool"/>
-      -->
+      <property name="hibernate.jdbc.time_zone" value="Asia/Ho_Chi_Minh"/>
     </properties>
   </persistence-unit>
 </persistence>
