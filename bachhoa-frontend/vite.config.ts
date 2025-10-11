@@ -8,12 +8,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // HOA: proxy sang Tomcat /ecommerce-hoa
+      // proxy mọi request bắt đầu bằng /api sang Tomcat
       '/api': {
-        target: 'http://localhost:8080/ecommerce-hoa',
-        changeOrigin: true
-      }
-    }
+        target: 'http://localhost:8080/bachhoa-backend',
+        changeOrigin: true,
+      },
+    },
   },
-  resolve: { alias: { '@': '/src' } }
+  resolve: { alias: { '@': '/src' } },
 })

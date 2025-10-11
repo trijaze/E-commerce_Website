@@ -1,3 +1,0 @@
-db.url=jdbc:mysql://localhost:3306/bachhoa_hoa?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-db.username=ecom_hoa
-db.password=hoa123!
