@@ -1,0 +1,17 @@
+# ===== Database =====
+datasource.driver=com.mysql.cj.jdbc.Driver
+datasource.url=jdbc:mysql://localhost:3306/bachhoa?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Ho_Chi_Minh
+datasource.username=root
+datasource.password=changeme
+
+# ===== Hibernate (Tomcat 9 + JDK 17 + Hibernate 5.x) =====
+hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+hibernate.hbm2ddl.auto=validate
+hibernate.show_sql=false
+hibernate.format_sql=true
+
+# ===== HikariCP =====
+hikari.maximumPoolSize=10
+hikari.minimumIdle=2
+hikari.idleTimeout=600000
+hikari.connectionTimeout=30000
