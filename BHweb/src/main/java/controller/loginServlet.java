@@ -60,11 +60,6 @@ public class loginServlet extends HttpServlet {
             AuditLogs log = new AuditLogs(u.getId(), "USER_LOGIN", "Users", String.valueOf(u.getId()));
             auditLogDAO.save(log);
 
-            // ✅ BƯỚC CHẨN ĐOÁN QUAN TRỌNG NHẤT
-            // In ra địa chỉ bộ nhớ của từng khóa bí mật để so sánh
-            System.out.println(">>> [loginServlet] Signing ACCESS token with key: " + JwtConfig.JWT_SECRET_KEY.toString());
-            System.out.println(">>> [loginServlet] Signing REFRESH token with key: " + JwtConfig.JWT_REFRESH_SECRET_KEY.toString());
-
             // Tạo tokens
             String accessToken = JwtUtils.generateToken(u, JwtConfig.ACCESS_TOKEN_EXPIRATION_MS, (Key) JwtConfig.JWT_SECRET_KEY);
             String refreshToken = JwtUtils.generateToken(u, JwtConfig.REFRESH_TOKEN_EXPIRATION_MS, (Key) JwtConfig.JWT_REFRESH_SECRET_KEY);
