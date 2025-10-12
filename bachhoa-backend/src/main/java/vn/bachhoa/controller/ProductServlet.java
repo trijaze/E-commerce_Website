@@ -1,81 +1,110 @@
 package vn.bachhoa.controller;
 
 import vn.bachhoa.dao.ProductDAO;
-import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
+import vn.bachhoa.model.ProductImage;
 import vn.bachhoa.util.JsonUtil;
 
-import javax.servlet.ServletException;
-// KHÔNG dùng @WebServlet vì đã map trong web.xml (/api/products/*)
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class ProductServlet extends HttpServlet {
-
-    private static final long serialVersionUID = 1L;
-
-    private final ProductDAO dao = new ProductDAO();
+    private final ProductDAO productDAO = new ProductDAO();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setCharacterEncoding("UTF-8");
-        resp.setContentType("application/json; charset=UTF-8");
 
-        // /api/products/{id} -> chi tiết
-        String path = req.getPathInfo();
-        if (path != null && path.length() > 1) {
-            if (!path.matches("^/\\d+$")) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                JsonUtil.ok(resp, new ErrorResponse("Invalid product id"));
-                return;
-            }
-            int id = Integer.parseInt(path.substring(1));
-            try {
-                Product p = dao.findDetailById(id);
-                if (p == null) {
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    JsonUtil.ok(resp, new ErrorResponse("Product not found"));
-                    return;
-                }
-                JsonUtil.ok(resp, new ProductDetailDTO(p));
-            } catch (Exception e) {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                JsonUtil.ok(resp, new ErrorResponse(e.getMessage()));
-            }
+        // path: "/{id}" hoặc "/{id}/related"
+        String path = Optional.ofNullable(req.getPathInfo()).orElse("").trim();
+        if (path.isEmpty() || "/".equals(path)) {
+            // Không implement list ở servlet này để tránh lệ thuộc DAO chưa có findAll()
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
             return;
         }
 
-        // /api/products[?categoryId=...] -> danh sách
-        String categoryIdParam = req.getParameter("categoryId");
+        String[] parts = Arrays.stream(path.split("/"))
+                .filter(s -> s != null && !s.isBlank())
+                .toArray(String[]::new);
+
+        Integer id;
         try {
-            List<Product> products = (categoryIdParam == null || categoryIdParam.isBlank())
-                    ? dao.findAll()
-                    : dao.findByCategoryId(Integer.parseInt(categoryIdParam));
+            id = Integer.parseInt(parts[0]);
+        } catch (NumberFormatException ex) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid product id");
+            return;
+        }
 
-            List<ProductDTO> dtoList = products.stream()
-                    .map(ProductDTO::new)
-                    .collect(Collectors.toList());
-
-            JsonUtil.ok(resp, dtoList);
-
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonUtil.ok(resp, new ErrorResponse("Invalid categoryId format"));
-        } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonUtil.ok(resp, new ErrorResponse(e.getMessage()));
+        try {
+            if (parts.length == 1) {
+                getDetail(id, resp);
+                return;
+            }
+            if (parts.length == 2 && "related".equalsIgnoreCase(parts[1])) {
+                int limit = parseInt(req.getParameter("limit"), 8);
+                getRelated(id, limit, resp);
+                return;
+            }
+            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Not found");
+        } catch (Exception ex) {
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
         }
     }
 
-    static class ErrorResponse {
-        public String error;
-        ErrorResponse(String msg) { this.error = msg; }
+    private void getDetail(Integer id, HttpServletResponse resp) throws IOException {
+        Product p = productDAO.findByIdWithRelations(id); // đã JOIN FETCH category/supplier/images/variants
+        if (p == null) {
+            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Product not found");
+            return;
+        }
+        // Dùng đúng DTO constructor có sẵn, không tự build tay
+        ProductDetailDTO dto = new ProductDetailDTO(p);
+        JsonUtil.ok(resp, wrap(dto));
+    }
+
+    private void getRelated(Integer id, int limit, HttpServletResponse resp) throws IOException {
+        var list = productDAO.findRelated(id, limit);
+
+        var items = new ArrayList<Map<String, Object>>();
+        for (Product p : list) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("productId", p.getProductId());
+            m.put("name", p.getName());
+            m.put("basePrice", p.getBasePrice());
+
+            // Lấy ảnh đại diện: ưu tiên ảnh isMain = true, nếu không có thì lấy ảnh đầu tiên
+            String url = null;
+            if (p.getImages() != null && !p.getImages().isEmpty()) {
+                ProductImage main = null;
+                for (ProductImage i : p.getImages()) {
+                    if (Boolean.TRUE.equals(i.getIsMain())) { main = i; break; } // ✅ dùng getIsMain()
+                }
+                url = (main != null) ? main.getImageUrl() : p.getImages().get(0).getImageUrl();
+            }
+            m.put("imageUrl", url);
+
+            items.add(m);
+        }
+        JsonUtil.ok(resp, wrap(items));
+    }
+
+    private static Map<String, Object> wrap(Object data) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("data", data);
+        return m;
+    }
+
+    private static void writeError(HttpServletResponse resp, int code, String msg) throws IOException {
+        resp.setStatus(code);
+        JsonUtil.ok(resp, Map.of("error", msg));
+    }
+
+    private static int parseInt(String s, int def) {
+        try { return (s == null || s.isBlank()) ? def : Integer.parseInt(s); }
+        catch (Exception e) { return def; }
     }
 }

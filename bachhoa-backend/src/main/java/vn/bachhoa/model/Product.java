@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(
@@ -19,51 +21,57 @@ import org.hibernate.annotations.FetchMode;
     uniqueConstraints = @UniqueConstraint(name = "uk_products_sku", columnNames = {"sku"})
 )
 public class Product implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
+
     @Id
+    @Column(name = "productId")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer productId;
 
-    @Column(nullable = false, unique = true, length = 100)
+    // KHÔNG đặt unique=true ở đây để tránh trùng với uniqueConstraints trên @Table
+    @Column(name = "sku", nullable = false, length = 100)
     private String sku;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(length = 4000)
+    // Nếu muốn dùng TEXT của MySQL: đổi thành @Column(name="description", columnDefinition="text")
+    @Column(name = "description", length = 4000)
     private String description;
 
-    @Column(precision = 13, scale = 2)
+    @Column(name = "basePrice", precision = 13, scale = 2)
     private BigDecimal basePrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryId")
+    @JoinColumn(name = "categoryId", foreignKey = @ForeignKey(name = "fk_products_category"))
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplierId")
+    @JoinColumn(name = "supplierId", foreignKey = @ForeignKey(name = "fk_products_supplier"))
     private Supplier supplier;
 
-    // Dùng FetchMode.SUBSELECT để tránh MultipleBagFetchException
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Tránh MultipleBagFetchException với 2 collection: dùng SUBSELECT + BatchSize
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 20)
+    @OrderBy("variantId ASC")
     private List<ProductVariant> variants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 20)
+    @OrderBy("imageId ASC")
     private List<ProductImage> images = new ArrayList<>();
 
-    
-    // --- Constructor ---
+    // --- Constructors ---
     public Product() {}
 
-    // --- Getters và Setters ---
+    // --- Getters / Setters ---
     public Integer getProductId() { return productId; }
     public void setProductId(Integer productId) { this.productId = productId; }
 
     public String getSku() { return sku; }
     public void setSku(String sku) { this.sku = sku; }
-
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -80,14 +88,13 @@ public class Product implements Serializable {
     public Supplier getSupplier() { return supplier; }
     public void setSupplier(Supplier supplier) { this.supplier = supplier; }
 
-
     public List<ProductVariant> getVariants() { return variants; }
     public void setVariants(List<ProductVariant> variants) { this.variants = variants; }
 
     public List<ProductImage> getImages() { return images; }
     public void setImages(List<ProductImage> images) { this.images = images; }
 
-    // --- equals() và hashCode() ---
+    // --- equals() / hashCode() ---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -99,5 +106,27 @@ public class Product implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hashCode(productId);
+    }
+
+    // --- tiện ích giữ quan hệ 2 chiều ---
+    public void addVariant(ProductVariant v) {
+        if (v == null) return;
+        variants.add(v);
+        v.setProduct(this);
+    }
+    public void removeVariant(ProductVariant v) {
+        if (v == null) return;
+        variants.remove(v);
+        v.setProduct(null);
+    }
+    public void addImage(ProductImage img) {
+        if (img == null) return;
+        images.add(img);
+        img.setProduct(this);
+    }
+    public void removeImage(ProductImage img) {
+        if (img == null) return;
+        images.remove(img);
+        img.setProduct(null);
     }
 }
