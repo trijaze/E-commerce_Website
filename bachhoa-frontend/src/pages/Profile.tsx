@@ -4,6 +4,7 @@ import { useAppSelector } from '../app/hooks';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatDate } from '@/utils/format';
+import { Link } from 'react-router-dom';
 
 export default function Profile() {
   const user = useAppSelector((s) => s.auth.user);
@@ -33,12 +34,12 @@ export default function Profile() {
           {/* Avatar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-5 space-y-4 sm:space-y-0">
             <img
-              src={`https://api.dicebear.com/9.x/initials/svg?seed=${user.name ?? 'User'}`}
+              src={`https://api.dicebear.com/9.x/initials/svg?seed=${user.username ?? 'User'}`}
               alt="avatar"
               className="w-24 h-24 rounded-full border border-gray-300 shadow-sm"
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">{user.name || 'Người dùng'}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{user.username || 'Người dùng'}</h2>
               <p className="text-gray-500">{user.email}</p>
               <span
                 className={`mt-2 inline-block px-3 py-1 text-sm font-medium rounded-full ${user.role === 'admin'
@@ -57,7 +58,7 @@ export default function Profile() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
               <div>
                 <p className="text-sm text-gray-500">ID Người dùng</p>
-                <p className="font-medium">{user.id}</p>
+                <p className="font-medium">{user.userId}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email</p>
@@ -81,6 +82,11 @@ export default function Profile() {
             <Button variant="secondary" onClick={() => alert('Chức năng chỉnh sửa đang phát triển')}>
               ✏️ Chỉnh sửa hồ sơ
             </Button>
+            <Link to="/changePassword">
+              <Button variant="secondary" className="w-full sm:w-auto">
+                🔑 Đổi mật khẩu
+              </Button>
+            </Link>
             <Button variant="danger" onClick={() => alert('Đăng xuất')}>
               🚪 Đăng xuất
             </Button>

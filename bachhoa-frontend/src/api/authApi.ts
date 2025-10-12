@@ -4,8 +4,8 @@ import type { User } from '../features/auth/authTypes';
 
 
 export type LoginPayload = { identifier: string; password: string };
-export type RegisterPayload = { username: string; phone: string; email: string; password: string };
-export type ForgotPasswordPayload = { username: string; phone: string; newPassword: string }
+export type RegisterPayload = { username: string; phoneNumber: string; email: string; password: string };
+export type ForgotPasswordPayload = { username: string; phoneNumber: string; newPassword: string }
 export type ChangePasswordPayload = { oldPassword: string; newPassword: string };
 
 export interface AuthResponse {

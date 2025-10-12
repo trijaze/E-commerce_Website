@@ -18,10 +18,12 @@
     <failOnMissingWebXml>false</failOnMissingWebXml>
     <hibernate.version>5.6.15.Final</hibernate.version>
     <jackson.version>2.17.0</jackson.version>
+    <jjwt.version>0.11.5</jjwt.version>
   </properties>
 
   <dependencies>
-    <!-- Servlet API for Tomcat 9 (provided by container) -->
+    <!-- === API CỦA WEB SERVER (TOMCAT) === -->
+    <!-- Servlet API - được cung cấp bởi Tomcat nên scope là 'provided' -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
@@ -29,42 +31,70 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- === CƠ SỞ DỮ LIỆU & JPA/HIBERNATE === -->
     <!-- JPA API -->
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
       <version>2.2</version>
     </dependency>
-
-    <!-- Hibernate implementation -->
+    <!-- Hibernate (triển khai của JPA) -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
       <version>${hibernate.version}</version>
     </dependency>
-
-    <!-- MySQL driver -->
+    <!-- MySQL Driver -->
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>8.0.33</version>
     </dependency>
 
-    <!-- Jackson for JSON -->
+    <!-- === XỬ LÝ JSON === -->
+    <!-- Bổ sung thư viện GSON -->
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.10.1</version>
+    </dependency>
+    
+    <!-- Jackson - Cần thiết cho thư viện JJWT -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
+
+    <!-- === JSON WEB TOKEN (JWT) === -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${jjwt.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${jjwt.version}</version>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>${jjwt.version}</version>
+        <scope>runtime</scope>
+    </dependency>
+    
+    <!-- === LOGGING === -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>2.0.13</version>
+    </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>2.0.13</version>
     </dependency>
   </dependencies>
 

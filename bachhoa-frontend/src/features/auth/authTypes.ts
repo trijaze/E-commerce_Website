@@ -1,10 +1,10 @@
 export interface User {
-  id: number;
+  userId: number;
   username: string;
-  phone: string;
+  phoneNumber: string;
   email: string;
   createdAt: string;
-  role: 'user' | 'admin';
+  role: 'customer' | 'admin';
 }
 
 export interface AuthState {
