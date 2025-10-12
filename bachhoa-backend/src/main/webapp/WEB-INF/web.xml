@@ -8,7 +8,6 @@
 
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
-<<<<<<< HEAD
         <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
 
         <filter-class>vn.bachhoa.filters.CharacterEncodingFilter</filter-class>
