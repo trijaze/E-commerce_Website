@@ -50,4 +50,18 @@
     <url-pattern>/api/reviews/*</url-pattern>
   </servlet-mapping>
 
+
+  <!-- Promotions -->
+
+  <servlet>
+      <servlet-name>PromotionServlet</servlet-name>
+      <servlet-class>vn.bachhoa.promotions.PromotionServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+      <servlet-name>PromotionServlet</servlet-name>
+      <url-pattern>/api/promotions/*</url-pattern>
+  </servlet-mapping>
+
+
 </web-app>
