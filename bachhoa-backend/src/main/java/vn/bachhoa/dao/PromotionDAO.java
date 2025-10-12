@@ -9,10 +9,7 @@ import javax.persistence.EntityTransaction;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * PromotionDAO: CRUD using JPA EntityManager.
- * Note: category mappings (promotion_categories) handled with native SQL here.
- */
+
 public class PromotionDAO {
 
     public Promotion findById(int id) {
@@ -144,3 +141,9 @@ public class PromotionDAO {
         }
     }
 }
+
+
+/**
+ * PromotionDAO: CRUD using JPA EntityManager.
+ * Note: category mappings (promotion_categories) handled with native SQL here.
+ */
