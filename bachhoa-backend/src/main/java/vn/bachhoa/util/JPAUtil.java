@@ -5,18 +5,28 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 public class JPAUtil {
-    private static final EntityManagerFactory emf = build();
+    private static final String PERSISTENCE_UNIT_NAME = "bachhoaPU";
 
-    private static EntityManagerFactory build() {
+    private static final EntityManagerFactory emf = buildEntityManagerFactory();
+
+    private static EntityManagerFactory buildEntityManagerFactory() {
         try {
-            return Persistence.createEntityManagerFactory("bachhoaPU");
-        } catch (Throwable t) {
-            System.err.println("Initial EntityManagerFactory creation failed: " + t);
-            throw new ExceptionInInitializerError(t);
+            return Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+        } catch (Throwable ex) {
+            System.err.println("Lỗi khi khởi tạo EntityManagerFactory: " + ex);
+            throw new ExceptionInInitializerError(ex);
         }
     }
 
+    // Lấy EntityManager để thao tác database
     public static EntityManager getEntityManager() {
         return emf.createEntityManager();
+    }
+
+    // Đóng EntityManagerFactory khi ứng dụng kết thúc
+    public static void close() {
+        if (emf != null && emf.isOpen()) {
+            emf.close();
+        }
     }
 }

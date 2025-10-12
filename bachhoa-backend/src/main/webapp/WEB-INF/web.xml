@@ -28,7 +28,7 @@
 
   <servlet>
     <servlet-name>ProductServlet</servlet-name>
-    <servlet-class>vn.bachhoa.web.ProductServlet</servlet-class>
+    <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>ProductServlet</servlet-name>
