@@ -15,7 +15,6 @@ export default function RelatedProducts({ productId }: Props) {
 
   useEffect(() => {
     let mounted = true;
-    if (!pid) { setItems([]); return; }
     setLoading(true);
     getRelated(pid)
       .then((d) => {

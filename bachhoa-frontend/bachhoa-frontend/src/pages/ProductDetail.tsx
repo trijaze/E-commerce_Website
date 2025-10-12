@@ -1,10 +1,11 @@
+// src/pages/ProductDetail.tsx
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getProductDetail } from '@/api/productDetailApi';
-import type {
-  ProductDetail as Detail,
-  VariantDTO as ProductVariant,
-  ImageDTO as ProductImage,
+import {
+  getProductDetail,
+  type ProductDetail as Detail,
+  type VariantDTO as ProductVariant,
+  type ImageDTO as ProductImage,
 } from '@/api/productDetailApi';
 import RelatedProducts from '@/components/RelatedProducts';
 
@@ -41,14 +42,11 @@ export default function ProductDetail() {
         setError(null);
       })
       .catch((e) => {
-        console.error(e);
         if (!mounted) return;
         setError('Không tải được chi tiết sản phẩm.');
       })
       .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [productId]);
 
   if (loading) {
@@ -73,7 +71,7 @@ export default function ProductDetail() {
   const images: ProductImage[] = detail.images ?? [];
   const variants: ProductVariant[] = detail.variants ?? [];
 
-  // Giá theo biến thể (nếu có) hoặc base price
+  // Giá theo biến thể (nếu có) hoặc base price (BE không trả minPrice)
   const currentPrice = useMemo(() => {
     if (!variants.length) return detail.basePrice ?? 0;
     const v = variants[Math.min(variantIdx, variants.length - 1)];
@@ -86,7 +84,7 @@ export default function ProductDetail() {
     else if (mainImgIdx > images.length - 1) setMainImgIdx(0);
   }, [images.length, mainImgIdx]);
 
-  // Mũi tên chuyển ảnh — thêm z-10 để luôn click được
+  // Mũi tên chuyển ảnh
   const prevImg = useCallback(
     () => setMainImgIdx((i: number) => (images.length ? (i - 1 + images.length) % images.length : 0)),
     [images.length]
@@ -100,9 +98,7 @@ export default function ProductDetail() {
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <nav className="text-sm mb-6 text-gray-600">
-        <Link to="/" className="hover:underline">
-          Trang chủ
-        </Link>
+        <Link to="/" className="hover:underline">Trang chủ</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{detail.name}</span>
       </nav>
@@ -156,11 +152,7 @@ export default function ProductDetail() {
                   }`}
                   title={`Ảnh ${idx + 1}`}
                 >
-                  <img
-                    src={img.imageUrl}
-                    alt={`${detail.name} ${idx + 1}`}
-                    className="object-cover w-full h-full"
-                  />
+                  <img src={img.imageUrl} alt={`${detail.name} ${idx + 1}`} className="object-cover w-full h-full" />
                 </button>
               ))}
             </div>
@@ -177,7 +169,7 @@ export default function ProductDetail() {
               <div className="text-sm text-gray-600 mb-2">Chọn loại</div>
               <div className="flex flex-wrap gap-2">
                 {variants.map((v, i) => {
-                  const label = v.name || v.sku || `Mẫu ${i + 1}`; // khớp BE
+                  const label = v.name || v.sku || `Mẫu ${i + 1}`; // ✅ khớp BE
                   const active = i === variantIdx;
                   return (
                     <button
@@ -197,14 +189,7 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {detail.description && (
-            <div className="mt-8 prose max-w-none">
-              <h2 className="text-lg font-semibold mb-2">Mô tả</h2>
-              <p className="whitespace-pre-line text-gray-700">{detail.description}</p>
-            </div>
-          )}
-
-          <div className="mt-6 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               className="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
@@ -222,6 +207,13 @@ export default function ProductDetail() {
               Mua ngay
             </button>
           </div>
+
+          {detail.description && (
+            <div className="mt-8 prose max-w-none">
+              <h2 className="text-lg font-semibold mb-2">Mô tả</h2>
+              <p className="whitespace-pre-line text-gray-700">{detail.description}</p>
+            </div>
+          )}
         </section>
       </div>
 

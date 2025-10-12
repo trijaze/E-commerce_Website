@@ -1,7 +1,12 @@
 // src/api/productDetailApi.ts
-import axiosClient from "./axiosClient";
+import axios from "axios";
 
-/** === Types KHỚP 100% BE DTO === */
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa",
+  headers: { "Content-Type": "application/json" },
+});
+
+// === Types khớp BE DTO ===
 export type ImageDTO = {
   imageId: number;
   imageUrl: string;
@@ -12,7 +17,7 @@ export type ImageDTO = {
 export type VariantDTO = {
   variantId: number;
   sku?: string | null;
-  name?: string | null;   // BE: variantName
+  name?: string | null;   // = variantName bên BE
   price?: number | null;
 };
 
@@ -37,22 +42,13 @@ export type RelatedItem = {
   imageUrl?: string | null;
 };
 
-/** BE bọc { data: ... } nên cần unwrap */
-function unwrap<T>(res: any): T {
-  const d = res?.data;
-  return (d && typeof d === "object" && "data" in d ? d.data : d) as T;
-}
-
-/** GET /api/products/:id -> { data: ProductDetail } */
 export async function getProductDetail(id: number): Promise<ProductDetail> {
-  const res = await axiosClient.get(`/products/${id}`);
-  return unwrap<ProductDetail>(res);
+  const { data } = await api.get(`/api/products/${id}`);
+  return data.data as ProductDetail; // BE bọc trong {data: ...}
 }
 
-/** GET /api/products/:id/related?limit=N -> { data: RelatedItem[] } */
+// trả về danh sách rút gọn cho related
 export async function getRelated(id: number, limit = 8): Promise<RelatedItem[]> {
-  const res = await axiosClient.get(`/products/${id}/related`, { params: { limit } });
-  return unwrap<RelatedItem[]>(res) ?? [];
+  const { data } = await api.get(`/api/products/${id}/related`, { params: { limit } });
+  return data.data as RelatedItem[];
 }
-
-export default { getProductDetail, getRelated };
