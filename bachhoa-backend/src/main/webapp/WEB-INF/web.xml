@@ -10,7 +10,7 @@
     <!-- Filter giữ mã hóa UTF-8 -->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
-        <filter-class>vn.bachhoa.web.filters.CharacterEncodingFilter</filter-class>
+        <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>CharacterEncodingFilter</filter-name>
