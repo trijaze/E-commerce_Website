@@ -146,6 +146,110 @@ INSERT INTO `productvariants` VALUES (101,1,'BEEF-001-SM','500g',250000.00,25),(
 /*!40000 ALTER TABLE `productvariants` ENABLE KEYS */;
 UNLOCK TABLES;
 
+
+-- =========================
+-- TABLE: promotions + promotion_categories + promotion_products + promotion_variants
+-- =========================
+
+DROP TABLE IF EXISTS `promotion_variants`;
+DROP TABLE IF EXISTS `promotion_products`;
+DROP TABLE IF EXISTS `promotion_categories`;
+DROP TABLE IF EXISTS `promotions`;
+
+-- =========================
+-- BẢNG CHÍNH: promotions
+-- =========================
+CREATE TABLE `promotions` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(50) NOT NULL UNIQUE,
+  `title` VARCHAR(255) DEFAULT NULL,
+  `description` TEXT DEFAULT NULL,
+  `discountType` ENUM('PERCENT', 'AMOUNT') NOT NULL DEFAULT 'PERCENT',
+  `discountValue` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `minOrderAmount` DECIMAL(10,2) DEFAULT NULL,
+  `active` TINYINT(1) NOT NULL DEFAULT 1,
+  `startAt` DATETIME DEFAULT NULL,
+  `endAt` DATETIME DEFAULT NULL,
+  `createdBy` INT DEFAULT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_promotions_code` (`code`),
+  CONSTRAINT `fk_promotions_createdBy`
+    FOREIGN KEY (`createdBy`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =====================================
+-- BẢNG LIÊN KẾT: promotion_categories
+-- =====================================
+CREATE TABLE `promotion_categories` (
+  `promotionId` INT NOT NULL,
+  `categoryId` INT NOT NULL,
+  PRIMARY KEY (`promotionId`, `categoryId`),
+  KEY `idx_promo_cat_category` (`categoryId`),
+  CONSTRAINT `fk_promo_cat_promotion`
+    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_cat_category`
+    FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =====================================
+-- BẢNG LIÊN KẾT: promotion_products
+-- =====================================
+CREATE TABLE `promotion_products` (
+  `promotionId` INT NOT NULL,
+  `productId` INT NOT NULL,
+  PRIMARY KEY (`promotionId`, `productId`),
+  KEY `idx_promo_prod_product` (`productId`),
+  CONSTRAINT `fk_promo_prod_promotion`
+    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_prod_product`
+    FOREIGN KEY (`productId`) REFERENCES `products` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =====================================
+-- BẢNG LIÊN KẾT: promotion_variants
+-- =====================================
+CREATE TABLE `promotion_variants` (
+  `promotionId` INT NOT NULL,
+  `variantId` INT NOT NULL,
+  PRIMARY KEY (`promotionId`, `variantId`),
+  KEY `idx_promo_variant_variant` (`variantId`),
+  CONSTRAINT `fk_promo_variant_promotion`
+    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_variant_variant`
+    FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =====================================
+-- DỮ LIỆU MẪU
+-- =====================================
+INSERT INTO `promotions`
+(`code`, `title`, `description`, `discountType`, `discountValue`, `minOrderAmount`, `active`, `startAt`, `endAt`, `createdBy`)
+VALUES
+('SUMMER10', 'Summer Sale 10%', 'Giảm 10% nhiều sản phẩm', 'PERCENT', 10.00, 0.00, 1, '2025-06-01 00:00:00', '2025-07-31 23:59:59', 1),
+('FRESH50', 'FRESH50 - 50k off', 'Giảm 50000 VND cho đơn hàng từ 200k', 'AMOUNT', 50000.00, 200000.00, 1, '2025-10-01 00:00:00', '2025-10-31 23:59:59', 1),
+('VIPVAR', 'VIP Variant Deal', 'Giảm 15% cho một số variant cao cấp', 'PERCENT', 15.00, 0.00, 1, '2025-08-01 00:00:00', '2025-12-31 23:59:59', 2);
+
+-- Mapping mẫu: áp dụng cho category, product và variant
+INSERT INTO `promotion_categories` (`promotionId`, `categoryId`) VALUES (1, 1), (2, 2);
+INSERT INTO `promotion_products` (`promotionId`, `productId`) VALUES (1, 3), (2, 5);
+INSERT INTO `promotion_variants` (`promotionId`, `variantId`) VALUES (3, 7), (3, 8);
+
 --
 -- Table structure for table `suppliers`
 --
