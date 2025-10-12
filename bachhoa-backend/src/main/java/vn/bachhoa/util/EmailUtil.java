@@ -14,9 +14,8 @@ import javax.mail.internet.MimeMessage;
  */
 public class EmailUtil {
     // --- CẤU HÌNH EMAIL ---
-    // Để bảo mật, trong thực tế, các thông tin này nên được đặt trong file cấu hình riêng.
-    private static final String FROM_EMAIL = "your-email@gmail.com"; // Email của bạn
-    private static final String PASSWORD = "your-gmail-app-password"; // Mật khẩu ứng dụng của Gmail
+    private static final String FROM_EMAIL = "ngthhongnhung0405@gmail.com"; 
+    private static final String PASSWORD = "zqab chsw dtev yzfq"; 
 
     /**
      * Gửi email chào mừng đến người dùng mới.

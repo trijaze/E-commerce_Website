@@ -15,10 +15,10 @@ import javax.persistence.TypedQuery;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import vn.bachhoa.jpa.JPAUtil;
-import vn.bachhoa.products.model.Product;
-import vn.bachhoa.products.model.ProductImage;
-import vn.bachhoa.products.model.ProductVariant;
+import vn.bachhoa.util.JPAUtil;
+import vn.bachhoa.model.Product;
+import vn.bachhoa.model.ProductImage;
+import vn.bachhoa.model.ProductVariant;
 
 public class ProductServiceJpa {
   private static final ObjectMapper M = new ObjectMapper();
