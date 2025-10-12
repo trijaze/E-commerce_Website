@@ -35,4 +35,13 @@
     <url-pattern>/api/products/*</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+      <servlet-name>PromotionServlet</servlet-name>
+      <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+      <servlet-name>PromotionServlet</servlet-name>
+      <url-pattern>/api/promotions</url-pattern>
+  </servlet-mapping>
+
 </web-app>
