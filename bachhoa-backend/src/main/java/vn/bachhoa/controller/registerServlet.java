@@ -6,6 +6,7 @@ import vn.bachhoa.model.User;
 import vn.bachhoa.model.AuditLog;
 import vn.bachhoa.util.PasswordUtil;
 import vn.bachhoa.util.JWTUtil;
+import vn.bachhoa.util.EmailUtil;
 import com.google.gson.Gson;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -61,6 +62,9 @@ public class registerServlet extends HttpServlet {
             // Ghi nhật ký đăng ký
             AuditLog log = new AuditLog(newUser.getUserId(), "USER_REGISTER", "Users", String.valueOf(newUser.getUserId()));
             auditLogDAO.save(log);
+            
+            // Gửi mail
+            EmailUtil.sendWelcomeEmail(newUser.getEmail(), newUser.getUsername());
             
             // Tạo token
             String accessToken = JWTUtil.generateToken(newUser, JWTUtil.ACCESS_TOKEN_EXPIRATION_MS, (Key) JWTUtil.JWT_SECRET_KEY);
