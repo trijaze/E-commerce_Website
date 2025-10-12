@@ -1,7 +1,6 @@
-// src/components/ProductCard.tsx
 import { Link } from "react-router-dom";
-import type { Product } from "../features/products/productTypes";
-import { formatCurrency } from "../utils/format";
+import { Product } from "../features/products/productTypes";
+import { formatCurrency, shortText } from "../utils/format";
 
 type Props = {
   product: Product;
@@ -9,59 +8,70 @@ type Props = {
 };
 
 export default function ProductCard({ product, onBuy }: Props) {
-  const href = `/products/${product.id}`;
+  const href = `/products/${product.productId}`;
+
+  // Xử lý URL ảnh (đã được chuẩn hóa từ productApi)
+  const imageUrl =
+    product.imageUrls?.[0]?.startsWith("http")
+      ? product.imageUrls[0]
+      : `http://localhost:8080${product.imageUrls?.[0] ?? ""}`;
 
   const handleBuy = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // chặn điều hướng sang trang chi tiết khi bấm MUA
-    e.preventDefault();
+    e.preventDefault(); // không chuyển trang khi bấm MUA
     e.stopPropagation();
     onBuy?.(product);
-    // tạm thời: nếu chưa nối giỏ hàng, cứ console
-    if (!onBuy) console.log("BUY:", product.id, product.name);
+    if (!onBuy) console.log("BUY:", product.productId, product.name);
   };
 
   return (
     <Link
       to={href}
-      className="block bg-white rounded-2xl shadow-sm hover:shadow-md transition
-                 border border-gray-100 group overflow-hidden"
+      className="block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 
+                 flex flex-col overflow-hidden hover:-translate-y-1 border border-gray-100"
     >
-      {/* Ảnh 4:3 */}
-      <div className="bg-gray-50 aspect-[4/3] w-full">
+      {/* Ảnh sản phẩm */}
+      <div className="relative bg-gray-100 flex items-center justify-center aspect-[4/3]">
         <img
-          src={product.images?.[0] ?? "/placeholder.jpg"}
+          src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="max-h-full w-auto object-contain"
           loading="lazy"
         />
+        {/* Huy hiệu giá nổi bật trên ảnh */}
+        <div className="absolute bottom-2 right-2 bg-green-500 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
+          {formatCurrency(product.basePrice)}
+        </div>
       </div>
 
       {/* Nội dung */}
-      <div className="p-3">
-        <h3 className="text-[15px] font-medium text-gray-800 line-clamp-2 min-h-[40px]">
-          {product.name}
-        </h3>
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="font-semibold text-base text-gray-800 line-clamp-1">
+            {product.name}
+          </h3>
 
-        <div className="mt-1">
-          <span className="text-emerald-600 font-semibold text-lg">
-            {formatCurrency(Number(product.price))}
-          </span>
+          {/* Nếu có thương hiệu hoặc nhà cung cấp */}
+          {product.supplierName && (
+            <div className="text-sm text-emerald-700 font-medium">
+              {product.supplierName}
+            </div>
+          )}
+
+          <p className="text-sm text-gray-600 mt-2 line-clamp-3">
+            {shortText(product.description ?? "", 100)}
+          </p>
         </div>
 
-        {/* foot */}
-        <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-          <span>Tồn kho: {product.stock ?? 0}</span>
-          {/* có thể hiển thị nhãn giảm giá/brand nếu muốn */}
+        {/* Nút MUA */}
+        <div className="mt-4">
+          <button
+            onClick={handleBuy}
+            className="w-full rounded-xl bg-green-500 text-white py-2
+                       font-semibold hover:bg-emerald-700 active:translate-y-px transition"
+          >
+            MUA
+          </button>
         </div>
-
-        {/* CTA MUA */}
-        <button
-          onClick={handleBuy}
-          className="mt-3 w-full rounded-xl bg-emerald-600 text-white py-2
-                     font-semibold hover:bg-emerald-700 active:translate-y-px"
-        >
-          MUA
-        </button>
       </div>
     </Link>
   );
