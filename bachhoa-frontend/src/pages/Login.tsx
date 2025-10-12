@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { login as loginAction } from '../features/auth/authSlice';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Card } from '@/components/ui/Card';
 
 // Schema validation cho form đăng nhập
 const schema = z.object({
@@ -49,7 +50,10 @@ export default function Login() {
 
   return (
     <div className="max-w-l mx-auto p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Đăng nhập</h2>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Đăng nhập</h1>
+        <p className="text-gray-500 text-sm mt-1">Đăng nhập để có những trải nghiệm tốt hơn!</p>
+      </div>
 
       {/* Hiển thị thông báo lỗi hoặc thành công */}
       {auth.error && !successMessage && <div className="mb-3 text-red-600 text-sm p-3 bg-red-100 rounded">{auth.error}</div>}

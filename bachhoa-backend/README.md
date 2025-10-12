@@ -55,7 +55,7 @@ sql/
 - **Orders & Status flow:** create `OrderServlet` (`/api/orders`) (owner: Thanh Trang).
 - **Auth (register/login/reset):** add `AuthServlet` and basic password hashing (owner: Hồng Nhung).
 - **Admin CRUD (Products/Variants):** add `AdminProductServlet` (owner: Phước Thịnh).
-- **Reviews:** add `ReviewServlet` (owner: Kiều Oanh).
+- **Reviews:** add `ReviewServlet` và **User Profile:** add `UserProfileServlet` (owner: Kiều Oanh).
 
 > Shipment class is intentionally omitted as per team note; track shipping status via `orders.status`.
 

@@ -8,6 +8,7 @@ const initialState: ProductsState = {
   error: null,
 };
 
+// Lấy danh sách sản phẩm (có thể kèm query)
 export const fetchProducts = createAsyncThunk<Product[], any>(
   "products/fetch",
   async (q, { rejectWithValue }) => {
@@ -22,11 +23,12 @@ export const fetchProducts = createAsyncThunk<Product[], any>(
   }
 );
 
+// Lấy chi tiết sản phẩm theo ID
 export const fetchProductById = createAsyncThunk<Product, string>(
   "products/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      return await productApi.getById(id);
+      return await productApi.getById(Number(id));
     } catch (e: unknown) {
       if (e instanceof Error) {
         return rejectWithValue({ message: e.message });
@@ -42,7 +44,9 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // ==========================
       // fetchProducts
+      // ==========================
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -53,23 +57,28 @@ const slice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
-        state.error = action.payload?.message ?? "Failed";
+        state.error = action.payload?.message ?? "Failed to fetch products";
       })
 
+      // ==========================
       // fetchProductById
+      // ==========================
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
         state.loading = false;
-        const idx = state.items.findIndex((p) => p.id === action.payload.id);
-        if (idx >= 0) state.items[idx] = action.payload;
-        else state.items.unshift(action.payload);
+        const idx = state.items.findIndex((p) => p.productId === action.payload.productId);
+        if (idx >= 0) {
+          state.items[idx] = action.payload; // cập nhật nếu đã có
+        } else {
+          state.items.unshift(action.payload); // thêm mới nếu chưa có
+        }
       })
       .addCase(fetchProductById.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
-        state.error = action.payload?.message ?? "Failed";
+        state.error = action.payload?.message ?? "Failed to fetch product detail";
       });
   },
 });
