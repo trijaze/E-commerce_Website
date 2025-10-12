@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @WebServlet("/api/auth/refresh")
 public class refreshTokenServlet extends HttpServlet {
-
+	private static final long serialVersionUID = 1L;
     private final Gson gson = new Gson();
     private static class RefreshRequest {
         String refreshToken;

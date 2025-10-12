@@ -4,55 +4,33 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
-  <display-name>bachhoa</display-name>
+    <display-name>bachhoa-backend</display-name>
 
-  <!-- CORS for local dev -->
-    <!-- Filter giữ mã hóa UTF-8 -->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
-        <filter-class>vn.bachhoa.web.filters.CharacterEncodingFilter</filter-class>
+        <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-    <!-- Filter bật CORS --> 
-  <filter>
-    <filter-name>CorsFilter</filter-name>
-    <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>CorsFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
-  <!-- Servlets -->
-  <servlet>
-    <servlet-name>HealthServlet</servlet-name>
-    <servlet-class>vn.bachhoa.web.HealthServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>HealthServlet</servlet-name>
-    <url-pattern>/api/health</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>ProductServlet</servlet-name>
-    <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ProductServlet</servlet-name>
-    <url-pattern>/api/products/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-      <servlet-name>PromotionServlet</servlet-name>
-      <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-      <servlet-name>PromotionServlet</servlet-name>
-      <url-pattern>/api/promotions</url-pattern>
-  </servlet-mapping>
-
-</web-app>
+    <filter>
+        <filter-name>JwtFilter</filter-name>
+        <filter-class>vn.bachhoa.filter.JwtFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>JwtFilter</filter-name>
+        <url-pattern>/api/secure/*</url-pattern>
+    </filter-mapping>
+    
+    </web-app>

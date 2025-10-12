@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @WebServlet("/api/categories")
 public class CategoryServlet extends HttpServlet {
-
+	private static final long serialVersionUID = 1L;
     private final ObjectMapper mapper;
     private final CategoryDAO categoryDAO;
 

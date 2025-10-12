@@ -64,7 +64,14 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
       <version>${jackson.version}</version>
+    </dependency>    
+    <!-- Thư viện cung cấp các lớp và giao thức cần thiết để gửi email qua SMTP. -->
+    <dependency>
+        <groupId>com.sun.mail</groupId>
+        <artifactId>javax.mail</artifactId>
+        <version>1.6.2</version>
     </dependency>
+    <!-- LocalDate -->
 
     <!-- JWT -->
     <dependency>
