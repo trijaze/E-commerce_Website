@@ -6,9 +6,9 @@ import com.google.gson.GsonBuilder;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import javax.servlet.*;
-import vn.nhom7.bachhoa.dao.ProductRepository;
-import vn.nhom7.bachhoa.model.Product;
-import vn.nhom7.bachhoa.dto.ProductDTO;
+import vn.bachhoa.dao.ProductRepository;
+import vn.bachhoa.model.Product;
+import vn.bachhoa.dto.ProductDTO;
 
 import java.io.IOException;
 import java.util.List;
