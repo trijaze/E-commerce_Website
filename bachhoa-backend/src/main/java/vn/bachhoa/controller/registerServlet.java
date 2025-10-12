@@ -104,4 +104,3 @@ public class registerServlet extends HttpServlet {
         resp.getWriter().write(gson.toJson(data));
     }
 }
-
