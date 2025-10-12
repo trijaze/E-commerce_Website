@@ -1,6 +1,9 @@
 // src/api/axiosClient.ts
-import axios, { AxiosRequestConfig } from "axios";
-
+import axios, {
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from "axios";
 import {
   getAccessToken,
   getRefreshToken,
@@ -9,77 +12,84 @@ import {
   clearTokens,
 } from "../utils/token";
 
-// HOA: gọi trực tiếp Tomcat (bỏ qua proxy Vite)
-const baseURL = "http://localhost:8080/bachhoa/api";
-// Ưu tiên đọc từ env; mặc định dùng '/api' để chạy qua proxy Vite (dev)
-//const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
+// Dev: để ENV trống -> dùng "/api" (proxy trong vite.config.ts)
+// Prod: set VITE_API_BASE_URL = "https://your-domain/bachhoa-backend/api" (hoặc ".../bachhoa/api")
+const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL ?? "/api";
+
 const axiosClient = axios.create({
-  baseURL,
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
-  withCredentials: false,
 });
 
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
+// ====== Helper set header an toàn cho axios v1 (AxiosHeaders hoặc object) ======
+function setAuthHeader(headers: any, token: string) {
+  if (!headers) return;
+  if (typeof headers.set === "function") {
+    // AxiosHeaders instance
+    headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    // Plain object
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+}
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((p) => {
-    if (error) p.reject(error);
-    else if (token) p.resolve(token);
-  });
+// ====== Request interceptor (gắn bearer nếu có) ======
+axiosClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    const token = getAccessToken();
+    if (token) setAuthHeader(config.headers, token);
+    return config;
+  },
+  (error: AxiosError) => Promise.reject(error)
+);
+
+// Đánh dấu đã retry để tránh vòng lặp
+type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+// Hàng đợi request chờ refresh
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (t: string) => void; reject: (e: any) => void }> = [];
+const processQueue = (error: any, token: string | null) => {
+  failedQueue.forEach(p => (token ? p.resolve(token) : p.reject(error)));
   failedQueue = [];
 };
 
-interface RetryConfig extends AxiosRequestConfig {
-  _retry?: boolean;
-}
-
-axiosClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  return config;
-});
-
+// ====== Response interceptor (tự refresh khi 401) ======
 axiosClient.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    const originalConfig = err.config as RetryConfig;
-    if (!originalConfig) return Promise.reject(err);
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const originalConfig = (error.config || {}) as RetryConfig;
 
-    if (err.response?.status === 401 && !originalConfig._retry) {
+    if (error.response?.status === 401 && !originalConfig._retry) {
       originalConfig._retry = true;
 
+      // Nếu đã có refresh đang chạy -> xếp hàng chờ token mới
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalConfig.headers = originalConfig.headers ?? {};
-            originalConfig.headers["Authorization"] = "Bearer " + token;
-            return axiosClient(originalConfig);
-          })
-          .catch((e) => Promise.reject(e));
+        }).then((newAccess) => {
+          setAuthHeader(originalConfig.headers, newAccess);
+          return axiosClient(originalConfig as any);
+        });
       }
 
       isRefreshing = true;
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        clearTokens();
-        isRefreshing = false;
-        return Promise.reject(err);
-      }
-
       try {
-        const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
-        if (data?.accessToken) setAccessToken(data.accessToken);
-        if (data?.refreshToken) setRefreshToken(data.refreshToken);
-        processQueue(null, data.accessToken);
-        originalConfig.headers = originalConfig.headers ?? {};
-        originalConfig.headers["Authorization"] = "Bearer " + data.accessToken;
-        return axiosClient(originalConfig);
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) throw new Error("No refresh token");
+
+        // Dùng axios gốc + API_BASE tuyệt đối
+        const r = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+        const newAccess = (r.data as any)?.accessToken;
+        const newRefresh = (r.data as any)?.refreshToken;
+        if (!newAccess) throw new Error("No new access token");
+
+        setAccessToken(newAccess);
+        if (newRefresh) setRefreshToken(newRefresh);
+
+        processQueue(null, newAccess);
+        setAuthHeader(originalConfig.headers, newAccess);
+        return axiosClient(originalConfig as any);
       } catch (e) {
         processQueue(e, null);
         clearTokens();
@@ -89,7 +99,7 @@ axiosClient.interceptors.response.use(
       }
     }
 
-    return Promise.reject(err);
+    return Promise.reject(error);
   }
 );
 
