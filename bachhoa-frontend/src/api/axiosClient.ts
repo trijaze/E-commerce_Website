@@ -10,11 +10,11 @@ import {
 } from "../utils/token";
 
 // HOA: gọi trực tiếp Tomcat (bỏ qua proxy Vite)
-const baseURL = "http://localhost:8080/BHweb/api";
+const baseURL = "http://localhost:8080/bachhoa/api";
 // Ưu tiên đọc từ env; mặc định dùng '/api' để chạy qua proxy Vite (dev)
 //const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080/BHweb/api",
+  baseURL,
   headers: { "Content-Type": "application/json" },
   withCredentials: false,
 });

@@ -13,13 +13,13 @@ const initialState: AuthState = {
 // --- HÀM HELPER ĐỂ GIẢI MÃ TOKEN VÀ LẤY THÔNG TIN USER ---
 const getUserFromToken = (token: string): User => {
   // Định nghĩa kiểu cho payload đã giải mã để TypeScript hiểu
-  const decodedToken: { sub: string; userId: number; role: 'user' | 'admin' } = jwtDecode(token);
+  const decodedToken: { sub: string; userId: number; role: 'customer' | 'admin' } = jwtDecode(token);
   return {
-    id: decodedToken.userId,
+    userId: decodedToken.userId,
     username: decodedToken.sub,
     role: decodedToken.role,
     // Các trường này ban đầu là rỗng và sẽ được điền đầy đủ khi `fetchMe` được gọi sau này
-    phone: '',
+    phoneNumber: '',
     email: '',
     createdAt: ''
   };

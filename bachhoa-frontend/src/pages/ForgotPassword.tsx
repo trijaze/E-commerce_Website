@@ -9,7 +9,7 @@ import { authApi } from '../api/authApi';
 const schema = z
     .object({
         username: z.string().min(3, 'Tên đăng nhập là bắt buộc'),
-        phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
+        phoneNumber: z.string().min(10, 'Số điện thoại không hợp lệ'),
         newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
         confirmPassword: z.string().min(6, 'Mật khẩu xác nhận là bắt buộc'),
     })
@@ -37,7 +37,7 @@ export default function ForgotPassword() {
         try {
             await authApi.forgotPassword({
                 username: data.username,
-                phone: data.phone,
+                phoneNumber: data.phoneNumber,
                 newPassword: data.newPassword
             });
 
@@ -70,8 +70,8 @@ export default function ForgotPassword() {
 
                 <div>
                     <label className="block text-sm font-medium mb-1">Số điện thoại đã đăng ký</label>
-                    <input {...register('phone')} type="tel" className="w-full border rounded px-3 py-2" placeholder="Số điện thoại của bạn" />
-                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
+                    <input {...register('phoneNumber')} type="tel" className="w-full border rounded px-3 py-2" placeholder="Số điện thoại của bạn" />
+                    {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>}
                 </div>
 
                 <div>

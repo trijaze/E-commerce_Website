@@ -5,12 +5,13 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { register as registerAction } from '../features/auth/authSlice';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import ChangePassword from './ChangePassword';
 
 // Schema validation không thay đổi
 const schema = z
   .object({
     username: z.string().min(3, 'Tên đăng nhập phải có ít nhất 3 ký tự'),
-    phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
+    phoneNumber: z.string().min(10, 'Số điện thoại không hợp lệ'),
     email: z.string().email('Email không hợp lệ'),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
     confirm: z.string().min(6, 'Mật khẩu xác nhận phải có ít nhất 6 ký tự'),
@@ -39,7 +40,7 @@ export default function Register() {
   const onSubmit = async (data: FormData) => {
     try {
       // Dùng unwrap() để bắt lỗi nếu thunk bị reject
-      await dispatch(registerAction({ username: data.username, phone: data.phone, email: data.email, password: data.password })).unwrap();
+      await dispatch(registerAction({ username: data.username, phoneNumber: data.phoneNumber, email: data.email, password: data.password })).unwrap();
 
       // Nếu không có lỗi, đặt thông báo thành công
       setSuccessMessage('Đăng ký thành công! Đang chuyển đến trang đăng nhập...');
@@ -72,8 +73,8 @@ export default function Register() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Số điện thoại</label>
-          <input {...register('phone')} type="tel" className="w-full border rounded px-3 py-2" placeholder="Số điện thoại của bạn" />
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
+          <input {...register('phoneNumber')} type="tel" className="w-full border rounded px-3 py-2" placeholder="Số điện thoại của bạn" />
+          {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>}
         </div>
 
         <div>
