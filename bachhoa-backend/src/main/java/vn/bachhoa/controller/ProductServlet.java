@@ -5,16 +5,15 @@ import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.util.JsonUtil;
-
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.ServletException;
-// KHÔNG dùng @WebServlet vì đã map trong web.xml (/api/products/*)
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
 public class ProductServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
