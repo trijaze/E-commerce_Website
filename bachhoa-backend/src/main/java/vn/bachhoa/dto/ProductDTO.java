@@ -44,11 +44,14 @@ public class ProductDTO {
     // Getters
     public Integer getProductId() { return productId; }
     public String getSku() { return sku; }
+
     public String getName() { return name; }
     public String getDescription() { return description; }
     public BigDecimal getBasePrice() { return basePrice; }
     public String getCategoryName() { return categoryName; }
     public String getSupplierName() { return supplierName; }
     public List<String> getImageUrls() { return imageUrls; }
+
     public List<String> getVariantNames() { return variantNames; }
+
 }

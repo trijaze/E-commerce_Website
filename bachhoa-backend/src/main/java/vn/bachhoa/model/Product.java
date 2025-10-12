@@ -64,6 +64,7 @@ public class Product implements Serializable {
     public String getSku() { return sku; }
     public void setSku(String sku) { this.sku = sku; }
 
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -78,6 +79,7 @@ public class Product implements Serializable {
 
     public Supplier getSupplier() { return supplier; }
     public void setSupplier(Supplier supplier) { this.supplier = supplier; }
+
 
     public List<ProductVariant> getVariants() { return variants; }
     public void setVariants(List<ProductVariant> variants) { this.variants = variants; }
