@@ -1,7 +1,21 @@
-// src/api/orderApi.ts
-import axiosClient from './axiosClient';
-export const orderApi = {
-  create: (payload: { items: { productId: string; quantity: number }[] }) => axiosClient.post('/orders', payload).then((r) => r.data),
-  list: () => axiosClient.get('/orders').then((r) => r.data),
-  byId: (id: string) => axiosClient.get(`/orders/${id}`).then((r) => r.data),
+import axiosClient from "./axiosClient";
+
+const orderApi = {
+  // 🟢 Lấy tất cả đơn hàng
+  getAll: () => axiosClient.get("/bachhoa/orders"),
+
+  // 🟢 Lấy 1 đơn hàng theo ID
+  getById: (id: number) => axiosClient.get(`/bachhoa/orders?id=${id}`),
+
+  // 🟢 Tạo đơn hàng mới
+  create: (data: any) => axiosClient.post("/bachhoa/orders", data),
+
+  // 🟢 Cập nhật đơn hàng (status, paymentMethod, ...)
+  update: (id: number, data: any) => axiosClient.put(`/bachhoa/orders?id=${id}`, data),
+
+  // 🔴 Xoá đơn hàng (nếu cần)
+  delete: (id: number) => axiosClient.delete(`/bachhoa/orders?id=${id}`),
 };
+
+export default orderApi;
+export { orderApi };

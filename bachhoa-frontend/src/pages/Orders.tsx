@@ -1,48 +1,59 @@
 // src/pages/Orders.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import { orderApi } from "../api/orderApi"; // ✅ import thật
+import { useNavigate } from "react-router-dom";
+
+interface OrderItem {
+  id: number;
+  productId: number;
+  quantity: number;
+  price: number;
+  status: string;
+}
 
 interface Order {
   id: number;
   status: string;
-  totalPrice: number;
-  createdAt: string;
-  items: { name: string; qty: number; price: number }[];
+  total: number;
+  createdAt?: string;
+  paymentMethod?: string;
+  items: OrderItem[];
 }
 
 export default function Orders() {
-  // Demo orders (có thể thay bằng orderApi.list())
   const [orders, setOrders] = useState<Order[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const demoOrders: Order[] = [
-      {
-        id: 1001,
-        status: 'Đang xử lý',
-        totalPrice: 270000,
-        createdAt: '2025-09-05',
-        items: [
-          { name: 'Nho', qty: 1, price: 120000 },
-          { name: 'Thịt', qty: 1, price: 150000 },
-        ],
-      },
-      {
-        id: 1002,
-        status: 'Hoàn tất',
-        totalPrice: 450000,
-        createdAt: '2025-08-30',
-        items: [
-          { name: 'Táo', qty: 2, price: 200000 },
-          { name: 'Rau cải', qty: 1, price: 50000 },
-        ],
-      },
-    ];
-
-    setOrders(demoOrders);
+    const fetchOrders = async () => {
+      try {
+        const res = await orderApi.getAll(); // ✅ gọi API thật
+        setOrders(res.data);
+      } catch (error) {
+        console.error("❌ Lỗi khi tải danh sách đơn hàng:", error);
+      }
+    };
+    fetchOrders();
   }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-100 text-green-700";
+      case "pending_payment":
+        return "bg-yellow-100 text-yellow-700";
+      case "shipped":
+        return "bg-blue-100 text-blue-700";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Đơn hàng của tôi</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+        🛒 Đơn hàng của tôi
+      </h1>
 
       {orders.length === 0 ? (
         <div className="bg-yellow-50 p-6 rounded-lg text-center text-gray-600">
@@ -61,30 +72,40 @@ export default function Orders() {
                   <div className="font-semibold text-lg text-gray-800">
                     Đơn hàng #{o.id}
                   </div>
-                  <div className="text-sm text-gray-500">Ngày đặt: {o.createdAt}</div>
+                  {o.createdAt && (
+                    <div className="text-sm text-gray-500">
+                      Ngày đặt: {new Date(o.createdAt).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
                 <div
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    o.status === 'Hoàn tất'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                    o.status
+                  )}`}
                 >
-                  {o.status}
+                  {o.status === "pending_payment"
+                    ? "Chờ thanh toán"
+                    : o.status === "paid"
+                    ? "Đã thanh toán"
+                    : o.status === "shipped"
+                    ? "Đã giao"
+                    : o.status}
                 </div>
               </div>
 
               {/* Items */}
               <div className="space-y-2">
-                {o.items.map((it, idx) => (
+                {o.items?.map((it) => (
                   <div
-                    key={idx}
+                    key={it.id}
                     className="flex justify-between text-gray-700 text-sm"
                   >
                     <span>
-                      {it.name} × {it.qty}
+                      🧾 Sản phẩm #{it.productId} × {it.quantity}
                     </span>
-                    <span>{it.price.toLocaleString()}₫</span>
+                    <span>
+                      {(it.price * it.quantity).toLocaleString()}₫
+                    </span>
                   </div>
                 ))}
               </div>
@@ -93,8 +114,18 @@ export default function Orders() {
               <div className="mt-4 flex justify-between items-center border-t pt-3">
                 <span className="font-semibold text-gray-800">Tổng cộng:</span>
                 <span className="text-lg font-bold text-green-600">
-                  {o.totalPrice.toLocaleString()}₫
+                  {o.total.toLocaleString()}₫
                 </span>
+              </div>
+
+              {/* Nút hành động */}
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => navigate(`/orders/${o.id}`)}
+                  className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Xem chi tiết
+                </button>
               </div>
             </div>
           ))}
