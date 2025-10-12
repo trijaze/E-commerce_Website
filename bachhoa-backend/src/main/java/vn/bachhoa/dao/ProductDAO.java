@@ -4,33 +4,64 @@ import vn.bachhoa.model.Product;
 import vn.bachhoa.util.JPAUtil;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.List;
 
-public class ProductDAO extends GenericDAO {
+public class ProductDAO extends GenericDAO<Product> {
 
-    public List<Product> findAll(int page, int size, String q, Integer categoryId) {
+    public ProductDAO() {
+        super(Product.class);
+    }
+
+    /**
+     * Lấy tất cả sản phẩm, preload images & variants để tránh LazyInitializationException
+     */
+    public List<Product> findAll() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            // Chỉ fetch category và supplier, không fetch images & variants bằng JOIN
             String jpql = "SELECT p FROM Product p " +
-                    (q != null && !q.isEmpty() ? "WHERE lower(p.name) LIKE lower(:q) " : "") +
-                    (categoryId != null ? (q != null && !q.isEmpty() ? "AND " : "WHERE ") + "p.category.categoryId = :cid " : "") +
-                    "ORDER BY p.productId DESC";
+                          "LEFT JOIN FETCH p.category " +
+                          "LEFT JOIN FETCH p.supplier " +
+                          "ORDER BY p.productId DESC";
+            List<Product> products = em.createQuery(jpql, Product.class).getResultList();
 
-            var query = em.createQuery(jpql, Product.class);
-            if (q != null && !q.isEmpty()) query.setParameter("q", "%" + q + "%");
-            if (categoryId != null) query.setParameter("cid", categoryId);
-            query.setFirstResult(Math.max(0, (page - 1) * size));
-            query.setMaxResults(size);
-            return query.getResultList();
+            // Preload images và variants
+            products.forEach(p -> {
+                p.getImages().size();
+                p.getVariants().size();
+            });
+
+            return products;
         } finally {
             em.close();
         }
     }
 
-    public Product findById(int id) {
+    /**
+     * Lấy danh sách sản phẩm theo categoryId
+     */
+    public List<Product> findByCategoryId(int categoryId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.find(Product.class, id);
+            String jpql = "SELECT p FROM Product p " +
+                          "LEFT JOIN FETCH p.category " +
+                          "LEFT JOIN FETCH p.supplier " +
+                          "WHERE p.category.categoryId = :categoryId " +
+                          "ORDER BY p.productId DESC";
+
+            TypedQuery<Product> query = em.createQuery(jpql, Product.class);
+            query.setParameter("categoryId", categoryId);
+
+            List<Product> products = query.getResultList();
+
+            // Preload images & variants
+            products.forEach(p -> {
+                p.getImages().size();
+                p.getVariants().size();
+            });
+
+            return products;
         } finally {
             em.close();
         }

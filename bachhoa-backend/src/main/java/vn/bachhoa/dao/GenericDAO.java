@@ -7,7 +7,13 @@ import javax.persistence.EntityTransaction;
 import java.util.List;
 import java.util.function.Function;
 
-public class GenericDAO {
+public class GenericDAO<T> {
+    private final Class<T> clazz;
+
+    public GenericDAO(Class<T> clazz) {
+        this.clazz = clazz;
+    }
+
     protected <R> R tx(Function<EntityManager, R> fn) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -24,9 +30,24 @@ public class GenericDAO {
         }
     }
 
-    protected <T> List<T> query(EntityManager em, Class<T> clazz, String jpql, Object... params) {
-        var q = em.createQuery(jpql, clazz);
-        for (int i = 0; i < params.length; i++) q.setParameter(i + 1, params[i]);
-        return q.getResultList();
+    // Thêm các hàm cơ bản
+    public T findById(int id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.find(clazz, id);
+        } finally {
+            em.close();
+        }
     }
+
+    public List<T> findAll() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT e FROM " + clazz.getSimpleName() + " e";
+            return em.createQuery(jpql, clazz).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
 }
