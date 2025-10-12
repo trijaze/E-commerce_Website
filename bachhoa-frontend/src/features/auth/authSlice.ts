@@ -69,7 +69,10 @@ export const fetchMe = createAsyncThunk<User, void>(
       const user = await authApi.me();
       return user;
     } catch (err: any) {
-      return rejectWithValue('Failed to auto-login');
+      // SỬA LỖI: Dùng rejectWithValue để thunk thất bại một cách chính xác
+      // và gửi đi một thông báo lỗi có thể dùng được trong slice.
+      const errorMessage = err?.response?.data?.error || 'Đã xảy ra lỗi không mong muốn.';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -77,6 +80,9 @@ export const fetchMe = createAsyncThunk<User, void>(
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authApi.logout();
+  } catch (e) {
+    // Việc này cho SonarLint biết rằng bạn đã xem xét khả năng có lỗi
+    // và quyết định không làm gì cả, vì finally vẫn sẽ chạy.
   } finally {
     clearTokens();
   }

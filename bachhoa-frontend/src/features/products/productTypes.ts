@@ -19,3 +19,12 @@ export type ProductsState = {
   loading: boolean;
   error?: string | null;
 };
+
+export type Review = {
+  reviewId: number;
+  rating: number;
+  title: string;
+  comment: string;
+  createdAt: string;
+  username: string;
+};

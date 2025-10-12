@@ -5,13 +5,24 @@ import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.model.ProductImage;
 import vn.bachhoa.util.JsonUtil;
+<<<<<<< HEAD
 
+=======
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.ServletException;
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+<<<<<<< HEAD
 import java.util.*;
 
+=======
+import java.util.List;
+import java.util.stream.Collectors;
+@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 public class ProductServlet extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAO();
 

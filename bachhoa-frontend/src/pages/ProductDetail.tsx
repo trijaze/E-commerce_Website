@@ -4,8 +4,13 @@ import { Link, useParams } from 'react-router-dom';
 import {
   getProductDetail,
   type ProductDetail as Detail,
+<<<<<<< HEAD
   type VariantDTO as ProductVariant,
   type ImageDTO as ProductImage,
+=======
+  type ProductVariant,
+  type ProductImage,
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 } from '@/api/productDetailApi';
 import RelatedProducts from '@/components/RelatedProducts';
 
@@ -30,6 +35,7 @@ export default function ProductDetail() {
     getProductDetail(productId)
       .then((d) => {
         if (!mounted) return;
+<<<<<<< HEAD
 
         // sort images: ảnh isMain lên trước
         const imgs = [...(d.images ?? [])].sort(
@@ -37,11 +43,18 @@ export default function ProductDetail() {
         );
 
         setDetail({ ...d, images: imgs });
+=======
+        setDetail(d);
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
         setVariantIdx(0);
         setMainImgIdx(0);
         setError(null);
       })
       .catch((e) => {
+<<<<<<< HEAD
+=======
+        console.error(e);
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
         if (!mounted) return;
         setError('Không tải được chi tiết sản phẩm.');
       })
@@ -68,6 +81,7 @@ export default function ProductDetail() {
     );
   }
 
+<<<<<<< HEAD
   const images: ProductImage[] = detail.images ?? [];
   const variants: ProductVariant[] = detail.variants ?? [];
 
@@ -77,6 +91,20 @@ export default function ProductDetail() {
     const v = variants[Math.min(variantIdx, variants.length - 1)];
     return v?.price ?? detail.basePrice ?? 0;
   }, [detail.basePrice, variants, variantIdx]);
+=======
+  const images = detail.images ?? [];
+  const variants: ProductVariant[] = detail.variants ?? [];
+
+  // Giá theo biến thể (nếu có) hoặc min/base price
+  const currentPrice = useMemo(() => {
+    if (!variants?.length) return detail?.minPrice ?? detail?.basePrice ?? 0;
+    const v = variants[Math.min(variantIdx, variants.length - 1)];
+    return v?.price ?? detail?.minPrice ?? detail?.basePrice ?? 0;
+  }, [detail, variants, variantIdx]);
+
+  const formatPrice = (v: number) =>
+    v.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 
   // Đảm bảo index hợp lệ khi danh sách ảnh đổi
   useEffect(() => {
@@ -84,7 +112,11 @@ export default function ProductDetail() {
     else if (mainImgIdx > images.length - 1) setMainImgIdx(0);
   }, [images.length, mainImgIdx]);
 
+<<<<<<< HEAD
   // Mũi tên chuyển ảnh
+=======
+  // Mũi tên chuyển ảnh — thêm z-10 để luôn click được
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
   const prevImg = useCallback(
     () => setMainImgIdx((i: number) => (images.length ? (i - 1 + images.length) % images.length : 0)),
     [images.length]
@@ -94,6 +126,14 @@ export default function ProductDetail() {
     [images.length]
   );
 
+<<<<<<< HEAD
+=======
+  const onChangeQty = (val: string) => {
+    val = val.replace(/[^\d]/g, '');
+    setQtyInput(val === '' ? '' : String(Math.min(999, Math.max(1, Number(val)))));
+  };
+
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
@@ -142,7 +182,7 @@ export default function ProductDetail() {
 
           {!!images.length && (
             <div className="mt-3 grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-2">
-              {images.map((img, idx) => (
+              {images.map((img: ProductImage, idx: number) => (
                 <button
                   key={`${img.imageId}-${idx}`}
                   type="button"
@@ -162,24 +202,44 @@ export default function ProductDetail() {
         {/* Thông tin & tùy chọn */}
         <section>
           <h1 className="text-2xl font-semibold mb-2">{detail.name}</h1>
+<<<<<<< HEAD
           <div className="text-xl font-bold text-emerald-600 mb-3">{formatPrice(currentPrice)}</div>
 
           {!!variants.length && (
+=======
+          <div className="text-xl font-bold text-rose-600 mb-3">{formatPrice(currentPrice)}</div>
+
+          {/* Biến thể (nếu có) */}
+          {!!(detail.variants?.length) && (
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
             <div className="mb-4">
               <div className="text-sm text-gray-600 mb-2">Chọn loại</div>
               <div className="flex flex-wrap gap-2">
                 {variants.map((v, i) => {
+<<<<<<< HEAD
                   const label = v.name || v.sku || `Mẫu ${i + 1}`; // ✅ khớp BE
                   const active = i === variantIdx;
                   return (
                     <button
                       key={v.variantId}
+=======
+                  const label = Object.entries(v.attributes || {})
+                    .map(([k, vv]) => `${k}: ${vv}`)
+                    .join(' · ') || `Mẫu ${i + 1}`;
+                  const active = i === variantIdx;
+                  return (
+                    <button
+                      key={v.variantId ?? i}
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
                       type="button"
                       onClick={() => setVariantIdx(i)}
                       className={`px-3 py-1.5 rounded-lg border text-sm ${
                         active ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50'
                       }`}
+<<<<<<< HEAD
                       title={v.sku ?? undefined}
+=======
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
                     >
                       {label}
                     </button>
@@ -189,15 +249,58 @@ export default function ProductDetail() {
             </div>
           )}
 
+<<<<<<< HEAD
+=======
+          {/* Số lượng */}
+          <div className="mb-4">
+            <div className="text-sm text-gray-600 mb-2">Số lượng</div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChangeQty(String(Math.max(1, Number(qtyInput || '1') - 1)))}
+                className="w-9 h-9 rounded-lg border hover:bg-gray-50"
+              >
+                −
+              </button>
+              <input
+                value={qtyInput}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeQty(e.target.value)}
+                onBlur={() => setQtyTouched(true)}
+                className="w-16 text-center rounded-lg border px-2 py-1.5"
+                inputMode="numeric"
+              />
+              <button
+                type="button"
+                onClick={() => onChangeQty(String(Math.min(999, Number(qtyInput || '1') + 1)))}
+                className="w-9 h-9 rounded-lg border hover:bg-gray-50"
+              >
+                +
+              </button>
+            </div>
+            {qtyTouched && (Number(qtyInput || '0') < 1 || Number(qtyInput) > 999) && (
+              <div className="text-xs text-rose-600 mt-1">Số lượng phải từ 1 tới 999.</div>
+            )}
+          </div>
+
+          {/* Nút hành động */}
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
           <div className="flex items-center gap-3">
             <button
               type="button"
               className="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
               onClick={() => {
+<<<<<<< HEAD
                 console.log('add-to-cart', {
                   productId,
                   variant: variants[variantIdx],
                   qty: 1,
+=======
+                // TODO: gọi API add to cart sau khi nhóm thống nhất
+                console.log('add-to-cart', {
+                  productId,
+                  variant: variants[variantIdx],
+                  qty: Math.max(1, Number(qtyInput || '1')),
+>>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
                 });
               }}
             >
