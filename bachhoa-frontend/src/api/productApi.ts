@@ -1,11 +1,16 @@
 import axiosClient from "./axiosClient";
-import type { Product } from "../features/products/productTypes";
+import type { Product} from "../features/products/productTypes";
 
 export interface ProductListQuery {
   take?: number;               // FE -> map sang limit của BE
   offset?: number;             // offset
   q?: string;                  // tìm theo tên
   categoryId?: number | string; // lọc theo danh mục
+  supplierId?: number | string;
+  minPrice?: number;
+  maxPrice?: number;
+  priceRange?: string;
+  sort?: string;
 }
 
 // Chuẩn hóa danh sách ảnh của sản phẩm
@@ -48,6 +53,11 @@ export const productApi = {
     if (q.offset != null) params.offset = q.offset;
     if (q.q) params.q = q.q;
     if (q.categoryId) params.categoryId = q.categoryId;
+    if (q.supplierId) params.supplierId = q.supplierId;
+    if (q.minPrice != null) params.minPrice = q.minPrice;
+    if (q.maxPrice != null) params.maxPrice = q.maxPrice;
+    if (q.priceRange) params.priceRange = q.priceRange;
+    if (q.sort) params.sort = q.sort;
 
     const res = await axiosClient.get("/products", { params });
     const data = res.data?.data ?? res.data;
@@ -56,14 +66,14 @@ export const productApi = {
   },
 
   // Lấy chi tiết sản phẩm theo ID
-  async getById(id: number): Promise<Product> {
+  async getById(id: number | string): Promise<Product> {
     const res = await axiosClient.get(`/products/${id}`);
     const data = res.data?.data ?? res.data;
     return toProduct(data);
   },
 
   // Lấy danh sách sản phẩm liên quan
-  async related(id: number, limit = 8): Promise<Product[]> {
+  async related(id: number | string, limit = 8): Promise<Product[]> {
     const res = await axiosClient.get(`/products/${id}/related`, {
       params: { limit },
     });

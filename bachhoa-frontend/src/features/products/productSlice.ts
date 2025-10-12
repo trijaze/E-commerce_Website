@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { productApi } from "../../api/productApi";
 import type { ProductsState, Product } from "./productTypes";
 
+
 const initialState: ProductsState = {
   items: [],
   loading: false,
@@ -11,14 +12,28 @@ const initialState: ProductsState = {
 // Lấy danh sách sản phẩm (có thể kèm query)
 export const fetchProducts = createAsyncThunk<Product[], any>(
   "products/fetch",
-  async (q, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await productApi.list(q);
+        // Ưu tiên dùng filter nếu có tham số lọc, ngược lại fallback sang list
+        if (
+            params &&
+            (params.q ||
+                params.categoryId ||
+                params.supplierId ||
+                params.minPrice ||
+                params.maxPrice ||
+                params.priceRange ||
+                params.sort)
+        ) {
+            return await productApi.list(params); // list() trong productApi đã hỗ trợ đầy đủ filter
+        }
+        // Không có filter cụ thể thì chỉ lấy danh sách bình thường
+        return await productApi.list({});
     } catch (e: unknown) {
-      if (e instanceof Error) {
-        return rejectWithValue({ message: e.message });
-      }
-      return rejectWithValue({ message: "Unknown error" });
+        if (e instanceof Error) {
+            return rejectWithValue({ message: e.message });
+        }
+        return rejectWithValue({ message: "Unknown error" });
     }
   }
 );
@@ -53,7 +68,7 @@ const slice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items.splice(0, state.items.length, ...action.payload);
       })
       .addCase(fetchProducts.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;

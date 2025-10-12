@@ -3,7 +3,8 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchProducts } from "../features/products/productSlice";
 import ProductCard from "../components/ProductCard";
 import CategoryFilter from "../components/CategoryFilter";
-import { categoryApi } from "../api/categoryApi"; 
+import { categoryApi } from "../api/categoryApi";
+import { useSearchParams } from "react-router-dom";
 
 export default function ProductList() {
   const dispatch = useAppDispatch();
@@ -12,58 +13,107 @@ export default function ProductList() {
   // Danh sách danh mục lấy từ backend
   const [categories, setCategories] = useState<{ categoryId: number; name: string }[]>([]);
 
-  // categoryId đang chọn
-  const [filter, setFilter] = useState<string>("");
+    // Bộ lọc nâng cao
+    const [filter, setFilter] = useState({
+        q: "",
+        categoryId: undefined as string | undefined,
+        minPrice: undefined as number | undefined,
+        maxPrice: undefined as number | undefined,
+        sort: "",
+    });
 
-  // Từ khóa tìm kiếm
-  const [q, setQ] = useState<string>("");
+    //Lấy query "q" từ URL (Navbar điều hướng tới /products?q=...)
+    const [searchParams] = useSearchParams();
+    const keyword = searchParams.get("q") || "";
 
-  // Gọi API sản phẩm mỗi khi q hoặc filter thay đổi
-  useEffect(() => {
-    dispatch(
-      fetchProducts({
-        take: 24,
-        q: q || undefined,
-        categoryId: filter || undefined,
-      })
-    );
-  }, [dispatch, q, filter]);
+    //Khi người dùng tìm kiếm từ Navbar, cập nhật filter.q
+    useEffect(() => {
+        setFilter((prev) => ({ ...prev, q: keyword }));
+    }, [keyword]);
 
-  // Gọi API danh mục khi load trang
-  useEffect(() => {
-    categoryApi
-      .list()
-      .then((res) => {
-        if (Array.isArray(res)) setCategories(res);
-        else setCategories([]);
-      })
-      .catch((err) => {
-        console.error("Lỗi lấy danh mục:", err);
-        setCategories([]);
-      });
-  }, []);
+    //Gọi API sản phẩm khi filter thay đổi
+    useEffect(() => {
+        dispatch(
+            fetchProducts({
+                take: 24,
+                q: filter.q || undefined,
+                categoryId: filter.categoryId || undefined,
+                minPrice: filter.minPrice,
+                maxPrice: filter.maxPrice,
+                sort: filter.sort || undefined,
+            })
+        );
+    }, [dispatch, filter]);
+
+  // Lấy danh mục sản phẩm
+    useEffect(() => {
+        categoryApi
+            .list()
+            .then((res) => (Array.isArray(res) ? setCategories(res) : setCategories([])))
+            .catch((err) => {
+                console.error("Lỗi lấy danh mục:", err);
+                setCategories([]);
+            });
+    }, []);
+
+    // Handler thay đổi
+    const handleCategoryChange = (id: string) => {
+        setFilter((prev) => ({ ...prev, categoryId: id || undefined }));
+    };
+
+    const handlePriceFilter = (min?: number, max?: number) => {
+        setFilter((prev) => ({ ...prev, minPrice: min, maxPrice: max }));
+    };
+
+    const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFilter((prev) => ({ ...prev, sort: e.target.value }));
+    };
 
   return (
     <div className="grid grid-cols-4 gap-4">
       {/* Sidebar */}
       <aside className="col-span-4 md:col-span-1 space-y-3">
-        {/* Tìm kiếm */}
-        <div className="p-3 border rounded-xl">
-          <div className="text-sm font-semibold mb-2">Tìm kiếm</div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Nhập tên sản phẩm…"
-            className="w-full border rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-
         {/* Bộ lọc danh mục */}
         <CategoryFilter
           categories={categories}
-          onChange={(id) => setFilter(id)}
-          active={filter}
+          onChange={handleCategoryChange}
+          active={filter.categoryId ?? ""}
         />
+
+          {/* Bộ lọc giá nhanh */}
+          <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="font-medium mb-2 text-sm">Khoảng giá</h2>
+              <ul className="space-y-1 text-sm">
+                  <li>
+                      <button onClick={() => handlePriceFilter(0, 50000)}>Dưới 50k</button>
+                  </li>
+                  <li>
+                      <button onClick={() => handlePriceFilter(50000, 100000)}>50k - 100k</button>
+                  </li>
+                  <li>
+                      <button onClick={() => handlePriceFilter(100000, 300000)}>100k - 300k</button>
+                  </li>
+                  <li>
+                      <button onClick={() => handlePriceFilter(300000, undefined)}>Từ 300k trở lên</button>
+                  </li>
+              </ul>
+          </div>
+
+          {/*Bộ lọc sắp xếp */}
+          <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="font-medium mb-2 text-sm">Sắp xếp theo</h2>
+              <select
+                  value={filter.sort}
+                  onChange={handleSortChange}
+                  className="border p-1 w-full text-sm"
+              >
+                  <option value="">Mặc định</option>
+                  <option value="price_asc">Giá ↑</option>
+                  <option value="price_desc">Giá ↓</option>
+                  <option value="name_az">Tên A–Z</option>
+                  <option value="name_za">Tên Z–A</option>
+              </select>
+          </div>
       </aside>
 
       {/* Main content */}
