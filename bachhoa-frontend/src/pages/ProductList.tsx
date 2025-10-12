@@ -1,30 +1,46 @@
-// src/pages/ProductList.tsx
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { fetchProducts } from '../features/products/productSlice';
-import ProductCard from '../components/ProductCard';
-import CategoryFilter from '../components/CategoryFilter';
-// HOA: BE chưa có /api/categories, tạm không import/không gọi
-// import { categoryApi } from '../api/categoryApi';
+import React, { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { fetchProducts } from "../features/products/productSlice";
+import ProductCard from "../components/ProductCard";
+import CategoryFilter from "../components/CategoryFilter";
+import { categoryApi } from "../api/categoryApi"; 
 
 export default function ProductList() {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((s) => s.products);
 
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const [filter, setFilter] = useState<string>(''); // HOA: sẽ dùng khi BE có categoryId
-  const [q, setQ] = useState<string>('');          // tìm kiếm theo tên
+  // Danh sách danh mục lấy từ backend
+  const [categories, setCategories] = useState<{ categoryId: number; name: string }[]>([]);
 
-  // HOA: gọi list sản phẩm thật từ BE (map take -> limit ở productApi)
-  useEffect(() => {
-    // Khi BE có filter theo categoryId, bật categoryId: filter || undefined
-    dispatch(fetchProducts({ take: 24, q: q || undefined /*, categoryId: filter || undefined*/ }));
-  }, [dispatch, q /*, filter*/]);
+  // categoryId đang chọn
+  const [filter, setFilter] = useState<string>("");
 
-  // HOA: tạm thời không gọi /api/categories vì BE chưa có
+  // Từ khóa tìm kiếm
+  const [q, setQ] = useState<string>("");
+
+  // Gọi API sản phẩm mỗi khi q hoặc filter thay đổi
   useEffect(() => {
-    setCategories([]);
-    // categoryApi.list().then(setCategories).catch(() => setCategories([]));
+    dispatch(
+      fetchProducts({
+        take: 24,
+        q: q || undefined,
+        categoryId: filter || undefined,
+      })
+    );
+  }, [dispatch, q, filter]);
+
+  // Gọi API danh mục khi load trang
+  useEffect(() => {
+    categoryApi
+      .list()
+      .then((res) => {
+        if (Array.isArray(res)) setCategories(res);
+        else setCategories([]);
+      })
+      .catch((err) => {
+        console.error("Lỗi lấy danh mục:", err);
+        setCategories([]);
+      });
   }, []);
 
   return (
@@ -42,22 +58,26 @@ export default function ProductList() {
           />
         </div>
 
-        {/* Lọc danh mục (hiện tạm rỗng) */}
-        <CategoryFilter categories={categories} onChange={(id) => setFilter(id)} />
+        {/* Bộ lọc danh mục */}
+        <CategoryFilter
+          categories={categories}
+          onChange={(id) => setFilter(id)}
+          active={filter}
+        />
       </aside>
 
-      {/* Main */}
+      {/* Main content */}
       <section className="col-span-4 md:col-span-3">
         <h1 className="text-xl font-semibold mb-4">Sản phẩm</h1>
 
         {loading && <div>Đang tải…</div>}
         {!loading && error && <div className="text-red-600">Lỗi: {String(error)}</div>}
-        {!loading && !error && (!items || items.length === 0) && <div>Chưa có sản phẩm.</div>}
+        {!loading && !error && items?.length === 0 && <div>Chưa có sản phẩm.</div>}
 
         {!loading && !error && items?.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {items.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.productId} product={p} />
             ))}
           </div>
         )}
