@@ -41,7 +41,7 @@ public class ProductRepository {
             case "price_asc" -> jpql.append("ORDER BY p.basePrice ASC");
             case "price_desc" -> jpql.append("ORDER BY p.basePrice DESC");
             case "name_az" -> jpql.append("ORDER BY p.name ASC");
-            case "name_za" -> jpql.append("ORDERBY p.name DESC");
+            case "name_za" -> jpql.append("ORDER BY p.name DESC");
             default -> jpql.append("ORDER BY p.productId ASC");
         }
 

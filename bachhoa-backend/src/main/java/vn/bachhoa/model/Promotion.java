@@ -1,61 +1,91 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "promotions")
-public class Promotion implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Promotion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "code", length = 50, nullable = false, unique = true)
     private String code;
 
+    @Column(name = "title", length = 255)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 20)
+    // using ENUM in DB but mapped as String here
+    @Column(name = "discountType", length = 20, nullable = false)
     private String discountType; // PERCENT | AMOUNT
 
-    @Column(precision = 18, scale = 2)
-    private BigDecimal discountValue;
+    @Column(name = "discountValue", precision = 10, scale = 2, nullable = false)
+    private BigDecimal discountValue = BigDecimal.ZERO;
 
-    @Column(precision = 18, scale = 2)
+    @Column(name = "minOrderAmount", precision = 10, scale = 2)
     private BigDecimal minOrderAmount;
 
+    @Column(name = "active", nullable = false)
     private Boolean active = true;
 
+    @Column(name = "startAt")
     private LocalDateTime startAt;
+
+    @Column(name = "endAt")
     private LocalDateTime endAt;
 
-    private Integer createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "createdBy")
+    private User createdBy;
 
+    @Column(name = "createdAt", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    public Promotion() {
-        // default constructor
-    }
+    // Many-to-many mappings to categories/products/variants via join tables
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "promotion_categories",
+            joinColumns = @JoinColumn(name = "promotionId"),
+            inverseJoinColumns = @JoinColumn(name = "categoryId", referencedColumnName = "categoryId"))
+    private Set<Category> categories = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "promotion_products",
+            joinColumns = @JoinColumn(name = "promotionId"),
+            inverseJoinColumns = @JoinColumn(name = "productId", referencedColumnName = "productId"))
+    private Set<Product> products = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "promotion_variants",
+            joinColumns = @JoinColumn(name = "promotionId"),
+            inverseJoinColumns = @JoinColumn(name = "variantId", referencedColumnName = "variantId"))
+    private Set<ProductVariant> variants = new HashSet<>();
+
+    // --- Constructors, getters, setters ---
+
+    public Promotion() {}
 
     @PrePersist
-    protected void onCreate() {
+    public void prePersist() {
         createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    public void preUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
-    // --- Getters / Setters ---
+    // getters & setters (generate or write manually)
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -86,12 +116,18 @@ public class Promotion implements Serializable {
     public LocalDateTime getEndAt() { return endAt; }
     public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
 
-    public Integer getCreatedBy() { return createdBy; }
-    public void setCreatedBy(Integer createdBy) { this.createdBy = createdBy; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Set<Category> getCategories() { return categories; }
+    public void setCategories(Set<Category> categories) { this.categories = categories; }
+
+    public Set<Product> getProducts() { return products; }
+    public void setProducts(Set<Product> products) { this.products = products; }
+
+    public Set<ProductVariant> getVariants() { return variants; }
+    public void setVariants(Set<ProductVariant> variants) { this.variants = variants; }
 }

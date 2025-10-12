@@ -6,13 +6,59 @@ import vn.bachhoa.util.JPAUtil;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.EntityTransaction;
-import java.util.ArrayList;
 import java.util.List;
-
 
 public class PromotionDAO {
 
-    public Promotion findById(int id) {
+    public Promotion create(Promotion p) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.persist(p);
+            tx.commit();
+            return p;
+        } catch (Exception ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Promotion update(Promotion p) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Promotion merged = em.merge(p);
+            tx.commit();
+            return merged;
+        } catch (Exception ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
+
+    public void delete(Integer id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Promotion p = em.find(Promotion.class, id);
+            if (p != null) em.remove(p);
+            tx.commit();
+        } catch (Exception ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Promotion findById(Integer id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.find(Promotion.class, id);
@@ -43,107 +89,43 @@ public class PromotionDAO {
         }
     }
 
-    public int create(Promotion p, List<Integer> categoryIds) throws Exception {
+    // active for category (current time check)
+    public List<Promotion> listActiveForCategory(Integer categoryId) {
         EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
         try {
-            tx.begin();
-            em.persist(p);
-            em.flush(); // ensure id generated
-            Integer promoId = p.getId();
-            if (categoryIds != null && !categoryIds.isEmpty()) {
-                // insert mapping rows via native SQL
-                for (Integer catId : categoryIds) {
-                    em.createNativeQuery("INSERT INTO promotion_categories (promotionId, categoryId) VALUES (?, ?)")
-                        .setParameter(1, promoId)
-                        .setParameter(2, catId)
-                        .executeUpdate();
-                }
-            }
-            tx.commit();
-            return promoId;
-        } catch (Exception ex) {
-            if (tx.isActive()) tx.rollback();
-            throw ex;
+            TypedQuery<Promotion> q = em.createQuery(
+                "SELECT DISTINCT p FROM Promotion p JOIN p.categories c WHERE c.categoryId = :catId AND p.active = true AND (p.startAt IS NULL OR p.startAt <= CURRENT_TIMESTAMP) AND (p.endAt IS NULL OR p.endAt >= CURRENT_TIMESTAMP) ORDER BY p.startAt",
+                Promotion.class);
+            q.setParameter("catId", categoryId);
+            return q.getResultList();
         } finally {
             em.close();
         }
     }
 
-    public void update(Promotion p, List<Integer> categoryIds) throws Exception {
+    public List<Promotion> listActiveForProduct(Integer productId) {
         EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
         try {
-            tx.begin();
-            em.merge(p);
-            // replace mappings
-            em.createNativeQuery("DELETE FROM promotion_categories WHERE promotionId = ?")
-                .setParameter(1, p.getId())
-                .executeUpdate();
-            if (categoryIds != null && !categoryIds.isEmpty()) {
-                for (Integer catId : categoryIds) {
-                    em.createNativeQuery("INSERT INTO promotion_categories (promotionId, categoryId) VALUES (?, ?)")
-                        .setParameter(1, p.getId())
-                        .setParameter(2, catId)
-                        .executeUpdate();
-                }
-            }
-            tx.commit();
-        } catch (Exception ex) {
-            if (tx.isActive()) tx.rollback();
-            throw ex;
+            TypedQuery<Promotion> q = em.createQuery(
+                "SELECT DISTINCT p FROM Promotion p JOIN p.products pr WHERE pr.productId = :pid AND p.active = true AND (p.startAt IS NULL OR p.startAt <= CURRENT_TIMESTAMP) AND (p.endAt IS NULL OR p.endAt >= CURRENT_TIMESTAMP) ORDER BY p.startAt",
+                Promotion.class);
+            q.setParameter("pid", productId);
+            return q.getResultList();
         } finally {
             em.close();
         }
     }
 
-    public void delete(int id) throws Exception {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Promotion p = em.find(Promotion.class, id);
-            if (p != null) em.remove(p);
-            tx.commit();
-        } catch (Exception ex) {
-            if (tx.isActive()) tx.rollback();
-            throw ex;
-        } finally {
-            em.close();
-        }
-    }
-
-    public List<Promotion> listActiveForCategory(int categoryId) {
+    public List<Promotion> listActiveForVariant(Integer variantId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String sql = "SELECT p.* FROM promotions p JOIN promotion_categories pc ON p.id = pc.promotionId " +
-                         "WHERE pc.categoryId = :catId AND p.active = 1 AND p.startAt <= NOW() AND p.endAt >= NOW() ORDER BY p.startAt";
-            @SuppressWarnings("unchecked")
-            List<Promotion> list = em.createNativeQuery(sql, Promotion.class)
-                    .setParameter("catId", categoryId)
-                    .getResultList();
-            return list;
-        } finally {
-            em.close();
-        }
-    }
-
-    public List<Integer> loadCategoryIds(int promotionId) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            @SuppressWarnings("unchecked")
-            List<Integer> cats = em.createNativeQuery("SELECT categoryId FROM promotion_categories WHERE promotionId = ?")
-                    .setParameter(1, promotionId)
-                    .getResultList();
-            return new ArrayList<>(cats);
+            TypedQuery<Promotion> q = em.createQuery(
+                "SELECT DISTINCT p FROM Promotion p JOIN p.variants v WHERE v.variantId = :vid AND p.active = true AND (p.startAt IS NULL OR p.startAt <= CURRENT_TIMESTAMP) AND (p.endAt IS NULL OR p.endAt >= CURRENT_TIMESTAMP) ORDER BY p.startAt",
+                Promotion.class);
+            q.setParameter("vid", variantId);
+            return q.getResultList();
         } finally {
             em.close();
         }
     }
 }
-
-
-/**
- * PromotionDAO: CRUD using JPA EntityManager.
- * Note: category mappings (promotion_categories) handled with native SQL here.
- */
