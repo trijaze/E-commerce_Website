@@ -1,51 +1,26 @@
 import axiosClient from "./axiosClient";
 import type { Product } from "../features/products/productTypes";
 
-// URL gốc (không kèm /api)
-export const BASE_URL = "http://localhost:8080/bachhoa";
-
 export interface ProductListQuery {
-  take?: number;              // FE -> map sang limit của BE
-  offset?: number;            // offset
-  q?: string;                 // tìm theo tên
+  take?: number;               // FE -> map sang limit của BE
+  offset?: number;             // offset
+  q?: string;                  // tìm theo tên
   categoryId?: number | string; // lọc theo danh mục
 }
 
 // Chuẩn hóa danh sách ảnh của sản phẩm
 function normalizeImages(x: any): string[] {
-  // Nếu backend trả về imageUrls (mảng string)
   if (Array.isArray(x.imageUrls)) {
     return x.imageUrls.map((path: string) => {
       if (!path) return "";
       if (path.startsWith("http")) return path; // đã đủ URL
       if (path.startsWith("/bachhoa")) return `http://localhost:8080${path}`;
-      if (path.startsWith("images/")) return `${BASE_URL}/${path}`; // quan trọng nè
-      return `${BASE_URL}/images/${path}`;
+      if (path.startsWith("images/")) return `/bachhoa/${path}`;
+      return `/bachhoa/images/${path}`;
     }).filter(Boolean);
   }
-
-  // Cũ: nếu backend trả về images hoặc imageUrl
-  if (Array.isArray(x.images)) {
-    return x.images.map((i: any) => {
-      const path = i?.imageUrl ?? i?.url ?? i?.image ?? "";
-      if (!path) return "";
-      if (path.startsWith("http")) return path;
-      if (path.startsWith("/bachhoa")) return `http://localhost:8080${path}`;
-      return `${BASE_URL}/images/${path}`;
-    }).filter(Boolean);
-  }
-
-  if (x.imageUrl) {
-    const path = x.imageUrl;
-    if (path.startsWith("http")) return [path];
-    if (path.startsWith("/bachhoa")) return [`http://localhost:8080${path}`];
-    if (path.startsWith("images/")) return [`${BASE_URL}/${path}`];
-    return [`${BASE_URL}/images/${path}`];
-  }
-
   return [];
 }
-
 
 // Chuẩn hóa dữ liệu trả về từ BE sang dạng Product của FE
 function toProduct(x: any): Product {

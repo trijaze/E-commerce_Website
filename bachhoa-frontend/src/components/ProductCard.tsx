@@ -1,8 +1,6 @@
-// src/components/ProductCard.tsx
 import { Link } from "react-router-dom";
 import { Product } from "../features/products/productTypes";
 import { formatCurrency, shortText } from "../utils/format";
-import { BASE_URL } from "../api/productApi";
 
 type Props = {
   product: Product;
@@ -12,14 +10,11 @@ type Props = {
 export default function ProductCard({ product, onBuy }: Props) {
   const href = `/products/${product.productId}`;
 
-  
+  // Xử lý URL ảnh (đã được chuẩn hóa từ productApi)
   const imageUrl =
-  product.imageUrls?.[0]?.startsWith("http")
-    ? product.imageUrls[0]
-    : `${BASE_URL}/${product.imageUrls[0]}`;
-
-
-
+    product.imageUrls?.[0]?.startsWith("http")
+      ? product.imageUrls[0]
+      : `http://localhost:8080${product.imageUrls?.[0] ?? ""}`;
 
   const handleBuy = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault(); // không chuyển trang khi bấm MUA
@@ -61,19 +56,14 @@ export default function ProductCard({ product, onBuy }: Props) {
               {product.supplierName}
             </div>
           )}
-          
 
           <p className="text-sm text-gray-600 mt-2 line-clamp-3">
             {shortText(product.description ?? "", 100)}
           </p>
         </div>
 
-        {/* Thông tin thêm + nút MUA */}
+        {/* Nút MUA */}
         <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-           
-          </div>
-
           <button
             onClick={handleBuy}
             className="w-full rounded-xl bg-green-500 text-white py-2
