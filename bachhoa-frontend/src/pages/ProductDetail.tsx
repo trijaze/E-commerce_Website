@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// src/pages/ProductDetail.tsx
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   getProductDetail,
@@ -15,343 +16,252 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Biến thể & ảnh
   const [variantIdx, setVariantIdx] = useState(0);
   const [mainImgIdx, setMainImgIdx] = useState(0);
 
-  // --- Số lượng sản phẩm
+  // Số lượng
   const [qtyInput, setQtyInput] = useState('1');
   const [qtyTouched, setQtyTouched] = useState(false);
 
-  const qtyNum = useMemo(() => {
-    if (qtyInput === '') return undefined;
-    const n = parseInt(qtyInput, 10);
-    return Number.isNaN(n) ? undefined : n;
-  }, [qtyInput]);
-
-  const qtyInvalid = qtyInput === '0';
-  const canBuy = !qtyInvalid && qtyInput !== '' && (qtyNum ?? 0) >= 1;
-
-  const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value.replace(/[^\d]/g, '');
-    setQtyInput(v);
-    if (!qtyTouched) setQtyTouched(true);
-  };
-
-  const handleQtyBlur = () => {
-    if (qtyInput === '' || qtyInput === '0') {
-      setQtyInput('1');
-      setQtyTouched(false);
-    }
-  };
-
-  const decQty = () => setQtyInput(String(Math.max(1, (qtyNum ?? 1) - 1)));
-  const incQty = () => setQtyInput(String((qtyNum ?? 1) + 1));
-
-  // --- Thumbnails scroll
-  const thumbsRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
-    let alive = true;
-    if (!productId || Number.isNaN(productId)) {
-      setError('Đường dẫn sản phẩm không hợp lệ');
-      setLoading(false);
-      return;
-    }
-
+    let mounted = true;
     setLoading(true);
-    window.scrollTo(0, 0);
-
     getProductDetail(productId)
-      .then((d) => {
-        if (!alive) return;
-        setDetail(d);
-        setMainImgIdx(0);
+      .then((res) => {
+        if (!mounted) return;
+        setDetail(res);
         setVariantIdx(0);
-        setQtyInput('1');
-        document.title = `${d.name} - Bách Hóa Online`;
+        // Ảnh chính nếu có ảnh isMain
+        const idx = res.images?.findIndex((i) => i.isMain) ?? -1;
+        setMainImgIdx(idx >= 0 ? idx : 0);
       })
-      .catch((e: any) => setError(e?.message || 'Lỗi tải dữ liệu'))
-      .finally(() => alive && setLoading(false));
-
+      .catch((e: unknown) => setError((e as Error).message || 'Load thất bại'))
+      .finally(() => mounted && setLoading(false));
     return () => {
-      alive = false;
+      mounted = false;
     };
   }, [productId]);
 
-  const fmt = (n: number) =>
-    new Intl.NumberFormat('vi-VN').format(n || 0) + ' đ';
-
-  const formatVariantLabel = (v: ProductVariant) => {
-    const attrs = v.attributes ?? {};
-    const keys = Object.keys(attrs);
-    const label =
-      keys.length === 1
-        ? String(Object.values(attrs)[0])
-        : keys.map((k) => `${k}: ${attrs[k]}`).join(' / ');
-    return `${label} — ${fmt(Number(v.price || 0))}`;
-  };
-
-  const variants = useMemo(() => {
-    const arr = detail?.variants ?? [];
-    const seen = new Set<string>();
-    return arr.filter((v) => {
-      const key = JSON.stringify(v.attributes || {});
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [detail]);
-
-  const images = useMemo(() => {
-    const arr = detail?.images ?? [];
-    return arr.length ? arr : [{ imageId: -1, imageUrl: '/logo.png', isMain: true }];
-  }, [detail]);
+  const images = detail?.images ?? [];
+  const variants: ProductVariant[] = detail?.variants ?? [];
 
   const currentPrice = useMemo(() => {
-    if (!detail) return 0;
-    if (variants?.length)
-      return Number(variants[variantIdx]?.price || detail.minPrice);
-    return Number(detail.minPrice || 0);
+    if (!variants?.length) return detail?.minPrice ?? detail?.basePrice ?? 0;
+    const v = variants[Math.min(variantIdx, variants.length - 1)];
+    return v?.price ?? detail?.minPrice ?? detail?.basePrice ?? 0;
   }, [detail, variants, variantIdx]);
 
-  const priceRangeLabel = useMemo(() => {
-    if (!detail) return fmt(0);
-    const prices = variants?.length
-      ? variants.map((v) => Number(v.price || 0))
-      : [Number(detail.minPrice || 0)];
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    return min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
-  }, [detail, variants]);
+  const formatPrice = (v: number) =>
+    v.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
-  const base = Number(detail?.basePrice || 0);
-  const showDiscount = base > 0 && base > currentPrice;
-  const pct = showDiscount ? Math.round(((base - currentPrice) / base) * 100) : 0;
-
-  const prevImg = () => setMainImgIdx((i) => Math.max(0, i - 1));
-  const nextImg = () => setMainImgIdx((i) => Math.min(images.length - 1, i + 1));
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') prevImg();
-      if (e.key === 'ArrowRight') nextImg();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [images.length]);
-
-  // ===================== REVIEW =====================
-  const [reviews, setReviews] = useState<
-    { id: number; userName: string; rating: number; comment: string; createdAt: string }[]
-  >([]);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-
-  useEffect(() => {
-    if (!productId) return;
-    fetch(`/api/reviews?productId=${productId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok) setReviews(data.data);
-      })
-      .catch(() => {});
-  }, [productId]);
-
-  const handleAddReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new URLSearchParams();
-    formData.append('productId', String(productId));
-    formData.append('userId', '1'); // mock user id
-    formData.append('rating', rating.toString());
-    formData.append('comment', comment);
-
-    const res = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString(),
+  const decQty = useCallback(() => {
+    setQtyTouched(true);
+    setQtyInput((prev) => {
+      const n = Math.max(1, parseInt(prev || '1', 10) - 1);
+      return String(n);
     });
+  }, []);
 
-    const data = await res.json();
-    if (data.ok) {
-      alert('Đã gửi đánh giá!');
-      setComment('');
-      fetch(`/api/reviews?productId=${productId}`)
-        .then((r) => r.json())
-        .then((data) => data.ok && setReviews(data.data));
-    }
+  const incQty = useCallback(() => {
+    setQtyTouched(true);
+    setQtyInput((prev) => {
+      const n = Math.max(1, parseInt(prev || '1', 10) + 1);
+      return String(n);
+    });
+  }, []);
+
+  const onQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQtyTouched(true);
+    const val = e.target.value.replace(/[^\d]/g, '');
+    setQtyInput(val === '' ? '' : String(Math.min(999, Math.max(1, Number(val)))));
   };
 
-  // ===================== SCROLL THUMBNAILS =====================
-  useEffect(() => {
-    const el = thumbsRef.current;
-    const btn = el?.querySelector<HTMLButtonElement>(
-      `button[data-idx="${mainImgIdx}"]`
+  const prevImg = () =>
+    setMainImgIdx((i) => (images.length ? (i - 1 + images.length) % images.length : 0));
+  const nextImg = () =>
+    setMainImgIdx((i) => (images.length ? (i + 1) % images.length : 0));
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-10">
+        <div className="animate-pulse text-gray-500">Đang tải chi tiết sản phẩm…</div>
+      </div>
     );
-    if (el && btn) {
-      const bx = btn.offsetLeft - el.clientWidth / 2 + btn.clientWidth / 2;
-      el.scrollTo({ left: Math.max(0, bx), behavior: 'smooth' });
-    }
-  }, [mainImgIdx]);
+  }
 
-  // ===================== RENDER =====================
-  if (loading) return <div className="p-6">Đang tải...</div>;
-  if (error) return <div className="p-6 text-red-600">Lỗi: {error}</div>;
-  if (!detail) return <div className="p-6">Không tìm thấy sản phẩm.</div>;
-
-  const hero = images[mainImgIdx]?.imageUrl ?? '/logo.png';
+  if (error || !detail) {
+    return (
+      <div className="container mx-auto px-4 py-10">
+        <p className="text-red-600">Lỗi: {error || 'Không tìm thấy sản phẩm'}</p>
+        <Link to="/" className="text-indigo-600 underline">Quay lại trang chủ</Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
+    <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <div className="mb-3 text-sm text-gray-500">
-        <Link to="/" className="hover:underline">Trang chủ</Link> /
-        <Link to="/products" className="hover:underline ml-1">Sản phẩm</Link> /
-        <span className="ml-1 text-gray-700">{detail.name}</span>
-      </div>
+      <nav className="text-sm mb-6 text-gray-600">
+        <Link to="/" className="hover:underline">Trang chủ</Link>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900">{detail.name}</span>
+      </nav>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Ảnh sản phẩm */}
-        <div>
-          <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-gray-50">
-            <img src={hero} alt={detail.name} className="h-full w-full object-cover" />
-          </div>
-          <div ref={thumbsRef} className="mt-2 flex gap-2 overflow-x-auto">
-            {images.map((img, i) => (
-              <button
-                key={img.imageId ?? `img-${i}`}
-                data-idx={i}
-                onClick={() => setMainImgIdx(i)}
-                className={`h-16 w-24 overflow-hidden rounded-xl border ${
-                  i === mainImgIdx ? 'ring-2 ring-emerald-500' : ''
-                }`}
-              >
-                <img
-                  src={img.imageUrl}
-                  alt={`Ảnh ${i + 1}`}
-                  className="h-full w-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
+        <section className="relative">
+          <div
+            className="relative w-full aspect-square bg-white border rounded-2xl flex items-center justify-center overflow-hidden"
+          >
+            {images.length ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={images[mainImgIdx]?.imageUrl}
+                alt={detail.name}
+                className="max-h-full max-w-full object-contain"
+              />
+            ) : (
+              <div className="text-sm text-gray-400">Chưa có ảnh</div>
+            )}
 
-        {/* Panel phải */}
-        <div className="rounded-2xl border bg-white p-5 shadow-sm">
-          <h1 className="text-2xl font-semibold">{detail.name}</h1>
-          <div className="mt-2 flex items-center gap-3">
-            <div className="text-emerald-600 text-3xl font-bold">
-              {priceRangeLabel}
+            {/* Nút mũi tên */}
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Ảnh trước"
+                  onClick={prevImg}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 px-3 py-2 hover:bg-white"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  aria-label="Ảnh kế"
+                  onClick={nextImg}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 px-3 py-2 hover:bg-white"
+                >
+                  ›
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {!!images.length && (
+            <div className="mt-3 grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-2">
+              {images.map((img, idx) => (
+                <button
+                  key={`${img.imageUrl}-${idx}`}
+                  type="button"
+                  onClick={() => setMainImgIdx(idx)}
+                  className={`border rounded-lg overflow-hidden aspect-square ${
+                    idx === mainImgIdx ? 'ring-2 ring-indigo-500' : 'hover:opacity-90'
+                  }`}
+                  title={`Ảnh ${idx + 1}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.imageUrl} alt={`${detail.name} ${idx + 1}`} className="object-cover w-full h-full" />
+                </button>
+              ))}
             </div>
-            {showDiscount && <span className="text-red-500 font-semibold">-{pct}%</span>}
+          )}
+        </section>
+
+        {/* Thông tin & tùy chọn */}
+        <section>
+          <h1 className="text-2xl font-semibold mb-2">{detail.name}</h1>
+          <div className="text-xl font-bold text-rose-600 mb-4">
+            {formatPrice(currentPrice)}
           </div>
 
-          {variants?.length > 0 && (
-            <div className="mt-5">
-              <div className="mb-1 text-sm font-medium">Chọn biến thể</div>
+          {/* Chọn biến thể */}
+          {variants.length > 0 && (
+            <div className="mb-4">
+              <label className="block mb-1 text-sm text-gray-600">Biến thể</label>
               <select
-                className="w-full rounded-xl border px-3 py-2"
+                className="w-full border rounded-md px-3 py-2"
                 value={variantIdx}
                 onChange={(e) => setVariantIdx(Number(e.target.value))}
               >
-                {variants.map((v, i) => (
-                  <option key={v.variantId ?? `variant-${i}`} value={i}>
-                    {formatVariantLabel(v)}
-                  </option>
-                ))}
+                {variants.map((v, i) => {
+                  // Hiển thị label biến thể đẹp: key=value, key2=value2…
+                  const label =
+                    typeof v.attributes === 'object' && v.attributes
+                      ? Object.entries(v.attributes as Record<string, string>)
+                          .map(([k, val]) => `${k}: ${val}`)
+                          .join(', ')
+                      : `Biến thể ${i + 1}`;
+
+                  return (
+                    <option key={i} value={i}>
+                      {label} — {formatPrice(v.price)}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex items-stretch">
-              <button type="button" onClick={decQty} className="h-10 w-10 rounded-l-xl border bg-white">-</button>
+          {/* Số lượng */}
+          <div className="mb-6">
+            <label className="block mb-1 text-sm text-gray-600">Số lượng</label>
+            <div className="inline-flex items-center border rounded-md">
+              <button type="button" onClick={decQty} className="px-3 py-2">-</button>
               <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
                 value={qtyInput}
-                onChange={handleQtyChange}
-                onBlur={handleQtyBlur}
-                className="h-10 w-20 text-center border-t border-b"
+                onChange={onQtyChange}
+                onBlur={() => {
+                  if (qtyInput === '' || Number(qtyInput) < 1) setQtyInput('1');
+                }}
+                className="w-16 text-center outline-none py-2"
+                inputMode="numeric"
               />
-              <button type="button" onClick={incQty} className="h-10 w-10 rounded-r-xl border bg-white">+</button>
+              <button type="button" onClick={incQty} className="px-3 py-2">+</button>
             </div>
+            {qtyTouched && (qtyInput === '' || Number(qtyInput) < 1) && (
+              <p className="text-xs text-rose-600 mt-1">Số lượng tối thiểu là 1</p>
+            )}
+          </div>
+
+          {/* Nút hành động (demo) */}
+          <div className="flex gap-3">
             <button
-              disabled={!canBuy}
-              className="flex-1 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
+              type="button"
+              className="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+              onClick={() =>
+                console.log('add-to-cart', {
+                  productId,
+                  variant: variants[variantIdx],
+                  qty: Math.max(1, Number(qtyInput || '1')),
+                })
+              }
             >
               Thêm vào giỏ
             </button>
+            <button
+              type="button"
+              className="px-5 py-2 rounded-xl border hover:bg-gray-50"
+            >
+              Mua ngay
+            </button>
           </div>
-        </div>
+
+          {/* Mô tả */}
+          {detail.description && (
+            <div className="mt-8 prose max-w-none">
+              <h2 className="text-lg font-semibold mb-2">Mô tả</h2>
+              <p className="whitespace-pre-line text-gray-700">{detail.description}</p>
+            </div>
+          )}
+        </section>
       </div>
 
-      {/* Mô tả */}
-      {detail.description && (
-        <div className="mt-10">
-          <h2 className="mb-3 text-lg font-semibold">Thông tin sản phẩm</h2>
-          <div className="rounded-2xl border bg-white p-5 text-gray-700 whitespace-pre-line">
-            {detail.description}
-          </div>
-        </div>
-      )}
-
       {/* Sản phẩm liên quan */}
-      <RelatedProducts productId={id ?? ''} limit={8} />
-
-      {/* Đánh giá */}
-      <section id="reviews" className="mt-10 rounded-2xl border bg-white p-5">
-        <h2 className="text-lg font-semibold mb-3">Đánh giá & nhận xét</h2>
-
-        <form onSubmit={handleAddReview} className="mb-5 space-y-3">
-          <label className="block text-sm font-medium text-gray-700">
-            Đánh giá (sao):
-            <select
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              className="ml-2 rounded border px-2 py-1"
-            >
-              {[5, 4, 3, 2, 1].map((n) => (
-                <option key={`rate-${n}`} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Nhập nhận xét của bạn..."
-            className="w-full rounded border px-3 py-2"
-            rows={3}
-          />
-
-          <button
-            type="submit"
-            className="rounded bg-emerald-600 px-4 py-2 text-white font-semibold hover:bg-emerald-700"
-          >
-            Gửi đánh giá
-          </button>
-        </form>
-
-        {reviews.length === 0 ? (
-          <p className="text-gray-500">Chưa có đánh giá nào.</p>
-        ) : (
-          <ul className="space-y-3">
-            {reviews.map((r) => (
-              <li key={`review-${r.id}`} className="rounded-xl border p-3">
-                <div className="font-semibold text-gray-800">{r.userName}</div>
-                <div className="text-yellow-500 text-sm">⭐ {r.rating}/5</div>
-                <div className="text-gray-700 mt-1">{r.comment}</div>
-                <div className="text-xs text-gray-400">
-                  {new Date(r.createdAt).toLocaleString()}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="mt-10">
+        <RelatedProducts productId={productId} />
+      </div>
     </div>
   );
 }

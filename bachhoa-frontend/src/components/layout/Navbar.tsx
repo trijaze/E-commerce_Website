@@ -1,19 +1,24 @@
 // src/components/layout/Navbar.tsx
-import { Link, NavLink, useNavigate} from 'react-router-dom';
-import { useAppSelector } from '../../app/hooks';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../../app/hooks';
 import { useState, Fragment } from 'react';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
+import { logout } from '../../features/auth/authSlice';
 
 
 export default function Navbar() {
   const cartCount = useAppSelector((s) =>
     s.cart.items.reduce((a, b) => a + b.qty, 0)
   );
+
+  const { user } = useAppSelector((s) => s.auth);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault(); // Ngăn trang tải lại
@@ -21,6 +26,12 @@ export default function Navbar() {
       navigate(`/products/search?q=${searchTerm.trim()}`);
       setSearchTerm(''); // Reset ô tìm kiếm
     }
+  };
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    dispatch(logout());
+    window.location.href = '/'; // Chuyển hướng về trang chủ sau khi đăng xuất
   };
 
   const navItems = [
@@ -72,64 +83,72 @@ export default function Navbar() {
               )}
             </NavLink>
           ))}
-
+          {/*Cập nhật khi có user và khi không}
           {/* User Dropdown */}
-          <Menu as="div" className="relative">
-            <Menu.Button className="flex items-center gap-2 hover:text-blue-600">
-              <img
-                src="/user.png"
-                alt="User"
-                className="w-9 h-9 rounded-full border"
-              />
-              <ChevronDownIcon className="w-4 h-4" />
-            </Menu.Button>
+          {user ? (
+            <Menu as="div" className="relative">
+              <Menu.Button className="flex items-center gap-2 hover:text-blue-600">
+                <img
+                  src="/user.png"
+                  alt="User"
+                  className="w-9 h-9 rounded-full border"
+                />
+                <ChevronDownIcon className="w-4 h-4" />
+              </Menu.Button>
 
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-200"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="transition ease-in duration-150"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
-                <Menu.Item>
-                  {({ active }) => (
-                    <Link
-                      to="/profile"
-                      className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
-                        }`}
-                    >
-                      Profile
-                    </Link>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <Link
-                      to="/settings"
-                      className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
-                        }`}
-                    >
-                      Settings
-                    </Link>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={() => console.log("Logout clicked")}
-                      className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100 text-red-600' : 'text-red-500'
-                        }`}
-                    >
-                      Logout
-                    </button>
-                  )}
-                </Menu.Item>
-              </Menu.Items>
-            </Transition>
-          </Menu>
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="transition ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <Link
+                        to="/profile"
+                        className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
+                          }`}
+                      >
+                        Profile
+                      </Link>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <Link
+                        to="/settings"
+                        className={`block px-4 py-2 text-sm ${active ? 'bg-gray-100 text-blue-600' : 'text-gray-700'
+                          }`}
+                      >
+                        Settings
+                      </Link>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={handleLogout}
+                        className={`block w-full text-left px-4 py-2 text-sm ${active ? 'bg-gray-100 text-red-600' : 'text-red-500'
+                          }`}
+                      >
+                        Logout
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          ) : (
+            // Nếu chưa đăng nhập: Hiển thị nút Đăng nhập/Đăng ký
+            <div className="flex items-center gap-4">
+              <Link to="/login" className="text-sm font-medium hover:text-blue-600">Log in</Link>
+              <Link to="/register" className="text-sm font-medium bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600">Register</Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -180,6 +199,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </nav >
   );
 }

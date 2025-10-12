@@ -41,13 +41,12 @@ export default function Profile() {
               <h2 className="text-2xl font-bold text-gray-800">{user.name || 'Người dùng'}</h2>
               <p className="text-gray-500">{user.email}</p>
               <span
-                className={`mt-2 inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                  user.role === 'ADMIN'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-green-100 text-green-700'
-                }`}
+                className={`mt-2 inline-block px-3 py-1 text-sm font-medium rounded-full ${user.role === 'admin'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-green-100 text-green-700'
+                  }`}
               >
-                {user.role === 'ADMIN' ? 'Quản trị viên' : 'Khách hàng'}
+                {user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}
               </span>
             </div>
           </div>
@@ -67,7 +66,7 @@ export default function Profile() {
               <div>
                 <p className="text-sm text-gray-500">Vai trò</p>
                 <p className="font-medium">
-                  {user.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng thường'}
+                  {user.role === 'admin' ? 'Quản trị viên' : 'Người dùng thường'}
                 </p>
               </div>
               <div>

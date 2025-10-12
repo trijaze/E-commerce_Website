@@ -1,67 +1,38 @@
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="3.1">
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
 
-  <!-- CORS filter để frontend React truy cập -->
+  <display-name>bachhoa</display-name>
+
+  <!-- CORS for local dev -->
   <filter>
     <filter-name>CorsFilter</filter-name>
-    <filter-class>vn.bachhoa.common.CorsFilter</filter-class>
+    <filter-class>vn.bachhoa.web.filters.CorsFilter</filter-class>
   </filter>
   <filter-mapping>
     <filter-name>CorsFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
-  <!-- Product -->
+  <!-- Servlets -->
+  <servlet>
+    <servlet-name>HealthServlet</servlet-name>
+    <servlet-class>vn.bachhoa.web.HealthServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>HealthServlet</servlet-name>
+    <url-pattern>/api/health</url-pattern>
+  </servlet-mapping>
+
   <servlet>
     <servlet-name>ProductServlet</servlet-name>
-    <servlet-class>vn.bachhoa.products.ProductServlet</servlet-class>
+    <servlet-class>vn.bachhoa.web.ProductServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>ProductServlet</servlet-name>
     <url-pattern>/api/products/*</url-pattern>
   </servlet-mapping>
-
-  <!-- User -->
-  <servlet>
-    <servlet-name>UserServlet</servlet-name>
-    <servlet-class>vn.bachhoa.users.UserServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>UserServlet</servlet-name>
-    <url-pattern>/api/users/*</url-pattern>
-  </servlet-mapping>
-
-  <!-- Auth -->
-  <servlet>
-    <servlet-name>AuthServlet</servlet-name>
-    <servlet-class>vn.bachhoa.auth.AuthServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>AuthServlet</servlet-name>
-    <url-pattern>/api/auth/*</url-pattern>
-  </servlet-mapping>
-
-  <!-- Review -->
-  <servlet>
-    <servlet-name>ReviewServlet</servlet-name>
-    <servlet-class>vn.bachhoa.reviews.ReviewServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ReviewServlet</servlet-name>
-    <url-pattern>/api/reviews/*</url-pattern>
-  </servlet-mapping>
-
-
-  <!-- Promotions -->
-
-  <servlet>
-      <servlet-name>PromotionServlet</servlet-name>
-      <servlet-class>vn.bachhoa.promotions.PromotionServlet</servlet-class>
-  </servlet>
-
-  <servlet-mapping>
-      <servlet-name>PromotionServlet</servlet-name>
-      <url-pattern>/api/promotions/*</url-pattern>
-  </servlet-mapping>
-
 
 </web-app>
