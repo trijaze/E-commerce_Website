@@ -12,15 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * REST endpoints:
- * GET  /api/promotions                 -> list all
- * GET  /api/promotions?id=...          -> get by id
- * GET  /api/promotions?categoryId=...  -> list active for category
- * POST /api/promotions                 -> create (body JSON)
- * PUT  /api/promotions/:id             -> update (body JSON)  (we implement using query param id)
- * DELETE /api/promotions?id=...        -> delete
- */
+
 @WebServlet(name = "PromotionServlet", urlPatterns = {"/api/promotions"})
 public class PromotionServlet extends HttpServlet {
 
@@ -129,3 +121,14 @@ public class PromotionServlet extends HttpServlet {
         }
     }
 }
+
+
+/**
+ * REST endpoints:
+ * GET  /api/promotions                 -> list all
+ * GET  /api/promotions?id=...          -> get by id
+ * GET  /api/promotions?categoryId=...  -> list active for category
+ * POST /api/promotions                 -> create (body JSON)
+ * PUT  /api/promotions/:id             -> update (body JSON)  (we implement using query param id)
+ * DELETE /api/promotions?id=...        -> delete
+ */
