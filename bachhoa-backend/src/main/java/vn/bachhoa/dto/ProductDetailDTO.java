@@ -38,7 +38,7 @@ public class ProductDetailDTO {
         public ImageDTO(ProductImage i) {
             this.imageId = i.getImageId();      // chỉnh nếu là getId()
             this.imageUrl = i.getImageUrl();    // chỉnh nếu là getUrl()
-            this.isMain = i.IsMain();        // chỉnh nếu là getMain() / isMain()
+            this.isMain = i.isMain();        // chỉnh nếu là getMain() / isMain()
         }
     }
 
