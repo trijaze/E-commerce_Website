@@ -5,24 +5,16 @@ import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.model.ProductImage;
 import vn.bachhoa.util.JsonUtil;
-<<<<<<< HEAD
 
-=======
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.ServletException;
->>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.util.*;
 
-=======
-import java.util.List;
-import java.util.stream.Collectors;
+/** Servlet chi tiết sản phẩm và sản phẩm liên quan */
 @WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
->>>>>>> 5fdfb7099475079ea94830212a58e14902a70441
 public class ProductServlet extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAO();
 
@@ -33,7 +25,7 @@ public class ProductServlet extends HttpServlet {
         // path: "/{id}" hoặc "/{id}/related"
         String path = Optional.ofNullable(req.getPathInfo()).orElse("").trim();
         if (path.isEmpty() || "/".equals(path)) {
-            // Không implement list ở servlet này để tránh lệ thuộc DAO chưa có findAll()
+            // Không implement danh sách ở servlet này
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
             return;
         }
@@ -67,32 +59,31 @@ public class ProductServlet extends HttpServlet {
     }
 
     private void getDetail(Integer id, HttpServletResponse resp) throws IOException {
-        Product p = productDAO.findByIdWithRelations(id); // đã JOIN FETCH category/supplier/images/variants
+        Product p = productDAO.findByIdWithRelations(id); // JOIN FETCH category/supplier/images/variants
         if (p == null) {
             writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Product not found");
             return;
         }
-        // Dùng đúng DTO constructor có sẵn, không tự build tay
         ProductDetailDTO dto = new ProductDetailDTO(p);
         JsonUtil.ok(resp, wrap(dto));
     }
 
     private void getRelated(Integer id, int limit, HttpServletResponse resp) throws IOException {
-        var list = productDAO.findRelated(id, limit);
+        List<Product> list = productDAO.findRelated(id, limit);
 
-        var items = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> items = new ArrayList<>();
         for (Product p : list) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("productId", p.getProductId());
             m.put("name", p.getName());
             m.put("basePrice", p.getBasePrice());
 
-            // Lấy ảnh đại diện: ưu tiên ảnh isMain = true, nếu không có thì lấy ảnh đầu tiên
+            // Ảnh đại diện: ưu tiên isMain = true, nếu không có thì lấy ảnh đầu tiên
             String url = null;
             if (p.getImages() != null && !p.getImages().isEmpty()) {
                 ProductImage main = null;
                 for (ProductImage i : p.getImages()) {
-                    if (Boolean.TRUE.equals(i.getIsMain())) { main = i; break; } // ✅ dùng getIsMain()
+                    if (Boolean.TRUE.equals(i.getIsMain())) { main = i; break; }
                 }
                 url = (main != null) ? main.getImageUrl() : p.getImages().get(0).getImageUrl();
             }
