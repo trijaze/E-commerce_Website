@@ -14,7 +14,8 @@ import java.util.Map;
 
 @WebServlet("/api/secure/users/changepassword")
 public class changePasswordServlet extends HttpServlet {
-    private final UserDAO userDAO = new UserDAO();
+	private static final long serialVersionUID = 1L;
+	private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
     private final Gson gson = new Gson();
 

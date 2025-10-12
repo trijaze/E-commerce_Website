@@ -8,6 +8,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "productVariants")  // camelCase theo quy ước bạn, nếu DB đang camelCase
 public class ProductVariant implements Serializable {
+	private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer variantId;

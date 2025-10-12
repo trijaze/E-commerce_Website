@@ -5,8 +5,6 @@ import com.google.gson.GsonBuilder;
 import vn.bachhoa.dao.OrderDao;
 import vn.bachhoa.model.Order;
 import vn.bachhoa.model.OrderItem;
-
-import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
@@ -14,6 +12,7 @@ import java.util.*;
 
 @WebServlet("/orders")
 public class OrderServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
 
     private final OrderDao orderDao = new OrderDao();
 

@@ -1,7 +1,6 @@
 package vn.bachhoa.util;
 
 import java.security.MessageDigest;
-import vn.bachhoa.model.User;
 
 public class PasswordUtil {
     public static String hashPassword(String password) {

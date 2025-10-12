@@ -15,6 +15,7 @@ import java.io.IOException;
  */
 @WebServlet("/api/secure/users/me")
 public class infoServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
     private final UserDAO dao = new UserDAO();
     private final Gson gson = new Gson();
 

@@ -25,7 +25,8 @@ public class User {
     private String email;
     
     //Thêm CreatAt
-    @Column(name = "createdAt", nullable = false, updatable = false)
+    @Column(name = "createdAt", nullable = false, updatable = false, 
+            columnDefinition = "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     @Column(nullable = false, length = 20)
@@ -64,4 +65,20 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public List<UserAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<UserAddress> addresses) {
+        this.addresses = addresses;
+    }
+    
+    // Đừng quên phương thức cho Cart nếu sau này cần dùng
+    public Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
 }

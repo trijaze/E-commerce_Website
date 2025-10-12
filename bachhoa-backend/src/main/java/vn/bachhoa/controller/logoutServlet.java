@@ -11,6 +11,7 @@ import java.util.Map;
 //Servlet xử lý việc đăng xuất của người dùng.
 @WebServlet("/api/users/logout") 
 public class logoutServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
     private final AuditLogDAO auditLogDAO = new AuditLogDAO(); 
     private final Gson gson = new Gson();
 

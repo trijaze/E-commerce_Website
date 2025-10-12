@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/api/auth/login")
 public class loginServlet extends HttpServlet {
-
+	private static final long serialVersionUID = 1L;
     private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
     private final Gson gson = new Gson();

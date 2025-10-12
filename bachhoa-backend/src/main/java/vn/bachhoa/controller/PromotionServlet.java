@@ -13,7 +13,7 @@ import java.util.List;
 
 @WebServlet(name = "PromotionServlet", urlPatterns = {"/api/promotions/*"})
 public class PromotionServlet extends HttpServlet {
-
+	private static final long serialVersionUID = 1L;
     private final PromotionService service = new PromotionService();
     private final ObjectMapper mapper = new ObjectMapper();
 

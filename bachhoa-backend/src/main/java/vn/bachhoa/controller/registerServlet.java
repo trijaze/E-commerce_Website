@@ -17,6 +17,7 @@ import java.util.Map;
 
 @WebServlet("/api/auth/register")
 public class registerServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
     private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
     private final Gson gson = new Gson();
