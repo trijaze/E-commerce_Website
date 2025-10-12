@@ -1,4 +1,4 @@
-package vn.nhom7.bachhoa.filter;
+package vn.bachhoa.filter;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;

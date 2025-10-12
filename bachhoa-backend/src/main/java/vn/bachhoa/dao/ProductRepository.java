@@ -1,4 +1,4 @@
-package vn.nhom7.bachhoa.dao;
+package vn..bachhoa.dao;
 
 import javax.persistence.*;
 import vn.nhom7.bachhoa.model.Product;

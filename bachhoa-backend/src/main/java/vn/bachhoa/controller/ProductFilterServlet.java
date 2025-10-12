@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet("/api/products")
-public class ProductServlet extends HttpServlet {
+public class ProductFilterServlet extends HttpServlet {
     private final ProductRepository repo = new ProductRepository();
 
     @Override
