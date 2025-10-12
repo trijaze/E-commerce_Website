@@ -9,7 +9,7 @@
   <!-- CORS for local dev -->
   <filter>
     <filter-name>CorsFilter</filter-name>
-    <filter-class>vn.bachhoa.web.filters.CorsFilter</filter-class>
+    <filter-class>vn.bachhoa.filters.CorsFilter</filter-class>
   </filter>
   <filter-mapping>
     <filter-name>CorsFilter</filter-name>
