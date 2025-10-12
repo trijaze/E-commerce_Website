@@ -19,14 +19,14 @@ public class ProductDAO extends GenericDAO<Product> {
     public List<Product> findAll() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Chỉ fetch category và supplier, không fetch images & variants bằng JOIN
+            // Fetch category và supplier (không JOIN collection để tránh nhân bản dòng)
             String jpql = "SELECT p FROM Product p " +
                           "LEFT JOIN FETCH p.category " +
                           "LEFT JOIN FETCH p.supplier " +
                           "ORDER BY p.productId DESC";
             List<Product> products = em.createQuery(jpql, Product.class).getResultList();
 
-            // Preload images và variants
+            // Preload images & variants để dùng được sau khi đóng EM
             products.forEach(p -> {
                 p.getImages().size();
                 p.getVariants().size();
@@ -62,6 +62,32 @@ public class ProductDAO extends GenericDAO<Product> {
             });
 
             return products;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Lấy chi tiết sản phẩm theo id, đảm bảo preload:
+     * - category, supplier (đụng vào khóa để init)
+     * - images, variants (size() để init collection)
+     */
+    public Product findDetailById(int id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            Product p = em.find(Product.class, id);
+            if (p != null) {
+                // chạm vào quan hệ để initialize trước khi đóng EM
+                if (p.getCategory() != null) {
+                    p.getCategory().getCategoryId();
+                }
+                if (p.getSupplier() != null) {
+                    p.getSupplier().getSupplierId();
+                }
+                p.getImages().size();
+                p.getVariants().size();
+            }
+            return p;
         } finally {
             em.close();
         }
