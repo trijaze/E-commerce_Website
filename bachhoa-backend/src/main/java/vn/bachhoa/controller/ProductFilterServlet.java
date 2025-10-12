@@ -1,4 +1,4 @@
-package vn.nhom7.bachhoa.controller;
+package vn.bachhoa.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
