@@ -42,29 +42,41 @@ public class registerServlet extends HttpServlet {
             return;
         }
 
-        if (userDAO.usernameExists(cred.username)) { /* ... */ }
-        if (userDAO.phoneExists(cred.phoneNumber)) { /* ... */ }
+        // --- KIỂM TRA DỮ LIỆU TRÙNG LẶP VÀ GỬI LỖI CHI TIẾT ---
+        // Kiểm tra username tồn tại
+        if (userDAO.usernameExists(cred.username)) {
+            sendError(resp, HttpServletResponse.SC_CONFLICT, "Tên đăng nhập đã được sử dụng.");
+            return;
+        }
+        
+        // Kiểm tra số điện thoại tồn tại
+        if (userDAO.phoneExists(cred.phoneNumber)) {
+            sendError(resp, HttpServletResponse.SC_CONFLICT, "Số điện thoại đã được đăng ký.");
+            return;
+        }
+        
+        // Kiểm tra email tồn tại
         if (userDAO.emailExists(cred.email)) {
-            sendError(resp, HttpServletResponse.SC_CONFLICT, "Email đã tồn tại");
+            sendError(resp, HttpServletResponse.SC_CONFLICT, "Email này đã được sử dụng.");
             return;
         }
 
         User newUser = null;
         try {
+            // --- Nếu tất cả kiểm tra đều qua, tiếp tục quá trình đăng ký ---
             String hashed = PasswordUtil.hashPassword(cred.password);
             newUser = new User(cred.username, hashed, cred.phoneNumber, cred.email);
-
             userDAO.save(newUser);
             
             if (newUser.getUserId() == 0) {
-                throw new Exception("Failed to save user to database, ID was not generated.");
+                throw new Exception("Lỗi nghiêm trọng: Không thể lưu người dùng vào CSDL.");
             }
 
             // Ghi nhật ký đăng ký
             AuditLog log = new AuditLog(newUser.getUserId(), "USER_REGISTER", "Users", String.valueOf(newUser.getUserId()));
             auditLogDAO.save(log);
             
-            // Gửi mail
+            // Gửi email chào mừng
             EmailUtil.sendWelcomeEmail(newUser.getEmail(), newUser.getUsername());
             
             // Tạo token
@@ -83,15 +95,13 @@ public class registerServlet extends HttpServlet {
         }
     }
 
-    //Phương thức helper để gửi response lỗi dưới dạng JSON.
-
     private void sendError(HttpServletResponse resp, int statusCode, String message) throws IOException {
         sendJsonResponse(resp, statusCode, Map.of("error", message));
     }
-
-    //Phương thức helper chung để gửi response JSON. 
+    
     private void sendJsonResponse(HttpServletResponse resp, int statusCode, Object data) throws IOException {
         resp.setStatus(statusCode);
         resp.getWriter().write(gson.toJson(data));
     }
 }
+
