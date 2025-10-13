@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/api/cart", "/api/cart/add", "/api/cart/remove", "/api/cart/clear"})
+@WebServlet("/api/cart")
 public class CartServlet extends HttpServlet {
     private final CartDAO cartDAO = new CartDAO();
     private final ProductDAO productDAO = new ProductDAO();
