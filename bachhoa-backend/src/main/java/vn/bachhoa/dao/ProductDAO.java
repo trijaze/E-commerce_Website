@@ -1,12 +1,17 @@
 package vn.bachhoa.dao;
 
+import vn.bachhoa.dto.ProductDTO;
+import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.util.JPAUtil;
+import vn.bachhoa.model.ProductImage;
+import vn.bachhoa.model.ProductVariant;
+
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProductDAO extends GenericDAO<Product> {
 
@@ -14,149 +19,133 @@ public class ProductDAO extends GenericDAO<Product> {
         super(Product.class);
     }
 
-    /**
-     * Lấy chi tiết 1 sản phẩm và nạp đủ quan hệ:
-     * - B1: nạp category, supplier (QUAN HỆ ĐƠN)
-     * - B2: nạp images (BAG #1)
-     * - B3: nạp variants (BAG #2)
-     *
-     * Cách này tránh MultipleBagFetchException khi có 2 collection.
-     */
-    public Product findByIdWithRelations(Integer id) {
+    /** Lấy danh sách sản phẩm (preload category + supplier; collections được SUBSELECT khi access) */
+    public List<ProductDTO> findAllDTO() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // B1: fetch entity + quan hệ đơn
-            Product p = em.createQuery(
-                    "SELECT p FROM Product p " +
-                    "LEFT JOIN FETCH p.category " +
-                    "LEFT JOIN FETCH p.supplier " +
-                    "WHERE p.productId = :id", Product.class)
-                .setParameter("id", id)
-                .getResultStream()
-                .findFirst()
-                .orElse(null);
+            String jpql = """
+                SELECT DISTINCT p FROM Product p
+                LEFT JOIN FETCH p.category
+                LEFT JOIN FETCH p.supplier
+                ORDER BY p.productId DESC
+            """;
+            List<Product> list = em.createQuery(jpql, Product.class).getResultList();
 
-            if (p == null) return null;
+            // --- KÍCH HOẠT việc load collection bằng cách access trong cùng EntityManager mở.
+            // Với @Fetch(FetchMode.SUBSELECT) ở entity, Hibernate sẽ chạy 2 subselect:
+            // SELECT ... FROM productimages WHERE productId IN (...)
+            // SELECT ... FROM productvariants WHERE productId IN (...)
+            // và populate cả danh sách images + variants cho tất cả product trong 'list'
+            for (Product p : list) {
+                // access to initialize (size() is enough)
+                if (p.getImages() != null) p.getImages().size();
+                if (p.getVariants() != null) p.getVariants().size();
+            }
 
-            // B2: fetch images
-            em.createQuery(
-                    "SELECT p FROM Product p " +
-                    "LEFT JOIN FETCH p.images " +
-                    "WHERE p = :p", Product.class)
-              .setParameter("p", p)
-              .getSingleResult();
-
-            // B3: fetch variants
-            em.createQuery(
-                    "SELECT p FROM Product p " +
-                    "LEFT JOIN FETCH p.variants " +
-                    "WHERE p = :p", Product.class)
-              .setParameter("p", p)
-              .getSingleResult();
-
-            return p;
+            return list.stream().map(ProductDTO::new).collect(Collectors.toList());
         } finally {
             em.close();
         }
     }
 
-    /**
-     * Sản phẩm liên quan: cùng category với sản phẩm gốc (trừ chính nó).
-     * Preload images để FE có thumbnail.
-     */
-    public List<Product> findRelated(Integer productId, int limit) {
+
+    /** Lấy danh sách sản phẩm theo categoryId */
+    public List<ProductDTO> findByCategoryDTO(Integer categoryId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Tìm categoryId của sản phẩm gốc
+            String jpql = """
+                SELECT DISTINCT p FROM Product p
+                LEFT JOIN FETCH p.category
+                LEFT JOIN FETCH p.supplier
+                WHERE p.category.categoryId = :cid
+                ORDER BY p.productId DESC
+            """;
+            List<Product> list = em.createQuery(jpql, Product.class)
+                    .setParameter("cid", categoryId)
+                    .getResultList();
+
+            // initialize collections using SUBSELECT (runs subselects once for the whole list)
+            for (Product p : list) {
+                if (p.getImages() != null) p.getImages().size();
+                if (p.getVariants() != null) p.getVariants().size();
+            }
+
+            return list.stream().map(ProductDTO::new).collect(Collectors.toList());
+        } finally {
+            em.close();
+        }
+    }
+
+    public ProductDetailDTO findDetailDTOById(Integer id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            // Lấy product + category + supplier
+            String jpql1 = """
+                SELECT DISTINCT p FROM Product p
+                LEFT JOIN FETCH p.category
+                LEFT JOIN FETCH p.supplier
+                WHERE p.productId = :id
+            """;
+            Product p = em.createQuery(jpql1, Product.class)
+                          .setParameter("id", id)
+                          .getSingleResult();
+
+            // Lấy images
+            p.setImages(em.createQuery(
+                "SELECT i FROM ProductImage i WHERE i.product.productId = :id ORDER BY i.imageId", ProductImage.class)
+                .setParameter("id", id)
+                .getResultList());
+
+            // Lấy variants
+            p.setVariants(em.createQuery(
+                "SELECT v FROM ProductVariant v WHERE v.product.productId = :id ORDER BY v.variantId", ProductVariant.class)
+                .setParameter("id", id)
+                .getResultList());
+
+            return new ProductDetailDTO(p);
+        } finally {
+            em.close();
+        }
+    }
+
+
+    /** Lấy sản phẩm liên quan (cùng category) */
+    public List<ProductDTO> findRelatedDTO(Integer productId, int limit) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
             Integer catId = em.createQuery(
                     "SELECT p.category.categoryId FROM Product p WHERE p.productId = :id", Integer.class)
-                .setParameter("id", productId)
-                .getResultStream()
-                .findFirst()
-                .orElse(null);
+                    .setParameter("id", productId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
 
             if (catId == null) return Collections.emptyList();
 
-            // Lấy danh sách liên quan + preload images (chỉ 1 bag -> an toàn)
-            String jpql =
-                "SELECT DISTINCT p FROM Product p " +
-                "LEFT JOIN FETCH p.images " +
-                "WHERE p.category.categoryId = :catId AND p.productId <> :id " +
-                "ORDER BY p.productId DESC";
+            String jpql = """
+                SELECT DISTINCT p FROM Product p
+                LEFT JOIN FETCH p.category
+                LEFT JOIN FETCH p.supplier
+                WHERE p.category.categoryId = :cid AND p.productId <> :id
+                ORDER BY p.productId DESC
+            """;
 
-            TypedQuery<Product> q = em.createQuery(jpql, Product.class)
-                .setParameter("catId", catId)
-                .setParameter("id", productId)
-                .setMaxResults(Math.max(1, limit));
+            List<Product> list = em.createQuery(jpql, Product.class)
+                    .setParameter("cid", catId)
+                    .setParameter("id", productId)
+                    .setMaxResults(Math.max(1, limit))
+                    .getResultList();
 
-            return q.getResultList();
+            // initialize to trigger SUBSELECT for images + variants (batch for the whole list)
+            for (Product p : list) {
+                if (p.getImages() != null) p.getImages().size();
+                if (p.getVariants() != null) p.getVariants().size();
+            }
+
+            return list.stream().map(ProductDTO::new).collect(Collectors.toList());
         } finally {
             em.close();
         }
     }
 
-    /**
-     * (Tuỳ chọn) Danh sách có tìm kiếm + lọc category + phân trang cơ bản.
-     * Chỉ preload images để show thumbnail (không preload variants để tránh 2 bag).
-     */
-    public List<Product> findAll(int page, int size, String q, Integer categoryId) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            StringBuilder sb = new StringBuilder(
-                "SELECT DISTINCT p FROM Product p " +
-                "LEFT JOIN FETCH p.images "
-            );
-
-            boolean hasQ = q != null && !q.isBlank();
-            boolean hasCat = categoryId != null;
-
-            if (hasQ || hasCat) sb.append("WHERE ");
-            if (hasQ) sb.append("LOWER(p.name) LIKE LOWER(:kw) ");
-            if (hasCat) {
-                if (hasQ) sb.append("AND ");
-                sb.append("p.category.categoryId = :cid ");
-            }
-            sb.append("ORDER BY p.productId DESC");
-
-            TypedQuery<Product> query = em.createQuery(sb.toString(), Product.class);
-
-            if (hasQ)  query.setParameter("kw", "%" + q.trim() + "%");
-            if (hasCat) query.setParameter("cid", categoryId);
-
-            if (page >= 0 && size > 0) {
-                query.setFirstResult(page * size);
-                query.setMaxResults(size);
-            }
-            return query.getResultList();
-        } finally {
-            em.close();
-        }
-    }
-
-    /**
-     * (Tuỳ chọn) Đếm tổng record để phân trang phía FE.
-     */
-    public long countAll(String q, Integer categoryId) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            StringBuilder sb = new StringBuilder("SELECT COUNT(p) FROM Product p ");
-            boolean hasQ = q != null && !q.isBlank();
-            boolean hasCat = categoryId != null;
-
-            if (hasQ || hasCat) sb.append("WHERE ");
-            if (hasQ) sb.append("LOWER(p.name) LIKE LOWER(:kw) ");
-            if (hasCat) {
-                if (hasQ) sb.append("AND ");
-                sb.append("p.category.categoryId = :cid ");
-            }
-
-            TypedQuery<Long> query = em.createQuery(sb.toString(), Long.class);
-            if (hasQ)  query.setParameter("kw", "%" + q.trim() + "%");
-            if (hasCat) query.setParameter("cid", categoryId);
-
-            return query.getSingleResult();
-        } finally {
-            em.close();
-        }
-    }
 }
