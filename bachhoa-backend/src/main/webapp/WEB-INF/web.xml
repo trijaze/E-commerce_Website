@@ -41,7 +41,7 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>PromotionServlet</servlet-name>
-    <url-pattern>/api/promotions</url-pattern>
+    <url-pattern>/api/promotions/*</url-pattern>
   </servlet-mapping>
 
 </web-app>
