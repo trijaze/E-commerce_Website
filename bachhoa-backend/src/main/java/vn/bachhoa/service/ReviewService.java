@@ -1,7 +1,6 @@
 package vn.bachhoa.service;
 
 import vn.bachhoa.dao.ReviewDAO;
-import vn.bachhoa.dao.UserDAO;
 import vn.bachhoa.dto.ReviewDTO;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.model.Review;
@@ -9,62 +8,82 @@ import vn.bachhoa.model.User;
 import vn.bachhoa.util.JPAUtil;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReviewService {
     private final ReviewDAO reviewDAO = new ReviewDAO();
-    private final UserDAO userDAO = new UserDAO();
-    // Giả sử bạn có một ProductDAO tương tự hoặc dùng trực tiếp EntityManager
-    // Ở đây tôi sẽ dùng EntityManager để tìm Product cho đơn giản
-    
-    /**
-     * Lấy tất cả các review đã được duyệt cho một sản phẩm.
-     * @param productId ID của sản phẩm.
-     * @return Danh sách ReviewDTO.
-     */
+
     public List<ReviewDTO> getReviewsForProduct(int productId) {
         return reviewDAO.findByProductId(productId).stream()
                 .map(ReviewDTO::new)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Thêm một review mới cho sản phẩm.
-     * @param userId ID của người dùng viết review.
-     * @param productId ID của sản phẩm được review.
-     * @param reviewData DTO chứa thông tin review.
-     * @return DTO của review vừa được tạo.
-     * @throws IllegalArgumentException nếu user hoặc product không tồn tại.
-     */
     public ReviewDTO addReview(int userId, int productId, ReviewDTO reviewData) {
-        User user = userDAO.findById(userId);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found");
-        }
+        System.out.println("=== START addReview ===");
+        System.out.println("userId: " + userId);
+        System.out.println("productId: " + productId);
+        System.out.println("rating: " + reviewData.getRating());
         
-        // Dùng EntityManager để tìm Product vì chưa có ProductDAO
         EntityManager em = JPAUtil.getEntityManager();
-        Product product;
+        EntityTransaction tx = em.getTransaction();
+        
         try {
-            product = em.find(Product.class, productId);
+            tx.begin();
+            
+            // ✅ Tìm User
+            User user = em.find(User.class, userId);
+            if (user == null) {
+                System.err.println("❌ User not found: " + userId);
+                throw new IllegalArgumentException("User not found");
+            }
+            System.out.println("✅ User found: " + user.getUsername());
+            
+            // ✅ Tìm Product
+            Product product = em.find(Product.class, productId);
             if (product == null) {
+                System.err.println("❌ Product not found: " + productId);
                 throw new IllegalArgumentException("Product not found");
             }
+            System.out.println("✅ Product found: " + product.getName());
+            
+            // ✅ Tạo Review
+            Review newReview = new Review();
+            newReview.setUser(user);
+            newReview.setProduct(product);
+            newReview.setRating(reviewData.getRating());
+            newReview.setTitle(reviewData.getTitle());
+            newReview.setComment(reviewData.getComment());
+            newReview.setApproved(true); // ✅ Explicit set approved
+            
+            // ✅ Persist
+            em.persist(newReview);
+            em.flush(); // ✅ Force write to DB immediately
+            
+            System.out.println("✅ Review saved with ID: " + newReview.getReviewID());
+            
+            tx.commit();
+            
+            // ✅ Return DTO
+            ReviewDTO result = new ReviewDTO(newReview);
+            System.out.println("=== END addReview (SUCCESS) ===");
+            return result;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error in addReview: " + e.getMessage());
+            e.printStackTrace();
+            
+            if (tx != null && tx.isActive()) {
+                tx.rollback();
+                System.out.println("🔄 Transaction rolled back");
+            }
+            throw new RuntimeException("Failed to add review: " + e.getMessage(), e);
         } finally {
-            em.close();
+            if (em != null) {
+                em.close();
+            }
         }
-
-        Review newReview = new Review();
-        newReview.setUser(user);
-        newReview.setProduct(product);
-        newReview.setRating(reviewData.getRating());
-        newReview.setTitle(reviewData.getTitle());
-        newReview.setComment(reviewData.getComment());
-        // isApproved và createdAt sẽ được tự động set bởi @PrePersist
-
-        Review savedReview = reviewDAO.save(newReview);
-        
-        return new ReviewDTO(savedReview);
     }
 }

@@ -29,7 +29,14 @@
       <!-- Sửa 3 dòng dưới cho đúng máy bạn -->
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/bachhoa?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
+<<<<<<< Updated upstream
       <property name="javax.persistence.jdbc.password" value="ctan"/>
+=======
+      <property name="javax.persistence.jdbc.password" value="123456"/>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+      <!-- NGỪNG phá/làm lại schema: -->
+      <property name="hibernate.hbm2ddl.auto" value="update"/> 
+>>>>>>> Stashed changes
 
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
       <property name="hibernate.hbm2ddl.auto" value="update"/>

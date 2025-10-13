@@ -13,7 +13,10 @@ public class Review {
     private int rating;
     private String title;
     private String comment;
-    private boolean isApproved;
+
+    @Column(name = "isApproved", nullable = false)
+    private Boolean isApproved = true;
+
     private LocalDateTime createdAt;
 
     @ManyToOne
@@ -26,32 +29,100 @@ public class Review {
 
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (!this.isApproved) this.isApproved = true;
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (isApproved == null) {
+            isApproved = true;
+        }
     }
 
-    // Getters & setters...
-    public Integer getReviewID() { return reviewID; }
-    public void setReviewID(Integer reviewID) { this.reviewID = reviewID; }
+    // ========== GETTERS & SETTERS ==========
+    
+    public Integer getReviewID() { 
+        return reviewID; 
+    }
+    
+    public void setReviewID(Integer reviewID) { 
+        this.reviewID = reviewID; 
+    }
 
-    public int getRating() { return rating; }
-    public void setRating(int rating) { this.rating = rating; }
+    public int getRating() { 
+        return rating; 
+    }
+    
+    public void setRating(int rating) { 
+        this.rating = rating; 
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getTitle() { 
+        return title; 
+    }
+    
+    public void setTitle(String title) { 
+        this.title = title; 
+    }
 
-    public String getComment() { return comment; }
-    public void setComment(String comment) { this.comment = comment; }
+    public String getComment() { 
+        return comment; 
+    }
+    
+    public void setComment(String comment) { 
+        this.comment = comment; 
+    }
 
-    public boolean isApproved() { return isApproved; }
-    public void setApproved(boolean approved) { isApproved = approved; }
+    public LocalDateTime getCreatedAt() { 
+        return createdAt; 
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) { 
+        this.createdAt = createdAt; 
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public User getUser() { 
+        return user; 
+    }
+    
+    public void setUser(User user) { 
+        this.user = user; 
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public Product getProduct() { 
+        return product; 
+    }
+    
+    public void setProduct(Product product) { 
+        this.product = product; 
+    }
 
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
+    // ========== isApproved METHODS (CHỈ GIỮ 1 BỘ) ==========
+    
+    /**
+     * Getter chuẩn JavaBean cho Boolean field
+     */
+    public Boolean getIsApproved() { 
+        return isApproved; 
+    }
+    
+    /**
+     * Setter chuẩn JavaBean cho Boolean field
+     */
+    public void setIsApproved(Boolean isApproved) { 
+        this.isApproved = isApproved; 
+    }
+
+    /**
+     * Getter kiểu boolean primitive (để tương thích với code cũ)
+     * Trả về false nếu isApproved là null
+     */
+    public boolean isApproved() {
+        return isApproved != null && isApproved;
+    }
+    
+    /**
+     * Setter kiểu boolean primitive (để tương thích với code cũ)
+     */
+    public void setApproved(boolean approved) {
+        this.isApproved = approved;
+    }
 }

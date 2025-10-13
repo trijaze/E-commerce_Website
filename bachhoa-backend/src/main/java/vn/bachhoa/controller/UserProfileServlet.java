@@ -1,7 +1,9 @@
 package vn.bachhoa.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import vn.bachhoa.dto.UserProfileDTO;
+import vn.bachhoa.dto.request.UpdateProfileRequest;
 import vn.bachhoa.service.UserProfileService;
 import vn.bachhoa.util.JsonUtil;
 
@@ -13,58 +15,77 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-// Endpoint này sẽ được bảo vệ bởi JwtFilter do có path là "/api/secure/*"
 @WebServlet("/api/secure/users/profile")
 public class UserProfileServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     private final UserProfileService profileService = new UserProfileService();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Xử lý yêu cầu GET để lấy thông tin hồ sơ người dùng hiện tại.
-     */
+    public UserProfileServlet() {
+        this.objectMapper = new ObjectMapper();
+        // Đăng ký module để xử lý LocalDateTime
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+            throws ServletException, IOException {
         Integer userId = (Integer) req.getAttribute("userId");
-
+        
         if (userId == null) {
-            JsonUtil.writeJson(resp, Map.of("error", "Unauthorized: User ID not found in token"), HttpServletResponse.SC_UNAUTHORIZED);
+            JsonUtil.writeJson(resp, Map.of("error", "Unauthorized: User ID not found in token"), 
+                    HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         UserProfileDTO profile = profileService.getProfile(userId);
-
+        
         if (profile == null) {
-            JsonUtil.writeJson(resp, Map.of("error", "User profile not found"), HttpServletResponse.SC_NOT_FOUND);
+            JsonUtil.writeJson(resp, Map.of("error", "User profile not found"), 
+                    HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         JsonUtil.ok(resp, profile);
     }
 
-    /**
-     * Xử lý yêu cầu PUT để cập nhật thông tin hồ sơ người dùng.
-     */
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) 
+            throws ServletException, IOException {
         Integer userId = (Integer) req.getAttribute("userId");
+        
         if (userId == null) {
-            JsonUtil.writeJson(resp, Map.of("error", "Unauthorized: User ID not found in token"), HttpServletResponse.SC_UNAUTHORIZED);
+            JsonUtil.writeJson(resp, Map.of("error", "Unauthorized: User ID not found in token"), 
+                    HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        
+
         try {
-            UserProfileDTO profileUpdateData = objectMapper.readValue(req.getReader(), UserProfileDTO.class);
-            UserProfileDTO updatedProfile = profileService.updateProfile(userId, profileUpdateData);
-            JsonUtil.ok(resp, updatedProfile);
+            // ✅ SỬA LỖI: Dùng UpdateProfileRequest thay vì UserProfileDTO
+            UpdateProfileRequest updateRequest = objectMapper.readValue(
+                    req.getInputStream(), 
+                    UpdateProfileRequest.class
+            );
+
+            // Gọi service với request DTO
+            UserProfileDTO updatedProfile = profileService.updateProfile(userId, updateRequest);
             
+            JsonUtil.ok(resp, updatedProfile);
+
         } catch (IllegalArgumentException e) {
-            // Bắt lỗi validation cụ thể và trả về 409 Conflict
-            JsonUtil.writeJson(resp, Map.of("error", e.getMessage()), HttpServletResponse.SC_CONFLICT);
+            // Lỗi validation (username đã tồn tại, v.v.)
+            JsonUtil.writeJson(resp, Map.of("error", e.getMessage()), 
+                    HttpServletResponse.SC_CONFLICT);
+        } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
+            // Lỗi parse JSON
+            e.printStackTrace();
+            JsonUtil.writeJson(resp, Map.of("error", "Invalid JSON format: " + e.getMessage()), 
+                    HttpServletResponse.SC_BAD_REQUEST);
         } catch (Exception e) {
-            // Các lỗi khác vẫn là Bad Request hoặc Internal Server Error
-            e.printStackTrace(); // In ra log để debug
-            JsonUtil.writeJson(resp, Map.of("error", "Invalid request data or failed to update profile"), HttpServletResponse.SC_BAD_REQUEST);
+            // Các lỗi khác
+            e.printStackTrace();
+            JsonUtil.writeJson(resp, Map.of("error", "Failed to update profile: " + e.getMessage()), 
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }
