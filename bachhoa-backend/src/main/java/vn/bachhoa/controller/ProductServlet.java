@@ -5,7 +5,7 @@ import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.util.JsonUtil;
 
-import javax.servlet.annotation.WebServlet;
+//import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

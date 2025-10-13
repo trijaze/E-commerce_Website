@@ -54,6 +54,7 @@ public class JwtFilter implements Filter {
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             resp.getWriter().write("{\"error\":\"Invalid token\"}");
+            System.out.println("Lỗi:" + e);
         }
     }
 }
