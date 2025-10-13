@@ -12,9 +12,9 @@ import { useDispatch } from "react-redux";
 import { add as addToCart } from "@/features/cart/cartSlice";
 import type { CartItem } from "@/features/cart/cartTypes";
 
-// Tự xử lý URL ảnh từ BE (ví dụ BE trả "/images/xxx.jpg")
+// Ghép URL ảnh từ BE (nếu DB lưu "/images/xxx.jpg")
 const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa";
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa";
 const resolveUrl = (u?: string | null) => {
   if (!u) return "/placeholder.png";
   if (/^https?:\/\//i.test(u)) return u;
@@ -22,7 +22,7 @@ const resolveUrl = (u?: string | null) => {
 };
 
 // Hiển thị nhãn biến thể đẹp từ JSON ({"size":"1kg","color":"xanh"})
-function prettyVariantName(name: string | null | undefined, fallback?: string) {
+const prettyVariantName = (name: string | null | undefined, fallback?: string) => {
   if (!name) return fallback ?? "";
   try {
     const o = JSON.parse(name);
@@ -31,11 +31,9 @@ function prettyVariantName(name: string | null | undefined, fallback?: string) {
         .map(([k, v]) => `${k}: ${String(v)}`)
         .join(", ");
     }
-  } catch {
-    /* ignore */
-  }
+  } catch {/* ignore */}
   return name || fallback || "";
-}
+};
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,8 +45,9 @@ export default function ProductDetail() {
 
   const [variantIdx, setVariantIdx] = useState(0);
   const [mainImgIdx, setMainImgIdx] = useState(0);
-  const [qty, setQty] = useState(1);
 
+  // ====== SỐ LƯỢNG: cho phép gõ tự do, chỉ chuẩn hoá khi blur hoặc khi nhấn +/- ======
+  const [qtyInput, setQtyInput] = useState("1");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -71,6 +70,14 @@ export default function ProductDetail() {
     [variants, variantIdx]
   );
 
+  // qty số hợp lệ suy ra từ chuỗi người dùng gõ
+  const qty = useMemo(() => {
+    const n = parseInt(qtyInput, 10);
+    if (Number.isNaN(n)) return 1;
+    const cap = stockLeft ?? 99;
+    return Math.min(cap, Math.max(1, n));
+  }, [qtyInput, stockLeft]);
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -80,7 +87,7 @@ export default function ProductDetail() {
         setDetail(d);
         setVariantIdx(0);
         setMainImgIdx(0);
-        setQty(1);
+        setQtyInput("1");
         setError(null);
       })
       .catch(() => mounted && setError("Không tải được chi tiết sản phẩm."))
@@ -94,7 +101,7 @@ export default function ProductDetail() {
     if (detail?.name) document.title = `${detail.name} | Bách Hóa Online`;
   }, [detail?.name]);
 
-  // Đảm bảo index ảnh hợp lệ khi danh sách ảnh đổi
+  // đảm bảo index ảnh hợp lệ
   useEffect(() => {
     if (!images.length) setMainImgIdx(0);
     else if (mainImgIdx > images.length - 1) setMainImgIdx(0);
@@ -103,30 +110,45 @@ export default function ProductDetail() {
   const handleSelectVariant = useCallback(
     (idx: number) => {
       setVariantIdx(idx);
-      // Nếu có ảnh gắn variant → tự chọn ảnh đó
+      // nếu có ảnh gắn variant thì auto chọn
       const targetVariantId = variants[idx]?.variantId ?? null;
       if (targetVariantId) {
         const foundIdx = images.findIndex((im) => im.variantId === targetVariantId);
         if (foundIdx >= 0) setMainImgIdx(foundIdx);
       }
-      setQty(1);
+      setQtyInput("1");
     },
     [variants, images]
   );
 
   const handleThumbClick = useCallback((idx: number) => setMainImgIdx(idx), []);
-  const decQty = () => setQty((q) => Math.max(1, q - 1));
-  const incQty = () => setQty((q) => Math.min(99, stockLeft ?? 99));
 
-  // Build CartItem đúng shape cartTypes.ts (id, name, price, qty, image?)
+  // ===== Handlers số lượng =====
+  const onQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    // chỉ cho tối đa 2 chữ số, cho phép rỗng khi đang gõ
+    if (/^\d{0,2}$/.test(v)) setQtyInput(v);
+  };
+  const onQtyBlur = () => {
+    // chuẩn hoá khi rời focus
+    if (qtyInput === "" || qty < 1) setQtyInput("1");
+    else setQtyInput(String(qty));
+  };
+  const decQty = () => setQtyInput(String(Math.max(1, qty - 1)));
+  const incQty = () => {
+    const cap = stockLeft ?? 99;
+    setQtyInput(String(Math.min(cap, qty + 1))); // ✅ tăng đúng 1, không nhảy 99
+  };
+
+  // Build CartItem đúng shape của cartTypes.ts
   const buildCartItem = (): CartItem => {
     const v = variants[variantIdx];
     const price = v?.price ?? detail!.basePrice ?? 0;
     return {
-      id: `${detail!.productId}:${v?.variantId ?? "none"}`, // gộp theo product + variant
+      id: `${detail!.productId}:${v?.variantId ?? "none"}`, // gộp theo product+variant
       name: detail!.name,
       price,
-      qty,
+      qty, // số hợp lệ đã chuẩn hoá
       image: resolveUrl(images[mainImgIdx]?.imageUrl ?? null),
     };
   };
@@ -138,10 +160,10 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     handleAddToCart();
-    navigate("/checkout"); // hoặc "/cart" tùy flow của nhóm
+    navigate("/checkout"); // hoặc "/cart" tuỳ flow nhóm
   };
 
-  // ===== Returns =====
+  // ===== Renders =====
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-10">
@@ -159,6 +181,10 @@ export default function ProductDetail() {
       </div>
     );
   }
+
+  const cap = stockLeft ?? 99;
+  const canDec = qty > 1;
+  const canInc = qty < cap;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -255,16 +281,29 @@ export default function ProductDetail() {
           {/* Qty + Actions */}
           <div className="mt-6 flex items-center gap-3">
             <div className="inline-flex items-center border rounded-xl overflow-hidden">
-              <button onClick={decQty} className="w-9 h-9">−</button>
+              <button
+                onClick={decQty}
+                disabled={!canDec}
+                className={`w-9 h-9 ${!canDec ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                −
+              </button>
               <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="w-12 h-9 text-center outline-none"
-                value={qty}
-                onChange={(e) => {
-                  const v = Math.max(1, Math.min(99, Number(e.target.value) || 1));
-                  setQty(v);
-                }}
+                value={qtyInput}
+                onChange={onQtyChange}
+                onBlur={onQtyBlur}
               />
-              <button onClick={incQty} className="w-9 h-9">+</button>
+              <button
+                onClick={incQty}
+                disabled={!canInc}
+                className={`w-9 h-9 ${!canInc ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                +
+              </button>
             </div>
 
             <button
