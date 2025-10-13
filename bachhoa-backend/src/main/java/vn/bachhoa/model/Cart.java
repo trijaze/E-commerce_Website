@@ -13,7 +13,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer cartId;
 
-    // ✅ Mỗi User chỉ có 1 Cart
+    //  Mỗi User chỉ có 1 Cart
     @OneToOne
     @JoinColumn(name = "user_id", unique = true, nullable = false)
     private User user;
@@ -21,7 +21,7 @@ public class Cart {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // ✅ Một Cart có nhiều CartItem
+    //  Một Cart có nhiều CartItem
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 

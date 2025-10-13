@@ -1,10 +1,10 @@
 // 🛒 API giỏ hàng kết nối tới BE Tomcat
-const BASE_URL = "http://localhost:8080/bachhoa/cart";
+const BASE_URL = "http://localhost:8080/bachhoa-backend/api/cart";
 
-// 🔹 Lấy danh sách sản phẩm trong giỏ hàng
-export async function getCartItems() {
+// 🔹 Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart?userId=1)
+export async function getCartItems(userId: number = 1) {
   try {
-    const res = await fetch(BASE_URL);
+    const res = await fetch(`${BASE_URL}?userId=${userId}`);
     if (!res.ok) throw new Error("Không thể tải giỏ hàng");
     return await res.json();
   } catch (err) {
@@ -13,16 +13,17 @@ export async function getCartItems() {
   }
 }
 
-// 🔹 Thêm sản phẩm vào giỏ
-export async function addToCart(productId: number, quantity: number = 1) {
+// 🔹 Thêm sản phẩm vào giỏ (POST /api/cart)
+export async function addToCart(
+  userId: number,
+  productId: number,
+  quantity: number = 1
+) {
   try {
-    const form = new URLSearchParams();
-    form.append("productId", String(productId));
-    form.append("quantity", String(quantity));
-
     const res = await fetch(BASE_URL, {
       method: "POST",
-      body: form,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, variantId: productId, quantity }), // backend dùng variantId
     });
 
     if (!res.ok) throw new Error("Không thể thêm sản phẩm vào giỏ");
@@ -33,7 +34,7 @@ export async function addToCart(productId: number, quantity: number = 1) {
   }
 }
 
-// 🔹 Cập nhật số lượng sản phẩm
+// 🔹 Cập nhật số lượng sản phẩm (PUT /api/cart)
 export async function updateQuantity(id: number, quantity: number) {
   try {
     const res = await fetch(BASE_URL, {
@@ -50,7 +51,7 @@ export async function updateQuantity(id: number, quantity: number) {
   }
 }
 
-// 🔹 Xóa 1 sản phẩm khỏi giỏ hàng
+// 🔹 Xóa 1 sản phẩm khỏi giỏ hàng (DELETE /api/cart?id=...)
 export async function deleteCartItem(id: number) {
   try {
     const res = await fetch(`${BASE_URL}?id=${id}`, { method: "DELETE" });
@@ -62,10 +63,10 @@ export async function deleteCartItem(id: number) {
   }
 }
 
-// 🔹 Xóa toàn bộ giỏ hàng
-export async function clearCart() {
+// 🔹 Xóa toàn bộ giỏ hàng (DELETE /api/cart?userId=1)
+export async function clearCart(userId: number = 1) {
   try {
-    const res = await fetch(BASE_URL, { method: "DELETE" });
+    const res = await fetch(`${BASE_URL}?userId=${userId}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Không thể xóa toàn bộ giỏ hàng");
     return await res.json();
   } catch (err) {
