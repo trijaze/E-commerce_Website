@@ -65,10 +65,7 @@ public class loginServlet extends HttpServlet {
 
          // Tạo tokens
          String accessToken = JWTUtil.generateToken(u, JWTUtil.ACCESS_TOKEN_EXPIRATION_MS, JWTUtil.JWT_SECRET_KEY); // <-- Bỏ (Key)
-         
-         System.out.println("LOGIN KEY OBJECT ID: " + System.identityHashCode(JWTUtil.JWT_REFRESH_SECRET_KEY));
          String refreshToken = JWTUtil.generateToken(u, JWTUtil.REFRESH_TOKEN_EXPIRATION_MS, JWTUtil.JWT_REFRESH_SECRET_KEY); // <-- Bỏ (Key) nếu có
-         System.out.println("LOGIN KEY: " + JWTUtil.JWT_SECRET_KEY);
             Map<String, String> responseData = Map.of("accessToken", accessToken, "refreshToken", refreshToken);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, responseData);
         } catch (Exception e) {
