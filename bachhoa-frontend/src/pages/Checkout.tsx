@@ -50,6 +50,9 @@ export default function Checkout() {
       setCheckingPromo(true);
       const promo = await getPromotionByCode(promoCode.trim());
       console.log("🧩 Promotion API:", promo);
+      console.log("🔥 Extracted promo:", promo);
+      console.log("📂 promo.active =", promo?.active);
+
 
       if (!promo || !promo.active) {
         alert("❌ Mã không hợp lệ hoặc đã hết hạn!");
@@ -79,6 +82,7 @@ export default function Checkout() {
       setCheckingPromo(false);
     }
   };
+
   // 🧾 Tạo đơn hàng
   const createOrder = async () => {
     if (items.length === 0) {

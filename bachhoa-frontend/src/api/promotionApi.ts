@@ -1,6 +1,7 @@
 // src/api/promotionApi.ts
 import axios from "axios";
 
+
 // === Instance chung ===
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa",
@@ -28,10 +29,23 @@ export async function getAllPromotions(): Promise<PromotionDTO[]> {
 }
 
 export async function getPromotionByCode(code: string): Promise<PromotionDTO | null> {
-  const { data } = await api.get("/api/promotions", { params: { code } });
-  const result = data.data;
-  if (Array.isArray(result)) return result[0] ?? null;
-  return result ?? null;
+  try {
+    const { data } = await api.get("/api/promotions", { params: { code } });
+
+    // Nếu backend trả thẳng object (không bọc trong data)
+    if (data && data.code) return data as PromotionDTO;
+
+    // Nếu backend trả bọc trong data
+    if (data?.data) {
+      if (Array.isArray(data.data)) return data.data[0] ?? null;
+      return data.data ?? null;
+    }
+
+    return null;
+  } catch (err) {
+    console.error("🚨 Lỗi getPromotionByCode:", err);
+    return null;
+  }
 }
 
 export async function createPromotion(promo: Partial<PromotionDTO>) {

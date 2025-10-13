@@ -75,6 +75,40 @@ public class UserDAO {
         });
     }
 
+    /**
+     * Tìm người dùng bằng username.
+     * @param username Tên đăng nhập cần tìm.
+     * @return Đối tượng User hoặc null nếu không tìm thấy.
+     */
+    public User findByUsername(String username) {
+        return executeInsideTransaction(em -> {
+            try {
+                return em.createQuery("SELECT u FROM User u WHERE u.username = :username", User.class)
+                         .setParameter("username", username)
+                         .getSingleResult();
+            } catch (NoResultException e) {
+                return null;
+            }
+        });
+    }
+
+    /**
+     * Tìm người dùng bằng số điện thoại.
+     * @param phoneNumber Số điện thoại cần tìm.
+     * @return Đối tượng User hoặc null nếu không tìm thấy.
+     */
+    public User findByPhoneNumber(String phoneNumber) {
+        return executeInsideTransaction(em -> {
+            try {
+                return em.createQuery("SELECT u FROM User u WHERE u.phoneNumber = :phone", User.class)
+                         .setParameter("phone", phoneNumber)
+                         .getSingleResult();
+            } catch (NoResultException e) {
+                return null;
+            }
+        });
+    }
+
     // Kiểm tra xem một username đã tồn tại hay chưa.
     public boolean usernameExists(String username) {
         return findByIdentifier(username) != null;

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  * Servlet này xử lý việc lấy thông tin của người dùng hiện tại (đã xác thực).
  * Endpoint này được bảo vệ bởi JwtFilter.
  */
-@WebServlet("/api/secure/user/me")
+@WebServlet("/api/secure/users/me")
 public class infoServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final UserDAO dao = new UserDAO();
