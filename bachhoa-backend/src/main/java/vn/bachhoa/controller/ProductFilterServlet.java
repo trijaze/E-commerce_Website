@@ -1,6 +1,7 @@
 package vn.bachhoa.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import com.google.gson.GsonBuilder;
 import vn.bachhoa.dao.ProductRepository;
 import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.model.Product;
+import vn.bachhoa.util.LocalDateTimeAdapter;
 
 /**
  * Lưu ý: map sang /api/products/filter để KHÔNG đụng với ProductServlet (/api/products/*)
@@ -29,7 +31,9 @@ public class ProductFilterServlet extends HttpServlet {
     private final Gson gson = new GsonBuilder()
             .serializeNulls()
             .setPrettyPrinting()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

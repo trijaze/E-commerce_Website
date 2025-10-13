@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, isAnyOf } from '@reduxjs/toolkit';
-import { jwtDecode } from 'jwt-decode'; // Sử dụng jwt-decode để giải mã JWT: npm install jwt-decode
+import { jwtDecode } from 'jwt-decode';
 import { authApi, LoginPayload, RegisterPayload } from '../../api/authApi';
 import { setAccessToken, setRefreshToken, clearTokens } from '../../utils/token';
 import type { AuthState, User } from './authTypes';
@@ -8,24 +8,21 @@ const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
+  isInitialized: false, // <-- THÊM: Trạng thái khởi tạo ban đầu là false
 };
 
-// --- HÀM HELPER ĐỂ GIẢI MÃ TOKEN VÀ LẤY THÔNG TIN USER ---
+// --- HÀM HELPER VÀ ASYNC THUNKS GIỮ NGUYÊN ---
 const getUserFromToken = (token: string): User => {
-  // Định nghĩa kiểu cho payload đã giải mã để TypeScript hiểu
   const decodedToken: { sub: string; userId: number; role: 'customer' | 'admin' } = jwtDecode(token);
   return {
     userId: decodedToken.userId,
     username: decodedToken.sub,
     role: decodedToken.role,
-    // Các trường này ban đầu là rỗng và sẽ được điền đầy đủ khi `fetchMe` được gọi sau này
     phoneNumber: '',
     email: '',
     createdAt: ''
   };
 };
-
-// --- CÁC HÀNH ĐỘNG ASYNC (ASYNC THUNKS) ---
 
 export const login = createAsyncThunk<User, LoginPayload>(
   'auth/login',
@@ -34,12 +31,9 @@ export const login = createAsyncThunk<User, LoginPayload>(
       const data = await authApi.login(payload);
       setAccessToken(data.accessToken);
       setRefreshToken(data.refreshToken);
-      // Giải mã token ngay lập tức để lấy thông tin user, tránh race condition
-      const user = getUserFromToken(data.accessToken);
-      return user;
+      return getUserFromToken(data.accessToken);
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
-      return rejectWithValue(errorMsg);
+      return rejectWithValue(err?.response?.data?.error || 'Đăng nhập thất bại.');
     }
   }
 );
@@ -51,17 +45,12 @@ export const register = createAsyncThunk<User, RegisterPayload>(
       const data = await authApi.register(payload);
       setAccessToken(data.accessToken);
       setRefreshToken(data.refreshToken);
-      // Giải mã token ngay lập tức để lấy thông tin user, tránh race condition
-      const user = getUserFromToken(data.accessToken);
-      return user;
+      return getUserFromToken(data.accessToken);
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.error || 'Đăng ký thất bại. Vui lòng thử lại.';
-      return rejectWithValue(errorMsg);
+      return rejectWithValue(err?.response?.data?.error || 'Đăng ký thất bại.');
     }
-  }
-);
+  });
 
-// fetchMe vẫn giữ nguyên để lấy thông tin đầy đủ và kiểm tra phiên tự động khi tải lại trang
 export const fetchMe = createAsyncThunk<User, void>(
   'auth/me',
   async (_, { rejectWithValue }) => {
@@ -82,26 +71,27 @@ export const logout = createAsyncThunk('auth/logout', async () => {
   }
 });
 
+
 // --- TẠO SLICE ---
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // Reducer để xóa lỗi thủ công từ UI
     clearError(state) {
       state.error = null;
     },
+    // Reducer để đánh dấu đã khởi tạo xong khi không có token
+    setInitialized(state) {
+      state.isInitialized = true;
+    },
   },
-  // Xử lý các trạng thái của async thunks
   extraReducers: (builder) => {
     builder
-      // Xử lý riêng cho hành động logout.fulfilled
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.loading = false;
         state.error = null;
       })
-      // Xử lý 'pending' cho tất cả các thunks (login, register, fetchMe)
       .addMatcher(
         isAnyOf(login.pending, register.pending, fetchMe.pending),
         (state) => {
@@ -109,23 +99,26 @@ const authSlice = createSlice({
           state.error = null;
         }
       )
-      // Xử lý 'fulfilled' cho tất cả các thunks (login, register, fetchMe)
       .addMatcher(
         isAnyOf(login.fulfilled, register.fulfilled, fetchMe.fulfilled),
         (state, action: PayloadAction<User>) => {
           state.loading = false;
           state.user = action.payload;
+          // CẬP NHẬT: Khi fetchMe thành công, đánh dấu đã khởi tạo xong
+          if (action.type === fetchMe.fulfilled.type) {
+            state.isInitialized = true;
+          }
         }
       )
-      // Xử lý 'rejected' cho tất cả các thunks
       .addMatcher(
         isAnyOf(login.rejected, register.rejected, fetchMe.rejected),
         (state, action) => {
           state.loading = false;
           state.user = null;
-          // Chỉ hiển thị lỗi cho các hành động login và register,
-          // fetchMe sẽ thất bại một cách "thầm lặng".
-          if (action.type !== fetchMe.rejected.type) {
+
+          if (action.type === fetchMe.rejected.type) {
+            state.isInitialized = true;
+          } else {
             state.error = action.payload as string;
           }
         }
@@ -133,6 +126,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+// CẬP NHẬT: Export action mới
+export const { clearError, setInitialized } = authSlice.actions;
 export default authSlice.reducer;
-

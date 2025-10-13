@@ -29,13 +29,13 @@ export const authApi = {
 
   // --- API được bảo vệ cho người dùng thường (Secured User APIs) ---
   me: (): Promise<User> =>
-    axiosClient.get('/secure/users/me').then((r) => r.data),
+    axiosClient.get('/secure/user/me').then((r) => r.data),
 
   changePassword: (payload: ChangePasswordPayload) =>
-    axiosClient.post('/secure/users/changepassword', payload).then(r => r.data),
+    axiosClient.post('/user/changepassword', payload).then(r => r.data),
 
   logout: () =>
-    axiosClient.post('/secure/users/logout').then(r => r.data),
+    axiosClient.post('/secure/user/logout').then(r => r.data),
 
   // --- API được bảo vệ chỉ dành cho Admin (Secured Admin APIs) nếu có ---
   //getAllUsers: (): Promise<User[]> => 

@@ -25,6 +25,8 @@ public class JwtFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
 
         String authHeader = req.getHeader("Authorization");
+        System.out.println("Authorization header: " + authHeader);
+
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -33,7 +35,7 @@ public class JwtFilter implements Filter {
         }
 
         String token = authHeader.substring(7);
-
+        
         try {
             Jws<Claims> claimsJws = Jwts.parserBuilder()
                                      .setSigningKey(JWTUtil.JWT_SECRET_KEY)

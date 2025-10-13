@@ -6,13 +6,17 @@ import vn.bachhoa.model.User;
 import vn.bachhoa.model.AuditLog;
 import vn.bachhoa.util.PasswordUtil;
 import vn.bachhoa.util.JWTUtil;
+import vn.bachhoa.util.LocalDateTimeAdapter;
 import vn.bachhoa.util.EmailUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @WebServlet("/api/auth/register")
@@ -20,8 +24,9 @@ public class registerServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
-    private final Gson gson = new Gson();
-
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     private static class RegisterRequest {
         String username;
         String password;

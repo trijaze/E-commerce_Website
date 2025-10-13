@@ -6,18 +6,22 @@
 
     <display-name>bachhoa-backend</display-name>
 
+    <!-- 
+      KHAI BÁO CÁC BỘ LỌC (FILTERS)
+      Trật tự của các filter-mapping bên dưới là rất quan trọng.
+    -->
+
+    <!-- BỘ LỌC 1: ENCODING FILTER (Chạy đầu tiên cho mọi request) -->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
         <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
-
-        <filter-class>vn.bachhoa.filters.CharacterEncodingFilter</filter-class>
-
     </filter>
     <filter-mapping>
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <!-- BỘ LỌC 2: CORS FILTER (Chạy thứ hai, cho các request API) -->
     <filter>
         <filter-name>CorsFilter</filter-name>
         <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
@@ -27,7 +31,7 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-
+    <!-- BỘ LỌC 3: JWT FILTER (Chạy cuối cùng, cho các API cần bảo vệ) -->
     <filter>
         <filter-name>JwtFilter</filter-name>
         <filter-class>vn.bachhoa.filter.JwtFilter</filter-class>
@@ -36,35 +40,37 @@
         <filter-name>JwtFilter</filter-name>
         <url-pattern>/api/secure/*</url-pattern>
     </filter-mapping>
-    
-    </web-app>
 
-  <!-- Servlets -->
-  <servlet>
-    <servlet-name>HealthServlet</servlet-name>
-    <servlet-class>vn.bachhoa.HealthServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>HealthServlet</servlet-name>
-    <url-pattern>/api/health</url-pattern>
-  </servlet-mapping>
+    <!-- 
+      KHAI BÁO CÁC SERVLET
+      Các servlet được định nghĩa ở đây. Các servlet khác dùng @WebServlet sẽ được tự động nhận diện.
+    -->
+    <servlet>
+        <servlet-name>HealthServlet</servlet-name>
+        <servlet-class>vn.bachhoa.HealthServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HealthServlet</servlet-name>
+        <url-pattern>/api/health</url-pattern>
+    </servlet-mapping>
 
-  <servlet>
-    <servlet-name>ProductServlet</servlet-name>
-    <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ProductServlet</servlet-name>
-    <url-pattern>/api/products/*</url-pattern>
-  </servlet-mapping>
+    <servlet>
+        <servlet-name>ProductServlet</servlet-name>
+        <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProductServlet</servlet-name>
+        <url-pattern>/api/products/*</url-pattern>
+    </servlet-mapping>
 
-  <servlet>
-      <servlet-name>PromotionServlet</servlet-name>
-      <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-      <servlet-name>PromotionServlet</servlet-name>
-      <url-pattern>/api/promotions</url-pattern>
-  </servlet-mapping>
+    <servlet>
+        <servlet-name>PromotionServlet</servlet-name>
+        <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PromotionServlet</servlet-name>
+        <url-pattern>/api/promotions</url-pattern>
+    </servlet-mapping>
 
 </web-app>
+

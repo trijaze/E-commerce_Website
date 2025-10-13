@@ -42,7 +42,7 @@ public class User {
     	
     };
     public User(String username, String password, String phone, String email) {
-        this.username = username;
+    	this.username = username;
         this.passwordHash = password;
         this.phoneNumber = phone;
         this.email = email;
