@@ -1,18 +1,20 @@
 // 🛒 API giỏ hàng kết nối tới BE Tomcat
 const BASE_URL = "http://localhost:8080/bachhoa/api/cart";
 
-// 🔹 Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart?userId=1)
-export async function getCartItems(userId: number = 1) {
+// 🔹 Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart)
+export async function getCartItems() {
   try {
-    const res = await fetch(`${BASE_URL}?userId=${userId}`);
-    if (!res.ok) throw new Error("Không thể tải giỏ hàng");
+    const res = await fetch(BASE_URL, {
+      method: "GET",
+      credentials: "include", // GỬI COOKIE SESSION ĐỂ TOMCAT NHẬN userId
+    });
+    if (!res.ok) throw new Error(`Không thể tải giỏ hàng (${res.status})`);
     return await res.json();
   } catch (err) {
     console.error("❌ Lỗi khi lấy giỏ hàng:", err);
     return [];
   }
 }
-
 // 🔹 Thêm sản phẩm vào giỏ (POST /api/cart)
 export async function addToCart(
   userId: number,
