@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { orderApi } from "../api/orderApi";
+import { promotionApi } from "../api/promotionApi"; // 👈 thêm dòng này
 import { clear } from "../features/cart/cartSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +12,61 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState<string>("cod");
 
+  // 👇 Thêm các state liên quan đến mã giảm giá
+  const [promoCode, setPromoCode] = useState<string>("");
+  const [promotion, setPromotion] = useState<any>(null);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [checkingPromo, setCheckingPromo] = useState<boolean>(false);
+
+  // 🧮 Tính tổng tiền
+  const subtotal = items.reduce((acc, i) => acc + i.price * i.qty, 0);
+  let discountAmount = 0;
+
+  if (promotion) {
+    if (promotion.discountType === "PERCENT") {
+      discountAmount = (subtotal * promotion.discountValue) / 100;
+    } else if (promotion.discountType === "AMOUNT") {
+      discountAmount = promotion.discountValue;
+    }
+
+    // Không cho giảm quá subtotal
+    if (discountAmount > subtotal) discountAmount = subtotal;
+  }
+
+  const total = subtotal - discountAmount;
+  
+
+  // ⚙️ Hàm áp dụng mã giảm giá
+  const applyPromotion = async () => {
+    if (!promoCode) {
+      alert("⚠️ Vui lòng nhập mã khuyến mãi!");
+      return;
+    }
+    try {
+      setCheckingPromo(true);
+      const res = await promotionApi.checkCode(promoCode);
+      const promo = res.data;
+
+      // ⚠️ Sửa đoạn này:
+      if (!promo || promo.active === false) {
+        alert("❌ Mã không hợp lệ hoặc đã hết hạn!");
+        return;
+      }
+
+      // ⚠️ Ở đây dùng discountValue thay vì discountPercent
+      setPromotion(promo);
+      setDiscountPercent(promo.discountValue || 0);
+
+      alert(`✅ Áp dụng mã ${promo.code}: giảm ${promo.discountValue}%`);
+    } catch (error) {
+      console.error(error);
+      alert("❌ Mã khuyến mãi không tồn tại!");
+    } finally {
+      setCheckingPromo(false);
+    }
+  };
+
+  // 🧾 Tạo đơn hàng
   const createOrder = async () => {
     if (items.length === 0) {
       alert("❌ Giỏ hàng trống!");
@@ -26,6 +82,8 @@ export default function Checkout() {
           quantity: i.qty,
           price: i.price,
         })),
+        promotionCode: promoCode || null, // 👈 gửi mã giảm giá kèm theo
+        totalPrice: total, // 👈 tổng sau khi giảm
       };
 
       console.log("🚀 Gửi đơn hàng:", payload);
@@ -49,9 +107,7 @@ export default function Checkout() {
       </h1>
 
       {items.length === 0 ? (
-        <p className="text-gray-600 text-center">
-          Giỏ hàng của bạn đang trống.
-        </p>
+        <p className="text-gray-600 text-center">Giỏ hàng của bạn đang trống.</p>
       ) : (
         <>
           {/* Danh sách sản phẩm */}
@@ -71,17 +127,61 @@ export default function Checkout() {
             ))}
           </ul>
 
-          {/* Tổng cộng */}
-          <div className="flex justify-between font-semibold text-lg mb-6">
-            <span>Tổng tiền:</span>
-            <span className="text-red-600">
-              {items
-                .reduce((acc, i) => acc + i.price * i.qty, 0)
-                .toLocaleString()}₫
-            </span>
+          {/* Mã khuyến mãi */}
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700">
+              Mã khuyến mãi:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="border rounded px-3 py-2 flex-1"
+                placeholder="Nhập mã khuyến mãi..."
+              />
+              <button
+                onClick={applyPromotion}
+                disabled={checkingPromo}
+                className={`${
+                  checkingPromo ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                } text-white px-4 py-2 rounded transition`}
+              >
+                {checkingPromo ? "Đang kiểm tra..." : "Áp dụng"}
+              </button>
+            </div>
+
+            {promotion && (
+              <p className="text-green-600 mt-2">
+                ✅ Mã {promotion.code} áp dụng thành công! Giảm{" "}
+                {promotion.discountPercent}%.
+              </p>
+            )}
           </div>
 
-          {/* Chọn phương thức thanh toán */}
+          {/* Tổng cộng */}
+          <div className="flex justify-between text-lg mb-2">
+            <span>Tạm tính:</span>
+            <span>{subtotal.toLocaleString()}₫</span>
+          </div>
+          {discountPercent > 0 && (
+            <div className="flex justify-between text-green-600 mb-2">
+              <span>
+                Giảm giá (
+                {promotion?.discountType === "PERCENT"
+                  ? `${promotion.discountValue}%`
+                  : `${promotion.discountValue.toLocaleString()}₫`}
+                ):
+              </span>
+              <span>-{discountAmount.toLocaleString()}₫</span>
+            </div>
+          )}
+          <div className="flex justify-between font-semibold text-xl mb-6">
+            <span>Tổng tiền:</span>
+            <span className="text-red-600">{total.toLocaleString()}₫</span>
+          </div>
+
+          {/* Phương thức thanh toán */}
           <div className="mb-4">
             <label className="block mb-2 font-medium text-gray-700">
               Phương thức thanh toán:
