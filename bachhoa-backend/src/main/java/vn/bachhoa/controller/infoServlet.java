@@ -34,8 +34,7 @@ public class infoServlet extends HttpServlet {
         // Lấy userId đã được JwtFilter xác thực và đính kèm vào request.
         // Dùng userId để truy vấn sẽ hiệu quả và chính xác hơn là dùng username.
         Integer userId = (Integer) req.getAttribute("userId");
-
-        // Kiểm tra xem userId có tồn tại không.
+        
         if (userId == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             resp.getWriter().write("{\"error\":\"Token không hợp lệ hoặc bị thiếu thông tin người dùng.\"}");

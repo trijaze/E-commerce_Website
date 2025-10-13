@@ -17,7 +17,6 @@ public class JsonUtil {
     public static void ok(HttpServletResponse resp, Object body) throws IOException {
         writeJson(resp, body, HttpServletResponse.SC_OK);
     }
-
     // Thêm method fromJson để parse JSON string thành object
     public static <T> T fromJson(String jsonStr, Class<T> clazz) throws IOException {
         MAPPER.findAndRegisterModules();

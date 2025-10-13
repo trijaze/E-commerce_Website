@@ -5,23 +5,25 @@ import com.google.gson.GsonBuilder;
 import vn.bachhoa.dao.OrderDao;
 import vn.bachhoa.model.Order;
 import vn.bachhoa.model.OrderItem;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
 
-@WebServlet("/orders")
+@WebServlet("/api/bachhoa/orders")
 public class OrderServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     private final OrderDao orderDao = new OrderDao();
 
-    // ✅ Dùng GsonBuilder để loại bỏ field không có @Expose (tránh vòng lặp vô hạn)
+    // ✅ Cấu hình Gson để loại bỏ vòng lặp
     private final Gson gson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
             .setPrettyPrinting()
             .create();
 
+    // ✅ Hàm CORS cho React
     private void setCors(HttpServletResponse resp) {
         resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -35,7 +37,7 @@ public class OrderServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
-    // 🟢 Lấy danh sách hoặc 1 đơn hàng cụ thể
+    // 🟢 Lấy danh sách hoặc 1 đơn hàng
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         setCors(resp);
@@ -45,6 +47,7 @@ public class OrderServlet extends HttpServlet {
             if (id != null) {
                 Order order = orderDao.getById(Integer.parseInt(id));
                 if (order == null) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     resp.getWriter().write("{\"error\": \"Order not found\"}");
                     return;
                 }
@@ -65,21 +68,26 @@ public class OrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         setCors(resp);
-
         try (BufferedReader reader = req.getReader()) {
             Map<String, Object> data = gson.fromJson(reader, Map.class);
 
+            // ✅ Đọc dữ liệu từ JSON
             int userId = ((Double) data.get("userId")).intValue();
             String paymentMethod = (String) data.get("paymentMethod");
+            String promotionCode = (String) data.getOrDefault("promotionCode", null);
+            Double totalPrice = data.get("totalPrice") != null ? (Double) data.get("totalPrice") : 0.0;
+
             List<Map<String, Object>> items = (List<Map<String, Object>>) data.get("items");
 
-            double total = 0;
+            // ✅ Chuẩn bị danh sách sản phẩm
             List<OrderItem> orderItems = new ArrayList<>();
+            double total = 0;
 
             for (Map<String, Object> item : items) {
                 int productId = ((Double) item.get("productId")).intValue();
                 int quantity = ((Double) item.get("quantity")).intValue();
                 double price = (Double) item.get("price");
+
                 total += price * quantity;
 
                 OrderItem oi = new OrderItem();
@@ -90,15 +98,21 @@ public class OrderServlet extends HttpServlet {
                 orderItems.add(oi);
             }
 
+            // ✅ Tạo order object
             Order order = new Order();
             order.setUserId(userId);
             order.setPaymentMethod(paymentMethod);
-            order.setTotal(total);
             order.setStatus("pending_payment");
             order.setItems(orderItems);
 
-            for (OrderItem oi : orderItems) oi.setOrder(order);
+            // Nếu tổng sau giảm khác 0 thì dùng nó, ngược lại dùng tổng gốc
+            order.setTotal(totalPrice > 0 ? totalPrice : total);
 
+            for (OrderItem oi : orderItems) {
+                oi.setOrder(order);
+            }
+
+            // ✅ Lưu vào DB
             orderDao.createOrder(order);
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
@@ -110,9 +124,11 @@ public class OrderServlet extends HttpServlet {
             resp.getWriter().write("{\"error\": \"❌ Failed to create order\"}");
         }
     }
+
+    // 🟢 Cập nhật đơn hàng
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json;charset=UTF-8");
+        setCors(resp);
         try {
             String id = req.getParameter("id");
             if (id == null) {
@@ -136,8 +152,8 @@ public class OrderServlet extends HttpServlet {
             resp.getWriter().write("{\"message\": \"✅ Order updated successfully\"}");
         } catch (Exception e) {
             e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\": \"❌ Failed to update order\"}");
         }
     }
-
 }
