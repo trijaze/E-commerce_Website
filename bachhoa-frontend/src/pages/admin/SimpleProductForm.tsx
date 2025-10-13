@@ -184,11 +184,11 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value={1}>Gạo - Ngũ cốc</option>
-                <option value={2}>Thịt tươi sống</option>
-                <option value={3}>Rau củ quả</option>
-                <option value={4}>Đồ uống</option>
-                <option value={5}>Đồ khô</option>
+                <option value={1}>Thực phẩm tươi sống</option>
+                <option value={2}>Rau củ</option>
+                <option value={3}>Đồ đông lạnh</option>
+                <option value={4}>Gia vị</option>
+                <option value={5}>Thực phẩm đóng gói sẵn</option>
               </select>
             </div>
 
@@ -198,12 +198,12 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
                 URL hình ảnh
               </label>
               <input
-                type="url"
+                type="text"
                 name="imageUrl"
                 value={formData.imageUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://example.com/image.jpg"
+                placeholder="images/product.jpg"
               />
             </div>
 

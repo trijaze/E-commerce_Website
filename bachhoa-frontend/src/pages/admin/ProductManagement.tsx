@@ -4,6 +4,7 @@ import { PencilIcon, TrashIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/ou
 import adminApi, { AdminProduct, CreateProductRequest } from '../../api/adminApi';
 import SimpleProductForm from './SimpleProductForm';
 import ProductViewModal from './ProductViewModal';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const ProductManagement: React.FC = () => {
   // console.log('🔥 ProductManagement rendering...');
@@ -33,7 +34,9 @@ const ProductManagement: React.FC = () => {
       }
       
       const response = await adminApi.getAllProducts(params);
-      setProducts(response.data);
+      console.log('🔥 Admin API response:', response);
+      // adminApi đã extract data array sẵn
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error loading products:', error);
       toast.error('Không thể tải danh sách sản phẩm');
@@ -254,7 +257,7 @@ const ProductManagement: React.FC = () => {
                         <div className="flex-shrink-0 h-12 w-12">
                           <img
                             className="h-12 w-12 rounded-md object-cover"
-                            src={product.imageUrl || '/images/placeholder.jpg'}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;

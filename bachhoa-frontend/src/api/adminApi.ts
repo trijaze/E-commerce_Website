@@ -48,7 +48,20 @@ export const adminApi = {
     if (params?.search) queryParams.append('search', params.search);
     
     const url = `/products${queryParams.toString() ? `?${queryParams}` : ''}`;
-    return axiosClient.get(url);
+    const response = await axiosClient.get(url);
+    // Map từ backend ProductDTO sang AdminProduct
+    const products = (response.data.data || []).map((item: any): AdminProduct => ({
+      id: item.productId,
+      name: item.name,
+      description: item.description,
+      price: item.basePrice,
+      stock: item.totalStock || 0, // Lấy totalStock từ backend
+      categoryId: 0, // Backend không trả về categoryId  
+      categoryName: item.categoryName,
+      imageUrl: item.imageUrls?.[0] || '',
+      status: true, // Default active
+    }));
+    return { data: products };
   },
 
   // Get product by ID
@@ -58,17 +71,63 @@ export const adminApi = {
 
   // Create new product
   createProduct: async (product: CreateProductRequest): Promise<AdminApiResponse<AdminProduct>> => {
-    return axiosClient.post('/products', product);
+    // Map frontend data sang backend format
+    const backendData = {
+      name: product.name,
+      sku: `AUTO-${Date.now()}`, // Generate SKU tự động
+      description: product.description,
+      basePrice: product.price,
+      categoryId: product.categoryId || 1,
+      supplierId: 1, // Default supplier
+    };
+    console.log('🔥 Sending to backend:', backendData);
+    const response = await axiosClient.post('/products', backendData);
+    // Map response từ backend ProductDetailDTO
+    const created = response.data.data || response.data;
+    return {
+      data: {
+        id: created.productId,
+        name: created.name,
+        description: created.description,
+        price: created.basePrice,
+        stock: 0,
+        categoryId: 0,
+        categoryName: created.categoryName,
+        imageUrl: created.imageUrls?.[0] || '',
+        status: true,
+      }
+    };
   },
 
   // Update product
   updateProduct: async (id: number, product: Partial<CreateProductRequest>): Promise<AdminApiResponse<AdminProduct>> => {
-    return axiosClient.put(`/products/${id}`, product);
+    const response = await axiosClient.put(`/products/${id}`, product);
+    // Map response từ backend ProductDetailDTO
+    const updated = response.data.data || response.data;
+    return {
+      data: {
+        id: updated.productId,
+        name: updated.name,
+        description: updated.description,
+        price: updated.basePrice,
+        stock: updated.totalStock || 0, // Map từ backend totalStock
+        categoryId: updated.categoryId || 0,
+        categoryName: updated.categoryName,
+        imageUrl: updated.images?.[0]?.imageUrl || '',
+        status: true,
+      }
+    };
   },
 
   // Delete product  
   deleteProduct: async (id: number): Promise<AdminApiResponse<{ message: string; id: number }>> => {
-    return axiosClient.delete(`/products/${id}`);
+    await axiosClient.delete(`/products/${id}`);
+    return {
+      data: {
+        message: 'Product deleted successfully',
+        id
+      }
+    };
   },
 
   // Bulk operations
@@ -83,7 +142,7 @@ export const adminApi = {
 };
 
 // Mock implementation for development (can be toggled)
-const USE_MOCK = true; // Set to true for development without backend
+const USE_MOCK = false; // Set to true for development without backend
 
 // Mock database - in-memory storage
 const mockProducts: AdminProduct[] = [

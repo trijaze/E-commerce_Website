@@ -52,8 +52,8 @@ public class loginServlet extends HttpServlet {
             return;
         }
 
-        String hashedRequestPassword = PasswordUtil.hashPassword(cred.password);
-        if (!u.getPasswordHash().equals(hashedRequestPassword)) {
+        // Verify password using BCrypt (not hashing the request password)
+        if (!PasswordUtil.verifyPassword(cred.password, u.getPasswordHash())) {
             sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Mật khẩu không chính xác.");
             return;
         }

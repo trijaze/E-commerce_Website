@@ -48,16 +48,6 @@
     <!-- Lưu ý: Các Servlet khác được định nghĩa bằng Annotation (@WebServlet) -->
     <!-- nên không cần khai báo ở đây, trừ khi bạn muốn ghi đè. -->
 
-    <!-- Product APIs -->
-    <servlet>
-        <servlet-name>ProductServlet</servlet-name>
-        <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ProductServlet</servlet-name>
-        <url-pattern>/api/products/*</url-pattern>
-    </servlet-mapping>
-
     <!-- Promotion APIs -->
     <servlet>
         <servlet-name>PromotionServlet</servlet-name>
