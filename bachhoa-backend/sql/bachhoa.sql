@@ -287,6 +287,75 @@ INSERT INTO `productimages` (`imageId`,`productId`,`variantId`,`imageUrl`,`isMai
 (41,41,NULL,'images/mihaohao.jpg',1),
 (42,42,NULL,'images/snackrongbien.jpg',1);
 
+CREATE TABLE `review` (
+    `reviewID` INT NOT NULL AUTO_INCREMENT,
+    `rating` INT NOT NULL,
+    `title` VARCHAR(255) NULL,
+    `comment` TEXT NULL,
+    `isApproved` BOOLEAN DEFAULT TRUE,
+    `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `user_id` INT NOT NULL,
+    `product_id` INT NOT NULL,
+    PRIMARY KEY (`reviewID`),
+    CONSTRAINT `fk_review_user`
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`userId`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_review_product`
+        FOREIGN KEY (`product_id`) REFERENCES `products` (`productId`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 3. SỬA CẤU TRÚC BẢNG
+ALTER TABLE review 
+MODIFY COLUMN product_id INT NOT NULL,
+MODIFY COLUMN user_id INT NOT NULL,
+MODIFY COLUMN isApproved TINYINT(1) NOT NULL DEFAULT 1,
+MODIFY COLUMN createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- 4. INSERT DỮ LIỆU MẪU
+INSERT INTO review (user_id, product_id, rating, title, comment, isApproved, createdAt) VALUES
+(1, 1, 5, 'Thịt bò Mỹ ngon', 'Ba chỉ bò Mỹ mềm, thơm, đúng mô tả. Giao nhanh.', 1, '2025-10-11 10:15:00'),
+(2, 2, 4, 'Sườn non tươi', 'Sườn non Vissan ngon, hơi béo nhưng dễ nấu.', 1, '2025-10-11 12:20:00'),
+(3, 3, 5, 'Ức gà ngon', 'Thịt ức gà CP mềm, không bở, đáng mua.', 1, '2025-10-11 14:00:00'),
+(4, 4, 4, 'Cá basa ngon', 'Cá basa fillet tươi, không tanh, dễ chế biến.', 1, '2025-10-11 15:10:00'),
+(5, 5, 5, 'Tôm sú tươi', 'Tôm sú loại 1 rất ngon, đóng gói cẩn thận.', 1, '2025-10-11 16:00:00'),
+(1, 6, 4, 'Trứng gà ta ngon', 'Trứng to, vỏ dày, lòng đỏ đẹp, chất lượng.', 1, '2025-10-11 17:45:00'),
+(2, 7, 5, 'Cà chua tươi', 'Cà chua Đà Lạt chín mọng, ngọt nhẹ.', 1, '2025-10-11 18:10:00'),
+(3, 8, 5, 'Rau cải sạch', 'Rau tươi, không hư, còn ướt sương, rất hài lòng.', 1, '2025-10-11 18:30:00'),
+(4, 9, 4, 'Khoai tây dẻo', 'Khoai tây vàng Úc ngon, nấu súp rất hợp.', 1, '2025-10-11 19:00:00'),
+(5, 10, 4, 'Cà rốt ngon', 'Cà rốt Đà Lạt ngọt, giòn, không dập.', 1, '2025-10-11 19:20:00'),
+(1, 11, 5, 'Dưa leo sạch', 'Dưa leo tươi giòn, không đắng, hàng chuẩn VietGAP.', 1, '2025-10-11 19:45:00'),
+(2, 12, 4, 'Rau muống xanh', 'Rau muống non, luộc rất ngon, sẽ mua lại.', 1, '2025-10-11 20:00:00'),
+(3, 13, 5, 'Tôm bóc vỏ ngon', 'Tôm bóc vỏ sạch, dễ chế biến, vị tươi ngọt.', 1, '2025-10-11 20:30:00'),
+(4, 14, 5, 'Há cảo tôm thịt ngon', 'Há cảo thơm ngon, nhân đầy, ăn hấp dẫn.', 1, '2025-10-11 21:00:00'),
+(5, 15, 5, 'Cá hồi ngon', 'Cá hồi Nauy tươi, lát đều, ăn rất ngon.', 1, '2025-10-11 21:15:00'),
+(1, 16, 4, 'Xúc xích Đức chuẩn vị', 'Xúc xích thơm, ít mỡ, ăn sáng tiện lợi.', 1, '2025-10-11 21:40:00'),
+(2, 17, 5, 'Bánh bao ngon', 'Bánh bao kim sa thơm, nhân chảy hấp dẫn.', 1, '2025-10-11 22:00:00'),
+(3, 18, 5, 'Chả giò tôm cua giòn', 'Chiên lại giòn rụm, hương vị thơm ngon.', 1, '2025-10-11 22:20:00'),
+(4, 19, 4, 'Nước mắm Nam Ngư ngon', 'Vị đậm đà, thơm, hợp khẩu vị gia đình.', 1, '2025-10-11 22:30:00'),
+(5, 20, 5, 'Dầu ăn tốt', 'Dầu ăn Tường An tinh luyện, chiên không bắn.', 1, '2025-10-11 22:45:00'),
+(1, 21, 5, 'Bột canh tiện dụng', 'Bột canh Hải Châu nêm rất vừa miệng.', 1, '2025-10-11 23:00:00'),
+(2, 22, 5, 'Muối hồng đẹp', 'Muối hồng Himalaya sạch, vị dịu, dùng tốt.', 1, '2025-10-11 23:15:00'),
+(3, 23, 5, 'Tiêu Phú Quốc thơm', 'Tiêu cay nồng tự nhiên, rất chất lượng.', 1, '2025-10-11 23:30:00'),
+(4, 24, 5, 'Đường Biên Hòa ngọt thanh', 'Đường tinh luyện ngon, dễ hòa tan.', 1, '2025-10-11 23:45:00'),
+(5, 25, 4, 'Mì Omachi ngon', 'Mì xốt bò hầm ngon, sợi dai, dễ ăn.', 1, '2025-10-12 00:00:00'),
+(1, 26, 5, 'Snack Oishi giòn ngon', 'Snack khoai tây vị phô mai thơm ngon.', 1, '2025-10-12 08:00:00'),
+(2, 27, 5, 'Milo ngon', 'Ngũ cốc Milo dễ uống, hợp cho buổi sáng.', 1, '2025-10-12 08:15:00'),
+(3, 28, 4, 'Phở ăn liền ngon', 'Phở Đệ Nhất vị bò đậm đà, sợi mềm.', 1, '2025-10-12 08:30:00'),
+(4, 29, 5, 'Bánh quy ngon', 'Bánh AFC thơm, ít béo, ăn nhẹ buổi sáng.', 1, '2025-10-12 08:45:00'),
+(5, 30, 4, 'Xúc xích CP ngon', 'Xúc xích heo CP ngọt, dùng nướng rất ngon.', 1, '2025-10-12 09:00:00'),
+(1, 31, 5, 'Cốt lết heo ngon', 'Thịt tươi, miếng dày, chiên giòn ngon.', 1, '2025-10-12 09:30:00'),
+(2, 32, 5, 'Thăn bò mềm', 'Thăn bò Mỹ rất ngon, dùng làm steak tuyệt.', 1, '2025-10-12 10:00:00'),
+(3, 33, 5, 'Đùi gà chắc', 'Đùi gà CP tươi, thịt săn chắc, thơm.', 1, '2025-10-12 10:30:00'),
+(4, 34, 5, 'Cánh gà giòn', 'Cánh gà CP tươi ngon, chiên giòn rụm.', 1, '2025-10-12 11:00:00'),
+(5, 35, 4, 'Ớt chuông đẹp', 'Ớt chuông Đà Lạt nhiều màu, giòn, tươi.', 1, '2025-10-12 11:15:00'),
+(1, 36, 5, 'Hành tây ngọt', 'Hành tây Đà Lạt thơm, không cay mắt.', 1, '2025-10-12 11:30:00'),
+(2, 37, 5, 'Muối biển ngon', 'Muối biển Bạc Liêu sạch, vị tự nhiên.', 1, '2025-10-12 11:45:00'),
+(3, 38, 5, 'Nước tương Maggi ngon', 'Nước tương vị dịu, không mặn gắt.', 1, '2025-10-12 12:00:00'),
+(4, 39, 4, 'Chả cá ngon', 'Chả cá thác lác thơm, chiên không vỡ.', 1, '2025-10-12 12:30:00'),
+(5, 40, 5, 'Cá viên ngon', 'Cá viên chiên giòn, vị vừa ăn.', 1, '2025-10-12 12:45:00'),
+(1, 41, 5, 'Mì Hảo Hảo quen thuộc', 'Vị tôm chua cay ngon, giá tốt.', 1, '2025-10-12 13:00:00'),
+(2, 42, 5, 'Snack rong biển ngon', 'Snack giòn tan, vị mặn nhẹ, rất ngon.', 1, '2025-10-12 13:15:00');
+
 -- ================
 -- PROMOTIONS + MAPPINGS (match entity Promotion.java)
 -- ================
