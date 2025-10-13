@@ -11,6 +11,7 @@ import RelatedProducts from "@/components/RelatedProducts";
 import { useDispatch } from "react-redux";
 import { add as addToCart } from "@/features/cart/cartSlice";
 import type { CartItem } from "@/features/cart/cartTypes";
+import ProductReviews from '@/components/ProductReviews';
 
 // Ghép URL ảnh từ BE (nếu DB lưu "/images/xxx.jpg")
 const API_BASE =
@@ -343,6 +344,11 @@ export default function ProductDetail() {
 
       <div className="mt-10">
         <RelatedProducts productId={productId} />
+      </div>
+
+      {/* ✅ Phần đánh giá sản phẩm */}
+      <div className="mt-10">
+        <ProductReviews productId={productId} />
       </div>
     </div>
   );
