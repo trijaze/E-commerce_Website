@@ -2,17 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getRelated, type RelatedItem } from "@/api/productDetailApi";
+import { imgUrl, mainImageOf } from "@/utils/url";
 
 type Props = { productId?: number };
-
-// Chuẩn hóa URL ảnh từ BE (vd: "/images/xxx.jpg" -> http://localhost:8080/bachhoa/images/xxx.jpg)
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa";
-const resolveUrl = (u?: string | null) => {
-  if (!u) return "/placeholder.png";
-  if (/^https?:\/\//i.test(u)) return u;
-  return `${API_BASE}${u.startsWith("/") ? "" : "/"}${u}`;
-};
 
 export default function RelatedProducts({ productId }: Props) {
   const params = useParams<{ id: string }>();
@@ -48,7 +40,7 @@ export default function RelatedProducts({ productId }: Props) {
   if (error || (!loading && items.length === 0)) return null;
 
   return (
-    <section>
+    <section className="mt-6">
       <h2 className="text-lg font-semibold mb-3">Sản phẩm liên quan</h2>
 
       {loading ? (
@@ -65,9 +57,14 @@ export default function RelatedProducts({ productId }: Props) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {items.map((p, idx) => {
-            const id = p.productId;
-            const price = p.basePrice ?? 0;
-            const img = resolveUrl(p.imageUrl ?? null);
+            const id = (p as any).productId ?? idx;
+            const price =
+              (p as any).basePrice ??
+              (p as any).price ??
+              0;
+
+            // Lấy ảnh chính từ nhiều dạng DTO, rồi chuẩn hoá URL về http://localhost:8080/bachhoa/...
+            const src = imgUrl(mainImageOf(p as any));
 
             return (
               <Link
@@ -77,8 +74,8 @@ export default function RelatedProducts({ productId }: Props) {
               >
                 <div className="aspect-square bg-white flex items-center justify-center">
                   <img
-                    src={img}
-                    alt={p.name}
+                    src={src}
+                    alt={(p as any).name}
                     className="max-w-full max-h-full object-contain"
                     loading="lazy"
                     onError={(e) => {
@@ -88,9 +85,11 @@ export default function RelatedProducts({ productId }: Props) {
                   />
                 </div>
                 <div className="p-3">
-                  <div className="text-sm line-clamp-2 mb-1">{p.name}</div>
+                  <div className="text-sm line-clamp-2 mb-1">
+                    {(p as any).name}
+                  </div>
                   <div className="font-semibold text-emerald-600 text-sm">
-                    {price.toLocaleString("vi-VN", {
+                    {Number(price).toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     })}
