@@ -6,65 +6,55 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
-@Table(name = "productVariants")  // camelCase theo quy ước bạn, nếu DB đang camelCase
+@Table(name = "productvariants")
 public class ProductVariant implements Serializable {
-	private static final long serialVersionUID = 1L;
-    @Id
+    private static final long serialVersionUID = 1L;
+
+    @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "variantId")
     private Integer variantId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "productId")  // camelCase
+    @JoinColumn(name = "productId", foreignKey = @ForeignKey(name = "fk_variants_product"))
     private Product product;
 
-    @Column(columnDefinition = "json")
-    private String attributes; // JSON: {"size":"500g","color":"red"}
+    // SKU của biến thể
+    @Column(name = "variantSku", length = 64, nullable = false)
+    private String variantSku;
 
-    @Column(precision = 13, scale = 2)
+    // Thuộc tính mô tả (ví dụ: "500g", "1kg", "vị tôm cay" ...)
+    @Column(name = "attributes", length = 255)
+    private String attributes;
+
+    // Giá bán của biến thể
+    @Column(name = "price", precision = 10, scale = 2, nullable = false)
     private BigDecimal price;
 
-    public ProductVariant() {}
+    // Số lượng tồn kho
+    @Column(name = "stockQuantity")
+    private Integer stockQuantity;
 
-    // Getters / Setters
-    public Integer getVariantId() {
-        return variantId;
-    }
+    // --- Getters / Setters ---
+    public Integer getVariantId() { return variantId; }
+    public void setVariantId(Integer variantId) { this.variantId = variantId; }
 
-    public void setVariantId(Integer variantId) {
-        this.variantId = variantId;
-    }
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
 
-    public Product getProduct() {
-        return product;
-    }
+    public String getVariantSku() { return variantSku; }
+    public void setVariantSku(String variantSku) { this.variantSku = variantSku; }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
+    public String getAttributes() { return attributes; }
+    public void setAttributes(String attributes) { this.attributes = attributes; }
 
-    public String getAttributes() {
-        return attributes;
-    }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
-    public void setAttributes(String attributes) {
-        this.attributes = attributes;
-    }
+    public Integer getStockQuantity() { return stockQuantity; }
+    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    // Optional helper method
-    public String getVariantName() {
-        if (attributes == null || attributes.isEmpty()) return null;
-        return attributes;
-    }
-
-    // equals / hashCode
+    // --- equals/hashCode ---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

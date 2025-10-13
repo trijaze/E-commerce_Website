@@ -4,73 +4,44 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
-    <display-name>bachhoa-backend</display-name>
+  <display-name>bachhoa-backend</display-name>
 
-    <!-- 
-      KHAI BÁO CÁC BỘ LỌC (FILTERS)
-      Trật tự của các filter-mapping bên dưới là rất quan trọng.
-    -->
+  <!-- Filters: chỉ cấu hình ở đây, bỏ @WebFilter trong class -->
+  <filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-    <!-- BỘ LỌC 1: ENCODING FILTER (Chạy đầu tiên cho mọi request) -->
-    <filter>
-        <filter-name>CharacterEncodingFilter</filter-name>
-        <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>CharacterEncodingFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
+  <filter>
+    <filter-name>CorsFilter</filter-name>
+    <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>CorsFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-    <!-- BỘ LỌC 2: CORS FILTER (Chạy thứ hai, cho các request API) -->
-    <filter>
-        <filter-name>CorsFilter</filter-name>
-        <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>CorsFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
+  <!-- Product APIs -->
+  <servlet>
+    <servlet-name>ProductServlet</servlet-name>
+    <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProductServlet</servlet-name>
+    <url-pattern>/api/products/*</url-pattern>
+  </servlet-mapping>
 
-    <!-- BỘ LỌC 3: JWT FILTER (Chạy cuối cùng, cho các API cần bảo vệ) -->
-    <filter>
-        <filter-name>JwtFilter</filter-name>
-        <filter-class>vn.bachhoa.filter.JwtFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>JwtFilter</filter-name>
-        <url-pattern>/api/secure/*</url-pattern>
-    </filter-mapping>
-
-    <!-- 
-      KHAI BÁO CÁC SERVLET
-      Các servlet được định nghĩa ở đây. Các servlet khác dùng @WebServlet sẽ được tự động nhận diện.
-    -->
-    <servlet>
-        <servlet-name>HealthServlet</servlet-name>
-        <servlet-class>vn.bachhoa.HealthServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>HealthServlet</servlet-name>
-        <url-pattern>/api/health</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>ProductServlet</servlet-name>
-        <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ProductServlet</servlet-name>
-        <url-pattern>/api/products/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>PromotionServlet</servlet-name>
-        <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>PromotionServlet</servlet-name>
-        <url-pattern>/api/promotions</url-pattern>
-    </servlet-mapping>
+  <servlet>
+    <servlet-name>PromotionServlet</servlet-name>
+    <servlet-class>vn.bachhoa.controller.PromotionServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PromotionServlet</servlet-name>
+    <url-pattern>/api/promotions</url-pattern>
+  </servlet-mapping>
 
 </web-app>
-

@@ -1,33 +1,54 @@
 // src/api/productDetailApi.ts
-import axiosClient from './axiosClient';
+import axios from "axios";
 
-/** Kiểu dữ liệu trả về từ BE cho trang chi tiết */
-export type ProductImage = { imageId?: number; imageUrl: string; isMain?: boolean };
-export type ProductVariant = { variantId?: number; attributes: Record<string, string>; price: number };
-export type RelatedItem = { productId: number; name: string; imageUrl?: string; minPrice: number };
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa",
+  headers: { "Content-Type": "application/json" },
+});
+
+// === Types khớp BE DTO ===
+export type ImageDTO = {
+  imageId: number;
+  imageUrl: string;
+  isMain: boolean;
+  variantId: number | null;
+};
+
+export type VariantDTO = {
+  variantId: number;
+  sku?: string | null;
+  name?: string | null;   // = variantName bên BE
+  price?: number | null;
+};
 
 export type ProductDetail = {
   productId: number;
+  sku?: string | null;
   name: string;
-  description?: string;
-  basePrice?: number;
-  minPrice?: number;
-  images: ProductImage[];
-  variants: ProductVariant[];
+  description?: string | null;
+  basePrice?: number | null;
+  categoryId?: number | null;
+  categoryName?: string | null;
+  supplierId?: number | null;
+  supplierName?: string | null;
+  images: ImageDTO[];
+  variants: VariantDTO[];
 };
 
-function pickData<T>(res: any): T {
-  return (res?.data?.data ?? res?.data) as T;
+export type RelatedItem = {
+  productId: number;
+  name: string;
+  basePrice?: number | null;
+  imageUrl?: string | null;
+};
+
+export async function getProductDetail(id: number): Promise<ProductDetail> {
+  const { data } = await api.get(`/api/products/${id}`);
+  return data.data as ProductDetail; // BE bọc trong {data: ...}
 }
 
-export const getProductDetail = async (id: number): Promise<ProductDetail> => {
-  const res = await axiosClient.get(`/products/${id}`);
-  return pickData<ProductDetail>(res);
-};
-
-export const getRelated = async (id: number, limit = 8): Promise<RelatedItem[]> => {
-  const res = await axiosClient.get(`/products/${id}/related`, { params: { limit } });
-  return pickData<RelatedItem[]>(res) ?? [];
-};
-
-export default { getProductDetail, getRelated };
+// trả về danh sách rút gọn cho related
+export async function getRelated(id: number, limit = 8): Promise<RelatedItem[]> {
+  const { data } = await api.get(`/api/products/${id}/related`, { params: { limit } });
+  return data.data as RelatedItem[];
+}

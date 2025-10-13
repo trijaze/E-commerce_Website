@@ -1,84 +1,106 @@
 // src/components/RelatedProducts.tsx
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import axiosClient from '@/api/axiosClient';
+import React, { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { getRelated, type RelatedItem } from "@/api/productDetailApi";
 
-type RelatedProduct = {
-  id: number;
-  name: string;
-  images?: { imageUrl: string; isMain?: boolean }[];
-  minPrice?: number;
-  basePrice?: number;
+type Props = { productId?: number };
+
+// Chuẩn hóa URL ảnh từ BE (vd: "/images/xxx.jpg" -> http://localhost:8080/bachhoa/images/xxx.jpg)
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa";
+const resolveUrl = (u?: string | null) => {
+  if (!u) return "/placeholder.png";
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${API_BASE}${u.startsWith("/") ? "" : "/"}${u}`;
 };
-
-type Props = {
-  /** ID sản phẩm hiện tại để lấy danh sách liên quan */
-  productId?: number; // cho phép optional, sẽ fallback sang useParams
-};
-
-const formatPrice = (v: number) =>
-  (v ?? 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
 export default function RelatedProducts({ productId }: Props) {
   const params = useParams<{ id: string }>();
-  const id = productId ?? Number(params.id ?? 0);
+  const pid = productId ?? Number(params.id ?? 0);
 
-  const [items, setItems] = useState<RelatedProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<RelatedItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
-    let on = true;
+    let mounted = true;
     setLoading(true);
-    axiosClient
-      .get<RelatedProduct[]>(`/products/${id}/related`)
-      .then((res) => {
-        if (!on) return;
-        setItems(res.data || []);
-      })
-      .catch((e: unknown) => setError((e as Error).message || 'Tải thất bại'))
-      .finally(() => on && setLoading(false));
-    return () => {
-      on = false;
-    };
-  }, [id]);
+    setError(null);
+    setItems([]);
 
-  if (loading) return <div className="text-sm text-gray-500">Đang tải sản phẩm liên quan…</div>;
-  if (error) return <div className="text-sm text-rose-600">Lỗi: {error}</div>;
-  if (!items.length) return null;
+    getRelated(pid, 8)
+      .then((d) => {
+        if (!mounted) return;
+        setItems(d ?? []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setError("Không tải được danh sách liên quan.");
+      })
+      .finally(() => mounted && setLoading(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, [pid]);
+
+  // Nếu lỗi hoặc danh sách rỗng sau khi load xong thì ẩn block
+  if (error || (!loading && items.length === 0)) return null;
 
   return (
     <section>
       <h2 className="text-lg font-semibold mb-3">Sản phẩm liên quan</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {items.map((p) => {
-          const main =
-            p.images?.find((i) => i.isMain)?.imageUrl || p.images?.[0]?.imageUrl || '';
-          const price = p.minPrice ?? p.basePrice ?? 0;
-          return (
-            <Link
-              key={p.id}
-              to={`/products/${p.id}`}
-              className="border rounded-2xl overflow-hidden hover:shadow transition bg-white"
-              title={p.name}
-            >
-              <div className="aspect-square bg-gray-50 flex items-center justify-center">
-                {main ? (
-                  // eslint-disable-next-line jsx-a11y/alt-text
-                  <img src={main} className="object-contain max-h-full max-w-full" />
-                ) : (
-                  <span className="text-xs text-gray-400">No image</span>
-                )}
-              </div>
-              <div className="p-3">
-                <div className="text-sm line-clamp-2 mb-1">{p.name}</div>
-                <div className="font-semibold text-rose-600 text-sm">{formatPrice(price)}</div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+
+      {loading ? (
+        // Skeleton khi đang tải
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border rounded-xl p-3 animate-pulse">
+              <div className="aspect-square rounded-xl bg-gray-100" />
+              <div className="h-4 mt-2 bg-gray-100 rounded" />
+              <div className="h-4 mt-2 w-1/2 bg-gray-100 rounded" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {items.map((p, idx) => {
+            const id = p.productId;
+            const price = p.basePrice ?? 0;
+            const img = resolveUrl(p.imageUrl ?? null);
+
+            return (
+              <Link
+                key={`${id}-${idx}`}
+                to={`/products/${id}`}
+                className="border rounded-xl overflow-hidden hover:shadow"
+              >
+                <div className="aspect-square bg-white flex items-center justify-center">
+                  <img
+                    src={img}
+                    alt={p.name}
+                    className="max-w-full max-h-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        "/placeholder.png";
+                    }}
+                  />
+                </div>
+                <div className="p-3">
+                  <div className="text-sm line-clamp-2 mb-1">{p.name}</div>
+                  <div className="font-semibold text-emerald-600 text-sm">
+                    {price.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
