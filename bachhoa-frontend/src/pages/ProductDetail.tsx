@@ -103,10 +103,12 @@ export default function ProductDetail() {
   }, [detail?.name]);
 
   // đảm bảo index ảnh hợp lệ
-  useEffect(() => {
-    if (!images.length) setMainImgIdx(0);
-    else if (mainImgIdx > images.length - 1) setMainImgIdx(0);
-  }, [images.length, mainImgIdx]);
+  useEffect(() => {
+    // Nếu KHÔNG có ảnh HOẶC index ảnh đang nằm ngoài phạm vi
+    if (!images.length || mainImgIdx > images.length - 1) {
+      setMainImgIdx(0);
+    }
+  }, [images.length, mainImgIdx]);
 
   const handleSelectVariant = useCallback(
     (idx: number) => {
