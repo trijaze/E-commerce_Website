@@ -15,14 +15,18 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import com.google.gson.GsonBuilder; 
+import vn.bachhoa.util.LocalDateTimeAdapter; 
+import java.time.LocalDateTime;
 
 @WebServlet("/api/auth/login")
 public class loginServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
-    private final Gson gson = new Gson();
-
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     private static class LoginRequest {
         String identifier;
         String password;
@@ -42,7 +46,7 @@ public class loginServlet extends HttpServlet {
         }
 
         User u = userDAO.findByIdentifier(cred.identifier);
-
+        
         if (u == null) {
             sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Tên đăng nhập hoặc số điện thoại không tồn tại.");
             return;
@@ -59,10 +63,12 @@ public class loginServlet extends HttpServlet {
             AuditLog log = new AuditLog(u.getUserId(), "USER_LOGIN", "Users", String.valueOf(u.getUserId()));
             auditLogDAO.save(log);
 
-            // Tạo tokens
-            String accessToken = JWTUtil.generateToken(u, JWTUtil.ACCESS_TOKEN_EXPIRATION_MS, (Key) JWTUtil.JWT_SECRET_KEY);
-            String refreshToken = JWTUtil.generateToken(u, JWTUtil.REFRESH_TOKEN_EXPIRATION_MS, (Key) JWTUtil.JWT_REFRESH_SECRET_KEY);
-
+         // Tạo tokens
+         String accessToken = JWTUtil.generateToken(u, JWTUtil.ACCESS_TOKEN_EXPIRATION_MS, JWTUtil.JWT_SECRET_KEY); // <-- Bỏ (Key)
+         
+         System.out.println("LOGIN KEY OBJECT ID: " + System.identityHashCode(JWTUtil.JWT_REFRESH_SECRET_KEY));
+         String refreshToken = JWTUtil.generateToken(u, JWTUtil.REFRESH_TOKEN_EXPIRATION_MS, JWTUtil.JWT_REFRESH_SECRET_KEY); // <-- Bỏ (Key) nếu có
+         System.out.println("LOGIN KEY: " + JWTUtil.JWT_SECRET_KEY);
             Map<String, String> responseData = Map.of("accessToken", accessToken, "refreshToken", refreshToken);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, responseData);
         } catch (Exception e) {

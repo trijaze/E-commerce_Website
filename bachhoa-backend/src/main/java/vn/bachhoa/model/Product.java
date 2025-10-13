@@ -1,69 +1,83 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(
     name = "products",
     indexes = {
-        @Index(name = "idx_products_category", columnList = "categoryId"),
-        @Index(name = "idx_products_sku", columnList = "sku")
+        @Index(name = "idx_products_category", columnList = "categoryId")
     },
     uniqueConstraints = @UniqueConstraint(name = "uk_products_sku", columnNames = {"sku"})
 )
-public class Product implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class Product  {
+
+    // ---------- Cột chính ----------
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "productId")
     private Integer productId;
 
-    @Column(nullable = false, unique = true, length = 100)
+    // ---------- Thuộc tính cơ bản ----------
+    @Column(name = "sku", nullable = false, length = 100)
     private String sku;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(length = 4000)
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(precision = 13, scale = 2)
+    @Column(name = "basePrice", precision = 13, scale = 2)
     private BigDecimal basePrice;
 
+    // ---------- Liên kết danh mục và nhà cung cấp ----------
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryId")
+    @JoinColumn(name = "categoryId", foreignKey = @ForeignKey(name = "fk_products_category"))
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplierId")
+    @JoinColumn(name = "supplierId", foreignKey = @ForeignKey(name = "fk_products_supplier"))
     private Supplier supplier;
 
-    // Dùng FetchMode.SUBSELECT để tránh MultipleBagFetchException
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Fetch(FetchMode.SUBSELECT)
+    // ---------- Danh sách biến thể ----------
+    @OneToMany(
+        mappedBy = "product",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    @Fetch(FetchMode.SUBSELECT) // Tránh lỗi MultipleBagFetchException
+    @BatchSize(size = 20) // Hibernate sẽ load tối đa 20 products một lần
+    @OrderBy("variantId ASC") // Đảm bảo thứ tự khi hiển thị
     private List<ProductVariant> variants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    // ---------- Danh sách hình ảnh ----------
+    @OneToMany(
+        mappedBy = "product",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
     @Fetch(FetchMode.SUBSELECT)
+    @BatchSize(size = 20)
+    @OrderBy("imageId ASC")
     private List<ProductImage> images = new ArrayList<>();
 
-    
-    // --- Constructor ---
+    // ---------- Constructors ----------
     public Product() {}
 
-    // --- Getters và Setters ---
+    // ---------- Getters / Setters ----------
     public Integer getProductId() { return productId; }
     public void setProductId(Integer productId) { this.productId = productId; }
 
     public String getSku() { return sku; }
     public void setSku(String sku) { this.sku = sku; }
-
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -80,24 +94,38 @@ public class Product implements Serializable {
     public Supplier getSupplier() { return supplier; }
     public void setSupplier(Supplier supplier) { this.supplier = supplier; }
 
-
     public List<ProductVariant> getVariants() { return variants; }
     public void setVariants(List<ProductVariant> variants) { this.variants = variants; }
 
     public List<ProductImage> getImages() { return images; }
     public void setImages(List<ProductImage> images) { this.images = images; }
 
-    // --- equals() và hashCode() ---
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Product)) return false;
-        Product other = (Product) o;
-        return productId != null && productId.equals(other.getProductId());
+   
+    public void addVariant(ProductVariant v) {
+        if (v != null) {
+            variants.add(v);
+            v.setProduct(this);
+        }
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(productId);
+    public void removeVariant(ProductVariant v) {
+        if (v != null) {
+            variants.remove(v);
+            v.setProduct(null);
+        }
+    }
+
+    public void addImage(ProductImage img) {
+        if (img != null) {
+            images.add(img);
+            img.setProduct(this);
+        }
+    }
+
+    public void removeImage(ProductImage img) {
+        if (img != null) {
+            images.remove(img);
+            img.setProduct(null);
+        }
     }
 }

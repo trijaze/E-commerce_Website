@@ -3,15 +3,19 @@ package vn.bachhoa.controller;
 import vn.bachhoa.dao.UserDAO;
 import vn.bachhoa.dao.AuditLogDAO; 
 import vn.bachhoa.model.User;
-import vn.bachhoa.model.AuditLog;   
+import vn.bachhoa.model.AuditLog;
+import vn.bachhoa.util.LocalDateTimeAdapter;
 import vn.bachhoa.util.PasswordUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -23,8 +27,9 @@ public class resetPasswordServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final UserDAO userDAO = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO(); 
-    private final Gson gson = new Gson();
-
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     // DTO để nhận dữ liệu từ JSON request
     private static class ResetRequest {
         String username;

@@ -7,11 +7,15 @@ import vn.bachhoa.model.CartItem;
 import vn.bachhoa.model.Product;
 import vn.bachhoa.model.User;
 import vn.bachhoa.util.JsonUtil;
+import vn.bachhoa.util.LocalDateTimeAdapter;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +23,9 @@ import java.util.Map;
 public class CartServlet extends HttpServlet {
     private final CartDAO cartDAO = new CartDAO();
     private final ProductDAO productDAO = new ProductDAO();
-    private final Gson gson = new Gson();
-
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");

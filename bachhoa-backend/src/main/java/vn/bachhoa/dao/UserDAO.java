@@ -8,6 +8,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
 import java.util.function.Function;
+import vn.bachhoa.dto.UserBasicDTO;
 
 /**
  * Lớp DAO (Data Access Object) chịu trách nhiệm cho tất cả các thao tác
@@ -44,6 +45,22 @@ public class UserDAO {
     public User findById(int id) {
         return executeInsideTransaction(em -> em.find(User.class, id));
     }
+    public UserBasicDTO findBasicById(int id) {
+        return executeInsideTransaction(em -> {
+            TypedQuery<UserBasicDTO> query = em.createQuery(
+                "SELECT new vn.bachhoa.dto.UserBasicDTO(u.userId, u.username, u.phoneNumber, u.email, u.createdAt) " +
+                "FROM User u WHERE u.userId = :id",
+                UserBasicDTO.class
+            );
+            query.setParameter("id", id);
+            try {
+                return query.getSingleResult();
+            } catch (NoResultException e) {
+                return null;
+            }
+        });
+    }
+
 
     //Tìm người dùng bằng identifier (username hoặc phone).
     public User findByIdentifier(String identifier) {
@@ -65,8 +82,8 @@ public class UserDAO {
     }
 
     // Kiểm tra xem một số điện thoại đã tồn tại hay chưa
-    public boolean phoneExists(String phone) {
-        return findByIdentifier(phone) != null;
+    public boolean phoneExists(String phoneNumber) {
+        return findByIdentifier(phoneNumber) != null;
     }
     
     // Kiểm tra xem một email đã tồn tại hay chưa

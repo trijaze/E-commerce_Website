@@ -1,15 +1,12 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
 @Table(name = "categories")
-public class Category implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -84,19 +81,5 @@ public class Category implements Serializable {
 
     public void setProducts(List<Product> products) {
         this.products = products;
-    }
-
-    // --- equals / hashCode ---
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Category)) return false;
-        Category other = (Category) o;
-        return categoryId != null && categoryId.equals(other.getCategoryId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(categoryId);
     }
 }
