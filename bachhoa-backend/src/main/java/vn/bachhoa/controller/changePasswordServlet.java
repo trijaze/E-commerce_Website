@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-@WebServlet("/api/secure/user/changepassword")
+@WebServlet("/api/secure/users/changepassword")
 public class changePasswordServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final UserDAO dao = new UserDAO();
