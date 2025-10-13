@@ -1,6 +1,6 @@
 // src/utils/token.ts
-const ACCESS_KEY = 'market_access_token_v1';
-const REFRESH_KEY = 'market_refresh_token_v1';
+const ACCESS_KEY = 'token';
+const REFRESH_KEY = 'refreshToken';
 
 export const getAccessToken = (): string | null => {
   try { return localStorage.getItem(ACCESS_KEY); } catch { return null; }

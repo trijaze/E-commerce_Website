@@ -13,9 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-@WebServlet("/api/reviews")
+@WebServlet("/api/secure/reviews")
 public class ReviewServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+
     private final ReviewService reviewService = new ReviewService();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -26,7 +27,6 @@ public class ReviewServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            // SỬA LỖI: Lấy productId từ parameter thay vì path
             int productId = getProductIdFromParameter(req);
             var reviews = reviewService.getReviewsForProduct(productId);
             JsonUtil.ok(resp, reviews);
@@ -44,20 +44,17 @@ public class ReviewServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Integer userId = (Integer) req.getAttribute("userId");
+
         if (userId == null) {
             JsonUtil.writeJson(resp, Map.of("error", "Authentication required to post a review"), HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         try {
-            // SỬA LỖI: Lấy productId từ parameter thay vì path
             int productId = getProductIdFromParameter(req);
             ReviewDTO reviewData = objectMapper.readValue(req.getReader(), ReviewDTO.class);
-            
             ReviewDTO newReview = reviewService.addReview(userId, productId, reviewData);
-            
             JsonUtil.writeJson(resp, newReview, HttpServletResponse.SC_CREATED);
-            
         } catch (IllegalArgumentException e) {
             JsonUtil.writeJson(resp, Map.of("error", e.getMessage()), HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
@@ -66,13 +63,15 @@ public class ReviewServlet extends HttpServlet {
     }
 
     /**
-     * Phương thức helper mới để lấy productId từ query parameter.
+     * Helper: Lấy productId từ query parameter.
      */
     private int getProductIdFromParameter(HttpServletRequest req) {
         String productIdParam = req.getParameter("productId");
+
         if (productIdParam == null || productIdParam.isBlank()) {
             throw new IllegalArgumentException("Query parameter 'productId' is required.");
         }
+
         try {
             return Integer.parseInt(productIdParam);
         } catch (NumberFormatException e) {

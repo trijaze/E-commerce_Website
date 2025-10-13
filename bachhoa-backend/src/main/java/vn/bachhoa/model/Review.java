@@ -27,7 +27,7 @@ public class Review {
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
-        isApproved = false;
+        if (!this.isApproved) this.isApproved = true;
     }
 
     // Getters & setters...

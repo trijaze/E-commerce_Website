@@ -11,6 +11,7 @@ import RelatedProducts from "@/components/RelatedProducts";
 import { useDispatch } from "react-redux";
 import { add as addToCart } from "@/features/cart/cartSlice";
 import type { CartItem } from "@/features/cart/cartTypes";
+import ProductReviews from '@/components/ProductReviews';
 
 // Ghép URL ảnh từ BE (nếu DB lưu "/images/xxx.jpg")
 const API_BASE =
@@ -102,10 +103,12 @@ export default function ProductDetail() {
   }, [detail?.name]);
 
   // đảm bảo index ảnh hợp lệ
-  useEffect(() => {
-    if (!images.length) setMainImgIdx(0);
-    else if (mainImgIdx > images.length - 1) setMainImgIdx(0);
-  }, [images.length, mainImgIdx]);
+  useEffect(() => {
+    // Nếu KHÔNG có ảnh HOẶC index ảnh đang nằm ngoài phạm vi
+    if (!images.length || mainImgIdx > images.length - 1) {
+      setMainImgIdx(0);
+    }
+  }, [images.length, mainImgIdx]);
 
   const handleSelectVariant = useCallback(
     (idx: number) => {
@@ -343,6 +346,11 @@ export default function ProductDetail() {
 
       <div className="mt-10">
         <RelatedProducts productId={productId} />
+      </div>
+
+      {/* ✅ Phần đánh giá sản phẩm */}
+      <div className="mt-10">
+        <ProductReviews productId={productId} />
       </div>
     </div>
   );
