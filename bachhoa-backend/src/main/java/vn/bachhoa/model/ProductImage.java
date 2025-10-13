@@ -1,13 +1,11 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
-import java.util.Objects;
 
 @Entity
 @Table(name = "productimages")
-public class ProductImage implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class ProductImage  {
+    
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,17 +41,4 @@ public class ProductImage implements Serializable {
     public Boolean getIsMain() { return isMain; }
     public void setIsMain(Boolean isMain) { this.isMain = isMain; }
 
-    // --- equals/hashCode ---
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProductImage)) return false;
-        ProductImage other = (ProductImage) o;
-        return imageId != null && imageId.equals(other.getImageId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(imageId);
-    }
 }

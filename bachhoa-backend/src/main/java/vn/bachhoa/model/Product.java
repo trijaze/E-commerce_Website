@@ -1,7 +1,6 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.*;
 import org.hibernate.annotations.Fetch;
@@ -12,13 +11,11 @@ import org.hibernate.annotations.BatchSize;
 @Table(
     name = "products",
     indexes = {
-        @Index(name = "idx_products_category", columnList = "categoryId"),
-        @Index(name = "idx_products_sku", columnList = "sku")
+        @Index(name = "idx_products_category", columnList = "categoryId")
     },
     uniqueConstraints = @UniqueConstraint(name = "uk_products_sku", columnNames = {"sku"})
 )
-public class Product implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Product  {
 
     // ---------- Cột chính ----------
     @Id
@@ -55,9 +52,9 @@ public class Product implements Serializable {
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
-    @Fetch(FetchMode.SUBSELECT) // ✅ Tránh lỗi MultipleBagFetchException
-    @BatchSize(size = 20) // ✅ Hibernate sẽ load tối đa 20 products một lần
-    @OrderBy("variantId ASC") // ✅ Đảm bảo thứ tự khi hiển thị
+    @Fetch(FetchMode.SUBSELECT) // Tránh lỗi MultipleBagFetchException
+    @BatchSize(size = 20) // Hibernate sẽ load tối đa 20 products một lần
+    @OrderBy("variantId ASC") // Đảm bảo thứ tự khi hiển thị
     private List<ProductVariant> variants = new ArrayList<>();
 
     // ---------- Danh sách hình ảnh ----------
@@ -103,7 +100,7 @@ public class Product implements Serializable {
     public List<ProductImage> getImages() { return images; }
     public void setImages(List<ProductImage> images) { this.images = images; }
 
-    // ---------- Quan hệ 2 chiều tiện ích ----------
+   
     public void addVariant(ProductVariant v) {
         if (v != null) {
             variants.add(v);
@@ -130,19 +127,5 @@ public class Product implements Serializable {
             images.remove(img);
             img.setProduct(null);
         }
-    }
-
-    // ---------- equals/hashCode ----------
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Product)) return false;
-        Product other = (Product) o;
-        return productId != null && productId.equals(other.getProductId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(productId);
     }
 }
