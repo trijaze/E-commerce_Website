@@ -3,12 +3,27 @@ import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { orderApi } from "../api/orderApi";
 import { getPromotionByCode } from "@/api/promotionApi";
 import { clear } from "../features/cart/cartSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Checkout() {
-  const items = useAppSelector((s) => s.cart.items);
+  const location = useLocation();
+  const singleProduct = location.state?.product; // 👈 nhận sản phẩm từ nút MUA (nếu có)
+
+  const cartItems = useAppSelector((s) => s.cart.items);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  // ✅ Nếu có sản phẩm truyền qua => chỉ mua 1 sản phẩm đó, ngược lại dùng cart
+  const items = singleProduct
+    ? [
+        {
+          id: singleProduct.productId,
+          name: singleProduct.name,
+          qty: 1,
+          price: singleProduct.basePrice,
+        },
+      ]
+    : cartItems;
 
   const [paymentMethod, setPaymentMethod] = useState<string>("cod");
 
@@ -92,7 +107,7 @@ export default function Checkout() {
 
     try {
       const payload = {
-        userId: 1, // giả định user tạm
+        userId: 1, // tạm hardcode user
         paymentMethod,
         items: items.map((i) => ({
           productId: i.id,
@@ -109,7 +124,10 @@ export default function Checkout() {
       console.log("✅ Đặt hàng thành công:", response.data);
 
       alert("🎉 Đặt hàng thành công!");
-      dispatch(clear());
+
+      // Nếu là mua qua cart thì clear, còn mua ngay thì không cần
+      if (!singleProduct) dispatch(clear());
+
       navigate("/orders");
     } catch (error) {
       console.error("❌ Lỗi khi tạo đơn hàng:", error);
