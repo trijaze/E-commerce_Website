@@ -1,7 +1,6 @@
 package vn.bachhoa.controller;
 
 import vn.bachhoa.dao.ProductDAO;
-import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.util.JsonUtil;
 
@@ -12,9 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-/** ✅ Servlet xử lý API sản phẩm: /api/products, /api/products/{id}, /api/products/{id}/related */
-@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
-public class ProductServlet extends HttpServlet {
+/** ✅ Servlet xử lý API admin cho sản phẩm: /api/secure/admin/products */
+@WebServlet(urlPatterns = {"/api/secure/admin/products", "/api/secure/admin/products/*"})
+public class AdminProductServlet extends HttpServlet {
 
     private final ProductDAO productDAO = new ProductDAO();
 
@@ -27,7 +26,8 @@ public class ProductServlet extends HttpServlet {
 
         try {
             if (path.isEmpty() || "/".equals(path)) {
-                handleList(req, resp);
+                // Lấy tất cả sản phẩm cho admin
+                handleAdminList(req, resp);
                 return;
             }
 
@@ -42,10 +42,7 @@ public class ProductServlet extends HttpServlet {
             }
 
             if (parts.length == 1) {
-                handleDetail(id, resp);
-            } else if (parts.length == 2 && "related".equalsIgnoreCase(parts[1])) {
-                int limit = tryParseInt(req.getParameter("limit"), 8);
-                handleRelated(id, limit, resp);
+                handleAdminDetail(id, resp);
             } else {
                 writeError(resp, 404, "Not found");
             }
@@ -56,53 +53,6 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
-    /** 🔹 Danh sách sản phẩm hoặc theo categoryId */
-    private void handleList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String catParam = req.getParameter("categoryId");
-        List<ProductDTO> list = (catParam != null && !catParam.isBlank())
-                ? productDAO.findByCategoryDTO(Integer.parseInt(catParam))
-                : productDAO.findAllDTO();
-        JsonUtil.ok(resp, wrap(list));
-    }
-
-    /** 🔹 Chi tiết sản phẩm */
-    private void handleDetail(Integer id, HttpServletResponse resp) throws IOException {
-        ProductDetailDTO dto = productDAO.findDetailDTOById(id);
-        if (dto == null) {
-            writeError(resp, 404, "Product not found");
-            return;
-        }
-        JsonUtil.ok(resp, wrap(dto));
-    }
-
-    /** 🔹 Sản phẩm liên quan */
-    private void handleRelated(Integer id, int limit, HttpServletResponse resp) throws IOException {
-        List<ProductDTO> list = productDAO.findRelatedDTO(id, limit);
-        JsonUtil.ok(resp, wrap(list));
-    }
-
-    // Helpers
-    private static Map<String, Object> wrap(Object data) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("data", data);
-        return m;
-    }
-
-    private static void writeError(HttpServletResponse resp, int code, String msg) throws IOException {
-        resp.setStatus(code);
-        JsonUtil.ok(resp, Map.of("error", msg));
-    }
-
-    private static Integer tryParseInt(String s) {
-        try { return (s == null || s.isBlank()) ? null : Integer.parseInt(s); }
-        catch (Exception e) { return null; }
-    }
-
-    private static int tryParseInt(String s, int def) {
-        try { return (s == null || s.isBlank()) ? def : Integer.parseInt(s); }
-        catch (Exception e) { return def; }
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setCharacterEncoding("UTF-8");
@@ -111,6 +61,12 @@ public class ProductServlet extends HttpServlet {
         try {
             // Parse JSON from request body
             Map<String, Object> data = JsonUtil.parseJson(req);
+            
+            // Validate required fields
+            if (!validateProductData(data)) {
+                writeError(resp, 400, "Missing required fields: name, price, categoryId");
+                return;
+            }
             
             // Create new product
             ProductDetailDTO product = mapToProductDTO(data);
@@ -197,7 +153,7 @@ public class ProductServlet extends HttpServlet {
             boolean deleted = productDAO.deleteProduct(id);
             
             if (deleted) {
-                JsonUtil.ok(resp, Map.of("message", "Product deleted successfully"));
+                JsonUtil.ok(resp, Map.of("message", "Product deleted successfully", "id", id));
             } else {
                 writeError(resp, 404, "Product not found or delete failed");
             }
@@ -207,12 +163,44 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
+    /** 🔹 Danh sách sản phẩm cho admin (bao gồm inactive) */
+    private void handleAdminList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String catParam = req.getParameter("categoryId");
+        String statusParam = req.getParameter("status");
+        String searchParam = req.getParameter("search");
+        
+        // TODO: Implement filtered search for admin
+        List<ProductDetailDTO> list = productDAO.findAllDetailDTO(); // Get all products including inactive
+        JsonUtil.ok(resp, wrap(list));
+    }
+
+    /** 🔹 Chi tiết sản phẩm cho admin */
+    private void handleAdminDetail(Integer id, HttpServletResponse resp) throws IOException {
+        ProductDetailDTO dto = productDAO.findDetailDTOById(id);
+        if (dto == null) {
+            writeError(resp, 404, "Product not found");
+            return;
+        }
+        JsonUtil.ok(resp, wrap(dto));
+    }
+
+    /** 🔹 Validate product data */
+    private boolean validateProductData(Map<String, Object> data) {
+        return data.containsKey("name") && 
+               data.get("name") != null && 
+               !((String) data.get("name")).trim().isEmpty() &&
+               data.containsKey("price") && 
+               data.get("price") != null &&
+               data.containsKey("categoryId") && 
+               data.get("categoryId") != null;
+    }
+
     /** 🔹 Helper: Map request data to ProductDetailDTO */
     private ProductDetailDTO mapToProductDTO(Map<String, Object> data) {
         ProductDetailDTO product = new ProductDetailDTO();
         
         if (data.containsKey("name")) {
-            product.setName((String) data.get("name"));
+            product.setName(((String) data.get("name")).trim());
         }
         if (data.containsKey("description")) {
             product.setDescription((String) data.get("description"));
@@ -227,6 +215,8 @@ public class ProductServlet extends HttpServlet {
             Object stock = data.get("stock");
             if (stock instanceof Number) {
                 product.setStock(((Number) stock).intValue());
+            } else {
+                product.setStock(0); // Default stock
             }
         }
         if (data.containsKey("categoryId")) {
@@ -242,9 +232,30 @@ public class ProductServlet extends HttpServlet {
             Object status = data.get("status");
             if (status instanceof Boolean) {
                 product.setStatus((Boolean) status);
+            } else {
+                product.setStatus(true); // Default active
             }
+        } else {
+            product.setStatus(true); // Default active
         }
         
         return product;
+    }
+
+    // Helper methods
+    private static Map<String, Object> wrap(Object data) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("data", data);
+        return m;
+    }
+
+    private static void writeError(HttpServletResponse resp, int code, String msg) throws IOException {
+        resp.setStatus(code);
+        JsonUtil.ok(resp, Map.of("error", msg));
+    }
+
+    private static Integer tryParseInt(String s) {
+        try { return (s == null || s.isBlank()) ? null : Integer.parseInt(s); }
+        catch (Exception e) { return null; }
     }
 }

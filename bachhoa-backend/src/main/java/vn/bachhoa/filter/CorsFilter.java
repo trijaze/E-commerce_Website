@@ -1,13 +1,12 @@
 package vn.bachhoa.filter;
 
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-
- // Áp dụng cho toàn bộ request
-
+@WebFilter("/*") // Áp dụng cho toàn bộ request
 public class CorsFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
