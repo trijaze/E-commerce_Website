@@ -40,7 +40,8 @@ public class ProductFilterServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // --- Lấy tham số filter ---
-        String keyword     = req.getParameter("q");           // hoặc "keyword" nếu FE gửi keyword
+        String keywordRaw = req.getParameter("q");
+        String keyword = (keywordRaw != null && !keywordRaw.trim().isEmpty()) ? keywordRaw.trim() : null;
         Integer categoryId = parseInt(req.getParameter("categoryId"));
         Integer supplierId = parseInt(req.getParameter("supplierId"));
         String priceRange  = req.getParameter("priceRange");

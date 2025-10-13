@@ -16,6 +16,50 @@
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
+<<<<<<< HEAD
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
+
+
+
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <filter>
+        <filter-name>JwtFilter</filter-name>
+        <filter-class>vn.bachhoa.filter.JwtFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>JwtFilter</filter-name>
+        <url-pattern>/api/secure/*</url-pattern>
+    </filter-mapping>
+    
+
+
+  <!-- Servlets -->
+  <servlet>
+    <servlet-name>HealthServlet</servlet-name>
+    <servlet-class>vn.bachhoa.controller.HealthServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>HealthServlet</servlet-name>
+    <url-pattern>/api/health</url-pattern>
+  </servlet-mapping>
+=======
   <filter>
     <filter-name>CorsFilter</filter-name>
     <filter-class>vn.bachhoa.filter.CorsFilter</filter-class>
@@ -24,6 +68,7 @@
     <filter-name>CorsFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
+>>>>>>> 4d91f640d7625185dffb6f60dbb6da0263e2b5ca
 
   <!-- Product APIs -->
   <servlet>

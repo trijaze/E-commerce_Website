@@ -15,7 +15,7 @@ import java.io.IOException;
  * Filter này chạy SAU CorsFilter, chỉ cho các endpoint cần được bảo vệ.
  * Nhiệm vụ duy nhất của nó là xác thực JWT.
  */
-@WebFilter("/api/secure/*")
+
 public class JwtFilter implements Filter {
 
     @Override

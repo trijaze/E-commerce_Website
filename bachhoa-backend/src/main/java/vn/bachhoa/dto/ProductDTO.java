@@ -40,7 +40,6 @@ public class ProductDTO {
         this.variantNames = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
                 p.getVariants().stream().map(ProductVariant::getAttributes).collect(Collectors.toList())
                 : new ArrayList<>();
-
     }
 
     // Getters
