@@ -148,4 +148,78 @@ public class ProductDAO extends GenericDAO<Product> {
         }
     }
 
+    /** Tạo sản phẩm mới (từ demo) */
+    public Product createProduct(Product product) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(product);
+            em.getTransaction().commit();
+            return product;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Cập nhật sản phẩm (từ demo) */
+    public Product updateProduct(Product product) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Product merged = em.merge(product);
+            em.getTransaction().commit();
+            return merged;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Xóa sản phẩm (từ demo) */
+    public void deleteProduct(int productId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Product product = em.find(Product.class, productId);
+            if (product != null) {
+                em.remove(product);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Lấy tất cả sản phẩm với chi tiết đầy đủ cho admin */
+    public List<ProductDetailDTO> findAllDetailDTO() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = """
+                SELECT DISTINCT p FROM Product p
+                LEFT JOIN FETCH p.category
+                LEFT JOIN FETCH p.supplier
+                ORDER BY p.productId DESC
+            """;
+            List<Product> list = em.createQuery(jpql, Product.class).getResultList();
+
+            // Load images và variants cho từng product
+            for (Product p : list) {
+                if (p.getImages() != null) p.getImages().size();
+                if (p.getVariants() != null) p.getVariants().size();
+            }
+
+            return list.stream().map(ProductDetailDTO::new).collect(java.util.stream.Collectors.toList());
+        } finally {
+            em.close();
+        }
+    }
+
 }

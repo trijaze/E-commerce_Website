@@ -2,17 +2,21 @@ package vn.bachhoa.controller;
 
 import vn.bachhoa.dao.ProductDAO;
 import vn.bachhoa.dto.ProductDetailDTO;
+import vn.bachhoa.model.Product;
+import vn.bachhoa.model.Category;
+import vn.bachhoa.model.Supplier;
 import vn.bachhoa.util.JsonUtil;
+import vn.bachhoa.util.JPAUtil;
 
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.persistence.EntityManager;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 /** ✅ Servlet xử lý API admin cho sản phẩm: /api/secure/admin/products */
-@WebServlet(urlPatterns = {"/api/secure/admin/products", "/api/secure/admin/products/*"})
 public class AdminProductServlet extends HttpServlet {
 
     private final ProductDAO productDAO = new ProductDAO();
@@ -64,16 +68,17 @@ public class AdminProductServlet extends HttpServlet {
             
             // Validate required fields
             if (!validateProductData(data)) {
-                writeError(resp, 400, "Missing required fields: name, price, categoryId");
+                writeError(resp, 400, "Missing required fields: name, basePrice, categoryId, supplierId");
                 return;
             }
             
-            // Create new product
-            ProductDetailDTO product = mapToProductDTO(data);
-            ProductDetailDTO created = productDAO.createProduct(product);
-            
+            // Create new product entity
+            Product product = mapToProduct(data);
+            Product created = productDAO.createProduct(product);
+
             if (created != null) {
-                JsonUtil.ok(resp, wrap(created));
+                ProductDetailDTO dto = productDAO.findDetailDTOById(created.getProductId());
+                JsonUtil.ok(resp, wrap(dto));
             } else {
                 writeError(resp, 400, "Failed to create product");
             }
@@ -109,18 +114,45 @@ public class AdminProductServlet extends HttpServlet {
             // Parse JSON from request body
             Map<String, Object> data = JsonUtil.parseJson(req);
             
-            // Update product
-            ProductDetailDTO product = mapToProductDTO(data);
-            product.setId(id); // Ensure ID is set
-            
-            boolean updated = productDAO.updateProduct(product);
-            
-            if (updated) {
-                ProductDetailDTO updatedProduct = productDAO.findDetailDTOById(id);
-                JsonUtil.ok(resp, wrap(updatedProduct));
-            } else {
-                writeError(resp, 404, "Product not found or update failed");
+            // Update product using EntityManager transaction
+            EntityManager em = JPAUtil.getEntityManager();
+            try {
+                em.getTransaction().begin();
+
+                // Lấy Product với eager loading category và supplier
+                String jpql = "SELECT p FROM Product p " +
+                             "LEFT JOIN FETCH p.category " +
+                             "LEFT JOIN FETCH p.supplier " +
+                             "WHERE p.productId = :id";
+                Product existing = em.createQuery(jpql, Product.class)
+                                   .setParameter("id", id)
+                                   .getSingleResult();
+
+                if (existing == null) {
+                    em.getTransaction().rollback();
+                    writeError(resp, 404, "Product not found");
+                    return;
+                }
+
+                // Update fields from request data
+                updateProductFromData(existing, data, em);
+
+                // Save changes
+                Product updated = em.merge(existing);
+                em.getTransaction().commit();
+
+                ProductDetailDTO dto = new ProductDetailDTO(updated);
+                JsonUtil.ok(resp, wrap(dto));
+
+            } catch (Exception e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+                throw e;
+            } finally {
+                em.close();
             }
+
         } catch (Exception ex) {
             ex.printStackTrace();
             writeError(resp, 500, ex.getMessage());
@@ -150,13 +182,16 @@ public class AdminProductServlet extends HttpServlet {
                 return;
             }
 
-            boolean deleted = productDAO.deleteProduct(id);
-            
-            if (deleted) {
-                JsonUtil.ok(resp, Map.of("message", "Product deleted successfully", "id", id));
-            } else {
-                writeError(resp, 404, "Product not found or delete failed");
+            // Check if product exists
+            ProductDetailDTO existing = productDAO.findDetailDTOById(id);
+            if (existing == null) {
+                writeError(resp, 404, "Product not found");
+                return;
             }
+
+            productDAO.deleteProduct(id);
+            JsonUtil.ok(resp, Map.of("message", "Product deleted successfully", "id", id));
+
         } catch (Exception ex) {
             ex.printStackTrace();
             writeError(resp, 500, ex.getMessage());
@@ -165,12 +200,8 @@ public class AdminProductServlet extends HttpServlet {
 
     /** 🔹 Danh sách sản phẩm cho admin (bao gồm inactive) */
     private void handleAdminList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String catParam = req.getParameter("categoryId");
-        String statusParam = req.getParameter("status");
-        String searchParam = req.getParameter("search");
-        
-        // TODO: Implement filtered search for admin
-        List<ProductDetailDTO> list = productDAO.findAllDetailDTO(); // Get all products including inactive
+        // Get all products including inactive
+        List<ProductDetailDTO> list = productDAO.findAllDetailDTO();
         JsonUtil.ok(resp, wrap(list));
     }
 
@@ -189,57 +220,84 @@ public class AdminProductServlet extends HttpServlet {
         return data.containsKey("name") && 
                data.get("name") != null && 
                !((String) data.get("name")).trim().isEmpty() &&
-               data.containsKey("price") && 
-               data.get("price") != null &&
-               data.containsKey("categoryId") && 
-               data.get("categoryId") != null;
+               data.containsKey("basePrice") &&
+               data.get("basePrice") != null &&
+               data.containsKey("categoryId") &&
+               data.get("categoryId") != null &&
+               data.containsKey("supplierId") &&
+               data.get("supplierId") != null;
     }
 
-    /** 🔹 Helper: Map request data to ProductDetailDTO */
-    private ProductDetailDTO mapToProductDTO(Map<String, Object> data) {
-        ProductDetailDTO product = new ProductDetailDTO();
-        
+    /** 🔹 Helper: Map request data to Product entity */
+    private Product mapToProduct(Map<String, Object> data) {
+        Product product = new Product();
+
         if (data.containsKey("name")) {
             product.setName(((String) data.get("name")).trim());
         }
         if (data.containsKey("description")) {
             product.setDescription((String) data.get("description"));
         }
-        if (data.containsKey("price")) {
-            Object price = data.get("price");
-            if (price instanceof Number) {
-                product.setPrice(((Number) price).doubleValue());
-            }
+        if (data.containsKey("sku")) {
+            product.setSku((String) data.get("sku"));
         }
-        if (data.containsKey("stock")) {
-            Object stock = data.get("stock");
-            if (stock instanceof Number) {
-                product.setStock(((Number) stock).intValue());
-            } else {
-                product.setStock(0); // Default stock
+        if (data.containsKey("basePrice")) {
+            Object price = data.get("basePrice");
+            if (price instanceof Number) {
+                product.setBasePrice(BigDecimal.valueOf(((Number) price).doubleValue()));
             }
         }
         if (data.containsKey("categoryId")) {
             Object categoryId = data.get("categoryId");
             if (categoryId instanceof Number) {
-                product.setCategoryId(((Number) categoryId).intValue());
+                Category category = new Category();
+                category.setCategoryId(((Number) categoryId).intValue());
+                product.setCategory(category);
             }
         }
-        if (data.containsKey("imageUrl")) {
-            product.setImageUrl((String) data.get("imageUrl"));
-        }
-        if (data.containsKey("status")) {
-            Object status = data.get("status");
-            if (status instanceof Boolean) {
-                product.setStatus((Boolean) status);
-            } else {
-                product.setStatus(true); // Default active
+        if (data.containsKey("supplierId")) {
+            Object supplierId = data.get("supplierId");
+            if (supplierId instanceof Number) {
+                Supplier supplier = new Supplier();
+                supplier.setSupplierId(((Number) supplierId).intValue());
+                product.setSupplier(supplier);
             }
-        } else {
-            product.setStatus(true); // Default active
         }
         
         return product;
+    }
+
+    /** 🔹 Helper: Update existing product from request data */
+    private void updateProductFromData(Product product, Map<String, Object> data, EntityManager em) {
+        if (data.containsKey("name")) {
+            product.setName(((String) data.get("name")).trim());
+        }
+        if (data.containsKey("description")) {
+            product.setDescription((String) data.get("description"));
+        }
+        if (data.containsKey("sku")) {
+            product.setSku((String) data.get("sku"));
+        }
+        if (data.containsKey("basePrice")) {
+            Object price = data.get("basePrice");
+            if (price instanceof Number) {
+                product.setBasePrice(BigDecimal.valueOf(((Number) price).doubleValue()));
+            }
+        }
+        if (data.containsKey("categoryId")) {
+            Object categoryId = data.get("categoryId");
+            if (categoryId instanceof Number) {
+                Category category = em.find(Category.class, ((Number) categoryId).intValue());
+                product.setCategory(category);
+            }
+        }
+        if (data.containsKey("supplierId")) {
+            Object supplierId = data.get("supplierId");
+            if (supplierId instanceof Number) {
+                Supplier supplier = em.find(Supplier.class, ((Number) supplierId).intValue());
+                product.setSupplier(supplier);
+            }
+        }
     }
 
     // Helper methods

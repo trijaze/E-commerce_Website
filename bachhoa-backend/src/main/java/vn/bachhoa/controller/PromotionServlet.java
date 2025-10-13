@@ -6,12 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "PromotionServlet", urlPatterns = {"/api/promotions/*"})
 public class PromotionServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final PromotionService service = new PromotionService();

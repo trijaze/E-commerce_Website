@@ -68,4 +68,14 @@
         <url-pattern>/api/promotions/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Admin Product APIs -->
+    <servlet>
+        <servlet-name>AdminProductServlet</servlet-name>
+        <servlet-class>vn.bachhoa.controller.AdminProductServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminProductServlet</servlet-name>
+        <url-pattern>/api/secure/admin/products/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
