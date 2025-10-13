@@ -6,6 +6,14 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+export type VariantDTO = {
+  variantId: number;
+  sku: string | null;
+  name: string | null;   // BE đang trả JSON attributes
+  price: number;
+  stockQuantity?: number;   
+};
+
 // === Types khớp BE DTO ===
 export type ImageDTO = {
   imageId: number;
@@ -14,12 +22,6 @@ export type ImageDTO = {
   variantId: number | null;
 };
 
-export type VariantDTO = {
-  variantId: number;
-  sku?: string | null;
-  name?: string | null;   // = variantName bên BE
-  price?: number | null;
-};
 
 export type ProductDetail = {
   productId: number;
