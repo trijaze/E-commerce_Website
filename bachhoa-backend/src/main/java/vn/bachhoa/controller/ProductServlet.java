@@ -1,9 +1,8 @@
 package vn.bachhoa.controller;
 
 import vn.bachhoa.dao.ProductDAO;
+import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
-import vn.bachhoa.model.Product;
-import vn.bachhoa.model.ProductImage;
 import vn.bachhoa.util.JsonUtil;
 
 import javax.servlet.annotation.WebServlet;
@@ -13,87 +12,76 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-/** Servlet chi tiết sản phẩm và sản phẩm liên quan */
-@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
+/** ✅ Servlet xử lý API sản phẩm: /api/products, /api/products/{id}, /api/products/{id}/related */
+//@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
 public class ProductServlet extends HttpServlet {
+
     private final ProductDAO productDAO = new ProductDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json; charset=UTF-8");
 
-        // path: "/{id}" hoặc "/{id}/related"
         String path = Optional.ofNullable(req.getPathInfo()).orElse("").trim();
-        if (path.isEmpty() || "/".equals(path)) {
-            // Không implement danh sách ở servlet này
-            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
-            return;
-        }
-
-        String[] parts = Arrays.stream(path.split("/"))
-                .filter(s -> s != null && !s.isBlank())
-                .toArray(String[]::new);
-
-        Integer id;
-        try {
-            id = Integer.parseInt(parts[0]);
-        } catch (NumberFormatException ex) {
-            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid product id");
-            return;
-        }
 
         try {
+            if (path.isEmpty() || "/".equals(path)) {
+                handleList(req, resp);
+                return;
+            }
+
+            String[] parts = Arrays.stream(path.split("/"))
+                    .filter(s -> s != null && !s.isBlank())
+                    .toArray(String[]::new);
+
+            Integer id = tryParseInt(parts[0]);
+            if (id == null) {
+                writeError(resp, 400, "Invalid product id");
+                return;
+            }
+
             if (parts.length == 1) {
-                getDetail(id, resp);
-                return;
+                handleDetail(id, resp);
+            } else if (parts.length == 2 && "related".equalsIgnoreCase(parts[1])) {
+                int limit = tryParseInt(req.getParameter("limit"), 8);
+                handleRelated(id, limit, resp);
+            } else {
+                writeError(resp, 404, "Not found");
             }
-            if (parts.length == 2 && "related".equalsIgnoreCase(parts[1])) {
-                int limit = parseInt(req.getParameter("limit"), 8);
-                getRelated(id, limit, resp);
-                return;
-            }
-            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Not found");
+
         } catch (Exception ex) {
-            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            ex.printStackTrace();
+            writeError(resp, 500, ex.getMessage());
         }
     }
 
-    private void getDetail(Integer id, HttpServletResponse resp) throws IOException {
-        Product p = productDAO.findByIdWithRelations(id); // JOIN FETCH category/supplier/images/variants
-        if (p == null) {
-            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Product not found");
+    /** 🔹 Danh sách sản phẩm hoặc theo categoryId */
+    private void handleList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String catParam = req.getParameter("categoryId");
+        List<ProductDTO> list = (catParam != null && !catParam.isBlank())
+                ? productDAO.findByCategoryDTO(Integer.parseInt(catParam))
+                : productDAO.findAllDTO();
+        JsonUtil.ok(resp, wrap(list));
+    }
+
+    /** 🔹 Chi tiết sản phẩm */
+    private void handleDetail(Integer id, HttpServletResponse resp) throws IOException {
+        ProductDetailDTO dto = productDAO.findDetailDTOById(id);
+        if (dto == null) {
+            writeError(resp, 404, "Product not found");
             return;
         }
-        ProductDetailDTO dto = new ProductDetailDTO(p);
         JsonUtil.ok(resp, wrap(dto));
     }
 
-    private void getRelated(Integer id, int limit, HttpServletResponse resp) throws IOException {
-        List<Product> list = productDAO.findRelated(id, limit);
-
-        List<Map<String, Object>> items = new ArrayList<>();
-        for (Product p : list) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("productId", p.getProductId());
-            m.put("name", p.getName());
-            m.put("basePrice", p.getBasePrice());
-
-            // Ảnh đại diện: ưu tiên isMain = true, nếu không có thì lấy ảnh đầu tiên
-            String url = null;
-            if (p.getImages() != null && !p.getImages().isEmpty()) {
-                ProductImage main = null;
-                for (ProductImage i : p.getImages()) {
-                    if (Boolean.TRUE.equals(i.getIsMain())) { main = i; break; }
-                }
-                url = (main != null) ? main.getImageUrl() : p.getImages().get(0).getImageUrl();
-            }
-            m.put("imageUrl", url);
-
-            items.add(m);
-        }
-        JsonUtil.ok(resp, wrap(items));
+    /** 🔹 Sản phẩm liên quan */
+    private void handleRelated(Integer id, int limit, HttpServletResponse resp) throws IOException {
+        List<ProductDTO> list = productDAO.findRelatedDTO(id, limit);
+        JsonUtil.ok(resp, wrap(list));
     }
 
+    // Helpers
     private static Map<String, Object> wrap(Object data) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("data", data);
@@ -105,7 +93,12 @@ public class ProductServlet extends HttpServlet {
         JsonUtil.ok(resp, Map.of("error", msg));
     }
 
-    private static int parseInt(String s, int def) {
+    private static Integer tryParseInt(String s) {
+        try { return (s == null || s.isBlank()) ? null : Integer.parseInt(s); }
+        catch (Exception e) { return null; }
+    }
+
+    private static int tryParseInt(String s, int def) {
         try { return (s == null || s.isBlank()) ? def : Integer.parseInt(s); }
         catch (Exception e) { return def; }
     }

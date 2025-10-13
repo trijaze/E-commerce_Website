@@ -41,10 +41,10 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Danh mục</h3>
             <ul className="space-y-2">
               <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Thực phẩm tươi sống</a></li>
-              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Đồ uống & Giải khát</a></li>
-              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Gia vị & Nấu ăn</a></li>
-              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Đồ gia dụng</a></li>
-              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Chăm sóc cá nhân</a></li>
+              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Rau củ</a></li>
+              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Gia vị</a></li>
+              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Thực phẩm đóng gói sẵn</a></li>
+              <li><a href="#" className="text-green-200 hover:text-yellow-400 transition">Thực phẩm đông lạnh</a></li>
             </ul>
           </div>
 
