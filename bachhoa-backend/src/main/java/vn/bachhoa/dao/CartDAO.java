@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CartDAO {
 
-    // 🧩 Lấy toàn bộ sản phẩm trong giỏ hàng của 1 user
+    // Lấy toàn bộ sản phẩm trong giỏ hàng của 1 user
     public List<CartItem> getCartItemsByUser(int userId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -25,14 +25,14 @@ public class CartDAO {
         }
     }
 
-    // 🛒 Thêm sản phẩm vào giỏ hàng
+    //  Thêm sản phẩm vào giỏ hàng
     public void addToCart(int userId, int productId, int quantity) {
         EntityManager em = JPAUtil.getEntityManager();
 
         try {
             em.getTransaction().begin();
 
-            // ✅ Lấy user và product
+            //  Lấy user và product
             User user = em.find(User.class, userId);
             Product product = em.find(Product.class, productId);
 
@@ -42,7 +42,7 @@ public class CartDAO {
                 return;
             }
 
-            // ✅ Tìm cart của user
+            //  Tìm cart của user
             Cart cart = em.createQuery(
                 "SELECT c FROM Cart c WHERE c.user.id = :uid", Cart.class)
                 .setParameter("uid", userId)
@@ -57,20 +57,23 @@ public class CartDAO {
                 em.persist(cart);
             }
 
-            // ✅ Kiểm tra xem sản phẩm đã có trong giỏ chưa
+            //  Kiểm tra xem sản phẩm đã có trong giỏ chưa
             CartItem existing = em.createQuery(
-                "SELECT ci FROM CartItem ci WHERE ci.cart.cartId = :cid AND ci.product.id = :pid", CartItem.class)
+                "SELECT ci FROM CartItem ci WHERE ci.cart.cartId = :cid AND ci.product.id = :pid",
+                CartItem.class)
                 .setParameter("cid", cart.getCartId())
                 .setParameter("pid", productId)
-                .getResultStream().findFirst().orElse(null);
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
 
             if (existing != null) {
                 existing.setQuantity(existing.getQuantity() + quantity);
                 em.merge(existing);
             } else {
                 CartItem ci = new CartItem();
-                ci.setCart(cart);       // ✅ liên kết cart
-                ci.setProduct(product); // ✅ liên kết product
+                ci.setCart(cart);       //  liên kết cart
+                ci.setProduct(product); //  liên kết product
                 ci.setQuantity(quantity);
                 em.persist(ci);
             }
@@ -78,15 +81,34 @@ public class CartDAO {
             em.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
         } finally {
             em.close();
         }
     }
 
-    // ❌ Xóa 1 sản phẩm khỏi giỏ hàng
+    //  Cập nhật số lượng sản phẩm trong giỏ
+    public void updateQuantity(int id, int quantity) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            CartItem item = em.find(CartItem.class, id);
+            if (item != null) {
+                item.setQuantity(quantity);
+                em.merge(item);
+            }
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+        } finally {
+            em.close();
+        }
+    }
+
+    //  Xóa 1 sản phẩm khỏi giỏ hàng (theo user + product)
     public void removeFromCart(int userId, int productId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -101,15 +123,33 @@ public class CartDAO {
             em.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
         } finally {
             em.close();
         }
     }
 
-    // 🧹 Xóa toàn bộ giỏ hàng của 1 user
+    //  Xóa 1 sản phẩm theo ID (FE gọi DELETE /api/cart?id=...)
+    public void deleteItemById(int id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            CartItem item = em.find(CartItem.class, id);
+            if (item != null) {
+                em.remove(item);
+            }
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+        } finally {
+            em.close();
+        }
+    }
+
+    //  Xóa toàn bộ giỏ hàng của 1 user
     public void clearCart(int userId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -123,9 +163,7 @@ public class CartDAO {
             em.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
         } finally {
             em.close();
         }
