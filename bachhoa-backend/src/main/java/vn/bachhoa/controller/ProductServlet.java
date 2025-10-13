@@ -160,6 +160,24 @@ public class ProductServlet extends HttpServlet {
                 }
             }
 
+            // Lấy stock từ frontend để tạo default variant
+            Integer stockQuantity = 0;
+            Object stockObj = data.get("stock");
+            if (stockObj != null) {
+                if (stockObj instanceof Number) {
+                    stockQuantity = ((Number) stockObj).intValue();
+                } else if (stockObj instanceof String) {
+                    try {
+                        stockQuantity = Integer.parseInt((String) stockObj);
+                    } catch (NumberFormatException e) {
+                        stockQuantity = 0;
+                    }
+                }
+            }
+
+            // Lấy imageUrl từ frontend
+            String imageUrl = (String) data.get("imageUrl");
+
             // Validate dữ liệu cần thiết
             if (product.getName() == null || product.getName().trim().isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -173,7 +191,7 @@ public class ProductServlet extends HttpServlet {
                 return;
             }
 
-            Product created = productDAO.createProduct(product);
+            Product created = productDAO.createProduct(product, stockQuantity, imageUrl);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             JsonUtil.ok(resp, new ProductDetailDTO(created));
 

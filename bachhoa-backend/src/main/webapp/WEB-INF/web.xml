@@ -62,16 +62,6 @@
 
 
 
-  <!-- Product APIs -->
-  <servlet>
-    <servlet-name>ProductServlet</servlet-name>
-    <servlet-class>vn.bachhoa.controller.ProductServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ProductServlet</servlet-name>
-    <url-pattern>/api/products/*</url-pattern>
-  </servlet-mapping>
-
     <servlet>
         <servlet-name>ProductFilterServlet</servlet-name>
         <servlet-class>vn.bachhoa.controller.ProductFilterServlet</servlet-class>

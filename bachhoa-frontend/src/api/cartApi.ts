@@ -66,3 +66,25 @@ export async function clearCart() {
     return { message: "Xóa giỏ thất bại" };
   }
 }
+
+// 🔄 Cập nhật số lượng sản phẩm trong giỏ
+export async function updateQuantity(productId: number, quantity: number) {
+  try {
+    const res = await fetch(BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ productId, quantity, action: "update" }),
+    });
+    if (!res.ok) throw new Error(`Không thể cập nhật số lượng (${res.status})`);
+    return await res.json();
+  } catch (err) {
+    console.error(" Lỗi khi cập nhật số lượng:", err);
+    return { message: "Cập nhật thất bại" };
+  }
+}
+
+// 🗑️ Xóa sản phẩm khỏi giỏ (alias cho removeFromCart)
+export async function deleteCartItem(productId: number) {
+  return removeFromCart(productId);
+}

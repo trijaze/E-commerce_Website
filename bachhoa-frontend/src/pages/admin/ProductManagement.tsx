@@ -242,6 +242,9 @@ const ProductManagement: React.FC = () => {
                     Danh mục
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nhà cung cấp
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trạng thái
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -286,6 +289,11 @@ const ProductManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {product.categoryName || `ID: ${product.categoryId}`}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {product.supplierName || `ID: ${product.supplierId || 'N/A'}`}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
