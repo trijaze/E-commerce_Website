@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Map;
 
 // Endpoint này sẽ được bảo vệ bởi JwtFilter do có path là "/api/secure/*"
-@WebServlet("/api/secure/user/profile")
+@WebServlet("/api/secure/users/profile")
 public class UserProfileServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     private final UserProfileService profileService = new UserProfileService();
@@ -54,16 +54,16 @@ public class UserProfileServlet extends HttpServlet {
         }
         
         try {
-            // Đọc dữ liệu JSON từ body của request và chuyển thành UserProfileDTO
             UserProfileDTO profileUpdateData = objectMapper.readValue(req.getReader(), UserProfileDTO.class);
-            
-            // Gọi service để cập nhật
             UserProfileDTO updatedProfile = profileService.updateProfile(userId, profileUpdateData);
-            
-            // Trả về profile đã được cập nhật
             JsonUtil.ok(resp, updatedProfile);
             
+        } catch (IllegalArgumentException e) {
+            // Bắt lỗi validation cụ thể và trả về 409 Conflict
+            JsonUtil.writeJson(resp, Map.of("error", e.getMessage()), HttpServletResponse.SC_CONFLICT);
         } catch (Exception e) {
+            // Các lỗi khác vẫn là Bad Request hoặc Internal Server Error
+            e.printStackTrace(); // In ra log để debug
             JsonUtil.writeJson(resp, Map.of("error", "Invalid request data or failed to update profile"), HttpServletResponse.SC_BAD_REQUEST);
         }
     }
