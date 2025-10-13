@@ -1,15 +1,12 @@
 package vn.bachhoa.model;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Objects;
 
 @Entity
 @Table(name = "productvariants")
-public class ProductVariant implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class ProductVariant  {
+    
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "variantId")
@@ -54,17 +51,4 @@ public class ProductVariant implements Serializable {
     public Integer getStockQuantity() { return stockQuantity; }
     public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
 
-    // --- equals/hashCode ---
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProductVariant)) return false;
-        ProductVariant other = (ProductVariant) o;
-        return variantId != null && variantId.equals(other.getVariantId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(variantId);
-    }
 }

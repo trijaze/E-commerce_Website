@@ -29,7 +29,11 @@
       <!-- Sửa 3 dòng dưới cho đúng máy bạn -->
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/bachhoa?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
+<<<<<<< HEAD
+      <property name="javax.persistence.jdbc.password" value="ctan"/>
+=======
       <property name="javax.persistence.jdbc.password" value="10211045678910"/>
+>>>>>>> 4d91f640d7625185dffb6f60dbb6da0263e2b5ca
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
       <property name="hibernate.hbm2ddl.auto" value="create"/>
       <property name="hibernate.show_sql" value="true"/>
