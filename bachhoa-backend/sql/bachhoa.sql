@@ -480,10 +480,10 @@ UNLOCK TABLES;
 -- =========================
 -- BẢNG ORDERS
 -- =========================
-DROP TABLE IF EXISTS `orderitems`;
-DROP TABLE IF EXISTS `orders`;
+DROP TABLE IF EXISTS `OrderItems`;
+DROP TABLE IF EXISTS `Orders`;
 
-CREATE TABLE `orders` (
+CREATE TABLE `Orders` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT,
   `total` DECIMAL(10,2),
@@ -496,7 +496,7 @@ CREATE TABLE `orders` (
 -- =========================
 -- BẢNG ORDER ITEMS
 -- =========================
-CREATE TABLE `orderitems` (
+CREATE TABLE `OrderItems` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
   `product_id` INT NOT NULL,
