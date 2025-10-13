@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { orderApi } from "../api/orderApi";
-import { promotionApi } from "../api/promotionApi"; // 👈 thêm dòng này
+import { getPromotionByCode } from "@/api/promotionApi";
 import { clear } from "../features/cart/cartSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -15,57 +15,70 @@ export default function Checkout() {
   // 👇 Thêm các state liên quan đến mã giảm giá
   const [promoCode, setPromoCode] = useState<string>("");
   const [promotion, setPromotion] = useState<any>(null);
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [checkingPromo, setCheckingPromo] = useState<boolean>(false);
+
 
   // 🧮 Tính tổng tiền
   const subtotal = items.reduce((acc, i) => acc + i.price * i.qty, 0);
-  let discountAmount = 0;
+  
+  const discountAmount = (() => {
+    if (!promotion) return 0;
+    // Kiểm tra active và minOrderAmount
+    if (!promotion.active) return 0;
+    if (promotion.minOrderAmount && subtotal < promotion.minOrderAmount) return 0;
 
-  if (promotion) {
     if (promotion.discountType === "PERCENT") {
-      discountAmount = (subtotal * promotion.discountValue) / 100;
+      return Math.min((subtotal * promotion.discountValue) / 100, subtotal);
     } else if (promotion.discountType === "AMOUNT") {
-      discountAmount = promotion.discountValue;
+      return Math.min(promotion.discountValue, subtotal);
     }
-
-    // Không cho giảm quá subtotal
-    if (discountAmount > subtotal) discountAmount = subtotal;
-  }
+    return 0;
+  })();
 
   const total = subtotal - discountAmount;
   
 
   // ⚙️ Hàm áp dụng mã giảm giá
+
   const applyPromotion = async () => {
-    if (!promoCode) {
+    if (!promoCode.trim()) {
       alert("⚠️ Vui lòng nhập mã khuyến mãi!");
       return;
     }
+
     try {
       setCheckingPromo(true);
-      const res = await promotionApi.checkCode(promoCode);
-      const promo = res.data;
+      const promo = await getPromotionByCode(promoCode.trim());
+      console.log("🧩 Promotion API:", promo);
 
-      // ⚠️ Sửa đoạn này:
-      if (!promo || promo.active === false) {
+      if (!promo || !promo.active) {
         alert("❌ Mã không hợp lệ hoặc đã hết hạn!");
+        setPromotion(null);
         return;
       }
 
-      // ⚠️ Ở đây dùng discountValue thay vì discountPercent
-      setPromotion(promo);
-      setDiscountPercent(promo.discountValue || 0);
+      if (promo.minOrderAmount && subtotal < promo.minOrderAmount) {
+        alert(`❌ Mã này chỉ áp dụng cho đơn từ ${promo.minOrderAmount.toLocaleString()}₫ trở lên!`);
+        setPromotion(null);
+        return;
+      }
 
-      alert(`✅ Áp dụng mã ${promo.code}: giảm ${promo.discountValue}%`);
-    } catch (error) {
-      console.error(error);
-      alert("❌ Mã khuyến mãi không tồn tại!");
+      setPromotion(promo);
+      alert(
+        `✅ Mã ${promo.code} áp dụng thành công: ${
+          promo.discountType === "PERCENT"
+            ? `${promo.discountValue}%`
+            : `${promo.discountValue.toLocaleString()}₫`
+        }`
+      );
+    } catch (err) {
+      console.error(err);
+      alert("❌ Mã khuyến mãi không tồn tại hoặc lỗi server!");
+      setPromotion(null);
     } finally {
       setCheckingPromo(false);
     }
   };
-
   // 🧾 Tạo đơn hàng
   const createOrder = async () => {
     if (items.length === 0) {
@@ -151,24 +164,30 @@ export default function Checkout() {
               </button>
             </div>
 
-            {promotion && (
+            {promotion && discountAmount > 0 && (
               <p className="text-green-600 mt-2">
                 ✅ Mã {promotion.code} áp dụng thành công! Giảm{" "}
-                {promotion.discountPercent}%.
+                {promotion.discountType === "PERCENT"
+                  ? `${promotion.discountValue}%`
+                  : `${promotion.discountValue.toLocaleString()}₫`}
+                .
               </p>
             )}
+
           </div>
 
+          
           {/* Tổng cộng */}
           <div className="flex justify-between text-lg mb-2">
             <span>Tạm tính:</span>
             <span>{subtotal.toLocaleString()}₫</span>
           </div>
-          {discountPercent > 0 && (
+
+          {discountAmount > 0 && promotion && (
             <div className="flex justify-between text-green-600 mb-2">
               <span>
                 Giảm giá (
-                {promotion?.discountType === "PERCENT"
+                {promotion.discountType === "PERCENT"
                   ? `${promotion.discountValue}%`
                   : `${promotion.discountValue.toLocaleString()}₫`}
                 ):
@@ -176,10 +195,12 @@ export default function Checkout() {
               <span>-{discountAmount.toLocaleString()}₫</span>
             </div>
           )}
+
           <div className="flex justify-between font-semibold text-xl mb-6">
             <span>Tổng tiền:</span>
             <span className="text-red-600">{total.toLocaleString()}₫</span>
           </div>
+
 
           {/* Phương thức thanh toán */}
           <div className="mb-4">
