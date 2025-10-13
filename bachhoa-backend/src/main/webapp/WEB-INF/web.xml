@@ -10,7 +10,7 @@
         <filter-name>CharacterEncodingFilter</filter-name>
         <filter-class>vn.bachhoa.filter.CharacterEncodingFilter</filter-class>
 
-        <filter-class>vn.bachhoa.filters.CharacterEncodingFilter</filter-class>
+
 
     </filter>
     <filter-mapping>
@@ -37,12 +37,12 @@
         <url-pattern>/api/secure/*</url-pattern>
     </filter-mapping>
     
-    </web-app>
+
 
   <!-- Servlets -->
   <servlet>
     <servlet-name>HealthServlet</servlet-name>
-    <servlet-class>vn.bachhoa.HealthServlet</servlet-class>
+    <servlet-class>vn.bachhoa.controller.HealthServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>HealthServlet</servlet-name>

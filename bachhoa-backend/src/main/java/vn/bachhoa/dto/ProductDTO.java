@@ -37,9 +37,20 @@ public class ProductDTO {
                 p.getImages().stream().map(ProductImage::getImageUrl).collect(Collectors.toList())
                 : new ArrayList<>();
 
-        this.variantNames = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
-                p.getVariants().stream().map(ProductVariant::getVariantName).collect(Collectors.toList())
-                : new ArrayList<>();
+        try {
+            if (p.getVariants() != null) {
+                this.variantNames = p.getVariants()
+                        .stream()
+                        .map(v -> v.getVariantName() != null ? v.getVariantName() : "")
+                        .collect(Collectors.toList());
+            } else {
+                this.variantNames = new ArrayList<>();
+            }
+        } catch (org.hibernate.LazyInitializationException e) {
+            // Nếu session đã đóng thì bỏ qua
+            this.variantNames = new ArrayList<>();
+        }
+
     }
 
     // Getters

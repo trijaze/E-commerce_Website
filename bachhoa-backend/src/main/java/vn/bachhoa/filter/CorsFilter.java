@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebFilter("/*")  // Áp dụng cho toàn bộ request
+ // Áp dụng cho toàn bộ request
 public class CorsFilter implements Filter {
 
     @Override
