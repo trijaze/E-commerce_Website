@@ -50,7 +50,7 @@ public class infoServlet extends HttpServlet {
             resp.getWriter().write("{\"error\":\"Không tìm thấy người dùng tương ứng với token.\"}");
             return;
         }
-
+        u.setPasswordHash(null);
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(gson.toJson(u));
     }

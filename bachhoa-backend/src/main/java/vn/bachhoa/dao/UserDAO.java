@@ -48,7 +48,7 @@ public class UserDAO {
     public UserBasicDTO findBasicById(int id) {
         return executeInsideTransaction(em -> {
             TypedQuery<UserBasicDTO> query = em.createQuery(
-                "SELECT new vn.bachhoa.dto.UserBasicDTO(u.userId, u.username, u.phoneNumber, u.email, u.createdAt) " +
+                "SELECT new vn.bachhoa.dto.UserBasicDTO(u.userId, u.username, u.passwordHash, u.phoneNumber, u.email, u.createdAt) " +
                 "FROM User u WHERE u.userId = :id",
                 UserBasicDTO.class
             );
@@ -60,7 +60,6 @@ public class UserDAO {
             }
         });
     }
-
 
     //Tìm người dùng bằng identifier (username hoặc phone).
     public User findByIdentifier(String identifier) {
@@ -103,6 +102,7 @@ public class UserDAO {
             return null; // Không cần trả về gì cả
         });
     }
+    
 
     //Cập nhật thông tin của một User đã có trong cơ sở dữ liệu.
     public void update(User user) {
@@ -112,6 +112,17 @@ public class UserDAO {
         });
     }
 
+    public void updatePasswordUserBasicDTO(UserBasicDTO userDto) {
+        executeInsideTransaction(em -> {
+            User userToUpdate = em.find(User.class, userDto.getUserId()); 
+
+            if (userToUpdate != null) {
+                userToUpdate.setPasswordHash(userDto.getPasswordHash());
+                em.merge(userToUpdate);
+            }
+            return null;
+        });
+    }
     //Xóa một người dùng khỏi cơ sở dữ liệu.
     public void delete(int userId) {
         executeInsideTransaction(em -> {

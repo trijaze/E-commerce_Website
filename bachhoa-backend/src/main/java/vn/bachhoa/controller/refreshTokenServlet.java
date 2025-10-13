@@ -41,9 +41,6 @@ public class refreshTokenServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         resp.setCharacterEncoding("UTF-8");
         
-        // --- LOG CHẨN ĐOÁN ---
-        System.out.println(">>> [refreshTokenServlet] vFINAL - Starting refresh process...");
-
         RefreshRequest refreshRequest = parseRefreshRequest(req);
         if (refreshRequest == null || refreshRequest.refreshToken == null || refreshRequest.refreshToken.trim().isEmpty()) {
             sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Refresh token không được để trống.");

@@ -25,8 +25,6 @@ public class JwtFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
 
         String authHeader = req.getHeader("Authorization");
-        System.out.println("Authorization header: " + authHeader);
-
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

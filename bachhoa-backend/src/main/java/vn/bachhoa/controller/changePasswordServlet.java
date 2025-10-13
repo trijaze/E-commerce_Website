@@ -1,11 +1,13 @@
 package vn.bachhoa.controller;
 
 import vn.bachhoa.dao.UserDAO;
+import vn.bachhoa.dto.UserBasicDTO;
 import vn.bachhoa.dao.AuditLogDAO;
 import vn.bachhoa.model.User;
 import vn.bachhoa.model.AuditLog;
 import vn.bachhoa.util.LocalDateTimeAdapter;
 import vn.bachhoa.util.PasswordUtil;
+import vn.bachhoa.dto.UserBasicDTO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -16,10 +18,10 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-@WebServlet("/api/secure/users/changepassword")
+@WebServlet("/api/secure/user/changepassword")
 public class changePasswordServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private final UserDAO userDAO = new UserDAO();
+	private final UserDAO dao = new UserDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -48,7 +50,7 @@ public class changePasswordServlet extends HttpServlet {
             return;
         }
 
-        User u = userDAO.findById(userId);
+        UserBasicDTO u = dao.findBasicById(userId);
         if (u == null) {
             sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy người dùng.");
             return;
@@ -64,7 +66,7 @@ public class changePasswordServlet extends HttpServlet {
         try {
             // Cập nhật mật khẩu mới
             u.setPasswordHash(PasswordUtil.hashPassword(payload.newPassword));
-            userDAO.update(u);
+            dao.updatePasswordUserBasicDTO(u);
 
             AuditLog log = new AuditLog(userId, "CHANGE_PASSWORD", "Users", String.valueOf(userId));
             auditLogDAO.save(log);
