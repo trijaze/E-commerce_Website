@@ -14,9 +14,6 @@ const Hero: React.FC = () => {
           <button className="bg-yellow-400 text-green-900 font-semibold py-3 px-6 rounded-lg hover:bg-opacity-90 transition">
             Mua Ngay
           </button>
-          <button className="border border-white text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-600 transition">
-            Khám Phá Thêm
-          </button>
         </div>
       </div>
     </section>

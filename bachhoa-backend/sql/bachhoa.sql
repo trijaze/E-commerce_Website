@@ -194,7 +194,7 @@ CREATE TABLE `promotion_categories` (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_promo_cat_category`
-    FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`)
+    FOREIGN KEY (`categoryId`) REFERENCES `categories` (`categoryId`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -212,7 +212,7 @@ CREATE TABLE `promotion_products` (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_promo_prod_product`
-    FOREIGN KEY (`productId`) REFERENCES `products` (`id`)
+    FOREIGN KEY (`productId`) REFERENCES `products` (`productId`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -230,7 +230,7 @@ CREATE TABLE `promotion_variants` (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_promo_variant_variant`
-    FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`id`)
+    FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`variantId`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
