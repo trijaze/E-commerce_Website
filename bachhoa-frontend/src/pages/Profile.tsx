@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authApi, UserProfilePayload, AddressPayload } from '@/api/authApi';
-import { setUser } from '@/features/auth/authSlice';
+import { setUser, logout } from '@/features/auth/authSlice';
 import { User } from '@/features/auth/authTypes';
 
 // --- Component Modal ---
@@ -118,6 +118,7 @@ function EditProfileModal({ isOpen, onClose, user, onSave }: EditProfileModalPro
 export default function Profile() {
   const user = useAppSelector((s) => s.auth.user);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!user) {
@@ -138,6 +139,15 @@ export default function Profile() {
       throw error;
     }
   };
+  
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout()).unwrap();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
 
   const mainAddress = user.addresses?.[0];
 
@@ -145,13 +155,11 @@ export default function Profile() {
     <>
       <div className="max-w-3xl mx-auto px-4 py-10">
         <Card className="shadow-xl rounded-2xl overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-500 p-6 text-white">
             <h1 className="text-3xl font-bold mb-1">Hồ sơ người dùng</h1>
             <p className="text-sm opacity-80">Thông tin tài khoản và cài đặt cá nhân</p>
           </div>
 
-          {/* Body */}
           <div className="p-8 bg-white space-y-8">
             {/* ✅ SỬA LỖI: HIỂN THỊ THÔNG TIN CHI TIẾT VÀ CÓ CẤU TRÚC */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
@@ -178,7 +186,6 @@ export default function Profile() {
               </div>
             </div>
           
-            {/* PHẦN ĐỊA CHỈ GIAO HÀNG (GIỮ NGUYÊN) */}
             <div className="border-t pt-8">
                <h3 className="text-xl font-semibold text-gray-800 mb-4">Địa chỉ giao hàng</h3>
                {mainAddress?.addressLine ? (
@@ -211,13 +218,12 @@ export default function Profile() {
                )}
             </div>
 
-            {/* CÁC NÚT HÀNH ĐỘNG (GIỮ NGUYÊN) */}
             <div className="flex justify-end gap-3 pt-6 border-t">
                 <Button variant="secondary" onClick={() => setIsModalOpen(true)}>✏️ Chỉnh sửa hồ sơ</Button>
                 <Link to="/changePassword">
                     <Button variant="secondary">🔑 Đổi mật khẩu</Button>
                 </Link>
-                <Button variant="danger" onClick={() => alert('Đăng xuất')}>🚪 Đăng xuất</Button>
+                <Button variant="danger" onClick={handleLogout}>🚪 Đăng xuất</Button>
             </div>
           </div>
         </Card>

@@ -6,12 +6,36 @@ public class CreateReviewRequest {
     private String comment;
 
     // Getters & Setters
-    public int getRating() { return rating; }
-    public void setRating(int rating) { this.rating = rating; }
+    public int getRating() { 
+        return rating; 
+    }
+    
+    public void setRating(int rating) { 
+        this.rating = rating; 
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getTitle() { 
+        return title; 
+    }
+    
+    public void setTitle(String title) { 
+        this.title = title; 
+    }
 
-    public String getComment() { return comment; }
-    public void setComment(String comment) { this.comment = comment; }
+    public String getComment() { 
+        return comment; 
+    }
+    
+    public void setComment(String comment) { 
+        this.comment = comment; 
+    }
+    
+    @Override
+    public String toString() {
+        return "CreateReviewRequest{" +
+                "rating=" + rating +
+                ", title='" + title + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

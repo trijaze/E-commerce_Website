@@ -2,94 +2,105 @@ package vn.bachhoa.service;
 
 import vn.bachhoa.dao.UserDAO;
 import vn.bachhoa.dto.UserProfileDTO;
+import vn.bachhoa.dto.request.UpdateProfileRequest;
 import vn.bachhoa.model.User;
 import vn.bachhoa.model.UserAddress;
+import vn.bachhoa.util.JPAUtil;
 
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * Service xử lý các logic nghiệp vụ liên quan đến hồ sơ người dùng.
- */
 public class UserProfileService {
     private final UserDAO userDAO = new UserDAO();
 
     /**
-     * Lấy thông tin hồ sơ của người dùng.
-     * @param userId ID của người dùng cần lấy thông tin.
-     * @return UserProfileDTO chứa thông tin, hoặc null nếu không tìm thấy.
+     * Lấy thông tin profile của user
      */
-    public UserProfileDTO getProfile(int userId) {
+    public UserProfileDTO getProfile(Integer userId) {
         User user = userDAO.findById(userId);
-        if (user == null) {
-            return null;
-        }
+        if (user == null) return null;
         return new UserProfileDTO(user);
     }
 
     /**
-     * Cập nhật thông tin hồ sơ người dùng, bao gồm cả địa chỉ.
-     * @param userId ID của người dùng đang thực hiện cập nhật.
-     * @param profileDTO DTO chứa thông tin mới từ frontend.
-     * @return DTO của người dùng sau khi đã cập nhật thành công.
-     * @throws IllegalArgumentException nếu dữ liệu mới (username/phone) bị trùng với người dùng khác.
-     * @throws IllegalStateException nếu không tìm thấy người dùng gốc trong CSDL.
+     * Cập nhật profile - nhận UpdateProfileRequest thay vì UserProfileDTO
      */
-    public UserProfileDTO updateProfile(int userId, UserProfileDTO profileDTO) {
-        User currentUser = userDAO.findById(userId);
-        if (currentUser == null) {
-            throw new IllegalStateException("Không tìm thấy người dùng với ID: " + userId);
-        }
-
-        // --- B1: KIỂM TRA DỮ LIỆU TRÙNG LẶP ---
-
-        // Kiểm tra Username mới
-        String newUsername = profileDTO.getUsername();
-        if (newUsername != null && !newUsername.trim().isEmpty() && !newUsername.equals(currentUser.getUsername())) {
-            User existingUser = userDAO.findByUsername(newUsername);
-            if (existingUser != null && !existingUser.getUserId().equals(currentUser.getUserId())) {
-                throw new IllegalArgumentException("Tên đăng nhập đã được sử dụng.");
-            }
-            currentUser.setUsername(newUsername);
-        }
-
-        // Kiểm tra Số điện thoại mới
-        String newPhoneNumber = profileDTO.getPhoneNumber();
-        if (newPhoneNumber != null && !newPhoneNumber.trim().isEmpty() && !newPhoneNumber.equals(currentUser.getPhoneNumber())) {
-            User existingUser = userDAO.findByPhoneNumber(newPhoneNumber);
-            if (existingUser != null && !existingUser.getUserId().equals(currentUser.getUserId())) {
-                throw new IllegalArgumentException("Số điện thoại đã được đăng ký.");
-            }
-            currentUser.setPhoneNumber(newPhoneNumber);
-        }
+    public UserProfileDTO updateProfile(Integer userId, UpdateProfileRequest request) {
+        User user = userDAO.findById(userId);
         
-        // --- B2: CẬP NHẬT ĐỊA CHỈ ---
-        
-        if (profileDTO.getAddresses() != null) {
-            // Xóa tất cả địa chỉ cũ để đồng bộ hóa
-            currentUser.getAddresses().clear();
-            
-            // Chuyển đổi từ List<AddressDTO> thành List<UserAddress> và thêm lại
-            List<UserAddress> newAddresses = profileDTO.getAddresses().stream()
-                .map(dto -> {
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // ✅ Kiểm tra username trùng lặp (nếu có thay đổi)
+        if (request.getUsername() != null && !request.getUsername().isEmpty() 
+                && !request.getUsername().equals(user.getUsername())) {
+            User existingUser = userDAO.findByUsername(request.getUsername());
+            if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("Tên đăng nhập đã được sử dụng");
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        // ✅ Kiểm tra phone trùng lặp (nếu có thay đổi)
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty() 
+                && !request.getPhoneNumber().equals(user.getPhoneNumber())) {
+            User existingUser = userDAO.findByPhoneNumber(request.getPhoneNumber());
+            if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("Số điện thoại đã được sử dụng");
+            }
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            // ✅ Xóa toàn bộ địa chỉ cũ
+            em.createQuery("DELETE FROM UserAddress WHERE user.userId = :uid")
+                .setParameter("uid", userId)
+                .executeUpdate();
+
+            // ✅ Thêm địa chỉ mới
+            List<UserAddress> newAddresses = new ArrayList<>();
+            if (request.getAddresses() != null && !request.getAddresses().isEmpty()) {
+                for (UpdateProfileRequest.AddressDTO addrDto : request.getAddresses()) {
                     UserAddress address = new UserAddress();
-                    address.setUser(currentUser); // Liên kết địa chỉ với người dùng hiện tại
-                    address.setLabel(dto.getLabel());
-                    address.setAddressLine(dto.getAddressLine());
-                    address.setCity(dto.getCity());
-                    address.setCountry(dto.getCountry());
-                    address.setPostalCode(dto.getPostalCode());
-                    address.setDefault(dto.isDefault());
-                    return address;
-                }).collect(Collectors.toList());
+                    address.setUser(user);
+                    address.setLabel(addrDto.getLabel());
+                    address.setAddressLine(addrDto.getAddressLine());
+                    address.setCity(addrDto.getCity());
+                    address.setCountry(addrDto.getCountry());
+                    address.setPostalCode(addrDto.getPostalCode());
+                    address.setDefault(addrDto.isDefault());
+                    
+                    em.persist(address);
+                    newAddresses.add(address);
+                }
+            }
+
+            // Gán lại danh sách địa chỉ mới
+            user.setAddresses(newAddresses);
             
-            currentUser.getAddresses().addAll(newAddresses);
+            // Merge user entity
+            user = em.merge(user);
+            
+            em.getTransaction().commit();
+
+            // ✅ Refresh để lấy dữ liệu mới nhất từ DB
+            em.refresh(user);
+
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Failed to update profile: " + e.getMessage(), e);
+        } finally {
+            em.close();
         }
 
-        // --- B3: LƯU THAY ĐỔI VÀO DATABASE ---
-        userDAO.update(currentUser);
-        
-        // Trả về DTO mới nhất sau khi cập nhật để frontend đồng bộ
-        return new UserProfileDTO(currentUser);
+        // ✅ Trả về DTO mới
+        return new UserProfileDTO(user);
     }
 }

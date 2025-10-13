@@ -22,7 +22,7 @@ import vn.bachhoa.util.LocalDateTimeAdapter;
 /**
  * Lưu ý: map sang /api/products/filter để KHÔNG đụng với ProductServlet (/api/products/*)
  */
-@WebServlet("/api/products/filter")
+
 public class ProductFilterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
