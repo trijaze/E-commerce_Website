@@ -1,48 +1,19 @@
-package vn.bachhoa.model;
+package vn.bachhoa.dto;
 
-import com.google.gson.annotations.Expose;
-
-import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
 
-@Entity
-@Table(name = "Orders")
-public class Order {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Expose
+// ===== OrderDTO =====
+public class OrderDTO {
     private int id;
-
-    @Column(name = "total")
-    @Expose
     private double total;
-
-    @Column(name = "status")
-    @Expose
     private String status;
-
-    @Column(name = "payment_method")
-    @Expose
     private String paymentMethod;
-
-    @Column(name = "promotion_code")
-    @Expose
     private String promotionCode;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at", updatable = false, insertable = false)
-    @Expose
     private Date createdAt;
+    private List<OrderItemDTO> items;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Expose
-    private List<OrderItem> items;
-
-    public Order() {}
-
-    // Getters / Setters
+    // ===== Getters / Setters =====
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -61,6 +32,6 @@ public class Order {
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public List<OrderItem> getItems() { return items; }
-    public void setItems(List<OrderItem> items) { this.items = items; }
+    public List<OrderItemDTO> getItems() { return items; }
+    public void setItems(List<OrderItemDTO> items) { this.items = items; }
 }
