@@ -1,5 +1,5 @@
 // 🛒 API giỏ hàng kết nối tới BE Tomcat
-const BASE_URL = "http://localhost:8080/bachhoa/api/cart";
+const BASE_URL = "http://localhost:8080/bachhoa/cart";
 
 //  Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart)
 export async function getCartItems() {
@@ -16,9 +16,15 @@ export async function getCartItems() {
   }
 }
 
+
 //  Thêm sản phẩm vào giỏ (POST /api/cart)
+
 export async function addToCart(productId: number, quantity: number = 1) {
   try {
+    const form = new URLSearchParams();
+    form.append("productId", String(productId));
+    form.append("quantity", String(quantity));
+
     const res = await fetch(BASE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,6 +72,7 @@ export async function clearCart() {
     return { message: "Xóa giỏ thất bại" };
   }
 }
+
 
 // 🔄 Cập nhật số lượng sản phẩm trong giỏ
 export async function updateQuantity(productId: number, quantity: number) {
