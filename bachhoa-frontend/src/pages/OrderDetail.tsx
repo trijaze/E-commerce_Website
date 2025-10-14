@@ -1,7 +1,7 @@
 // src/pages/OrderDetail.tsx
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { orderApi } from "../api/orderApi"; // ✅ sửa lại import đúng
+import  orderApi  from "../api/orderApi"; // ✅ sửa lại import đúng
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
