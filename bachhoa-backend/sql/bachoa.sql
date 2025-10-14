@@ -84,6 +84,25 @@ ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   description = VALUES(description);
 
+CREATE TABLE Orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    total DOUBLE NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50),
+    promotion_code VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE OrderItems (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DOUBLE NOT NULL,
+    status VARCHAR(50),
+    FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE CASCADE
+);
+
 
 -- products
 CREATE TABLE `products` (
