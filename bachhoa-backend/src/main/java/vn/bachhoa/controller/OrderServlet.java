@@ -80,6 +80,7 @@ public class OrderServlet extends HttpServlet {
             // parse JSON từ FE
             OrderRequest orderReq = gson.fromJson(reader, OrderRequest.class);
 
+
             if (orderReq == null || orderReq.items == null || orderReq.items.isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.getWriter().write("{\"error\":\"Items cannot be empty\"}");
@@ -154,6 +155,7 @@ public class OrderServlet extends HttpServlet {
             if (data.containsKey("paymentMethod")) order.setPaymentMethod((String) data.get("paymentMethod"));
 
             orderDao.update(order);
+
             resp.getWriter().write("{\"message\":\"Order updated successfully\"}");
         } catch (Exception e) {
             e.printStackTrace();
