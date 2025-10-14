@@ -7,7 +7,7 @@ export default function ManageOrders() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    orderApi.list().then(d => setOrders(d)).catch(() => setOrders([]));
+    orderApi.getAll().then(response => setOrders(response.data?.data || [])).catch(() => setOrders([]));
   }, []);
 
   const filtered = orders.filter(o => o.id.toString().includes(search) || o.status.toLowerCase().includes(search.toLowerCase()));

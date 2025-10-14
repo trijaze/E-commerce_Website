@@ -80,7 +80,7 @@ export default function ManageProducts() {
                 <input type="number" value={editForm.stock} onChange={e => setEditForm({ ...editForm, stock: Number(e.target.value) })} className="border p-2 rounded" />
               </div>
             ) : (
-              <div>{p.name} - ${p.price.toFixed(2)} | {p.stock} in stock</div>
+              <div>{p.name} - ${(p.price || 0).toFixed(2)} | {p.stock} in stock</div>
             )}
 
             <div className="flex space-x-2 mt-2 md:mt-0">

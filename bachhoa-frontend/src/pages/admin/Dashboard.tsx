@@ -23,7 +23,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadStats() {
       const products: Product[] = await productApi.list().catch(() => []);
-      const orders = await orderApi.list().catch(() => []);
+      const orders = await orderApi.getAll().then(response => response.data?.data || []).catch(() => []);
       const users = await userApi.list().catch(() => []);
       const revenue = products.reduce((sum: number, p: Product) => sum + (p.price || 0) * (p.stock || 0), 0);
 

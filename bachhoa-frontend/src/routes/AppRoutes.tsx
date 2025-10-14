@@ -6,13 +6,14 @@ import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
 import Profile from '../pages/Profile';
 import Orders from '../pages/Orders';
-import AdminDashboard from '../pages/admin/Dashboard';
+import AdminDashboard from '../pages/admin/RealDashboard';
 import ProductManagement from '../pages/admin/ProductManagement';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import ChangePassword from '../pages/ChangePassword';
 import ForgotPassword from '../pages/ForgotPassword';
 import AuthLayout from '../components/layout/AuthLayout';
+import AdminLayout from '../components/layout/AdminLayout';
 import MainLayout from '../components/layout/MainLayout';
 import Home from '@/pages/Home';
 import AdminLoginPage from '../pages/admin/LoginPage';
@@ -33,7 +34,12 @@ export default function AppRoutes() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/orders" element={<Orders />} />
+      </Route>
+      
+      {/* Admin Routes với AdminLayout */}
+      <Route element={<AdminLayout />}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/products" element={<ProductManagement />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
