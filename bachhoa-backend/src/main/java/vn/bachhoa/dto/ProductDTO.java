@@ -37,9 +37,6 @@ public class ProductDTO {
                 p.getImages().stream().map(ProductImage::getImageUrl).collect(Collectors.toList())
                 : new ArrayList<>();
 
-       // this.variantNames = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
-               // p.getVariants().stream().map(ProductVariant::getAttributes).collect(Collectors.toList())
-               // : new ArrayList<>();
     }
 
     // Getters
