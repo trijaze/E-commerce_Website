@@ -229,6 +229,25 @@ INSERT INTO `productvariants` (`variantId`,`productId`,`variantSku`,`attributes`
 (173,42,'PACK-008-SM','Gói 40g',13000.00,50),
 (174,42,'PACK-008-LG','Túi 80g',24000.00,30);
 
+CREATE TABLE Orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    total DOUBLE NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50),
+    promotion_code VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE OrderItems (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DOUBLE NOT NULL,
+    status VARCHAR(50),
+    FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE CASCADE
+);
+
 -- productimages (create AFTER products & variants to avoid FK issues)
 CREATE TABLE `productimages` (
   `imageId` int NOT NULL AUTO_INCREMENT,
