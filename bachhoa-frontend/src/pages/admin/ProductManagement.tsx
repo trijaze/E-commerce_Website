@@ -35,7 +35,6 @@ const ProductManagement: React.FC = () => {
       }
       
       const response = await adminApi.getAllProducts(params);
-      console.log('🔥 Admin API response:', response);
       // adminApi đã extract data array sẵn
       setProducts(response.data || []);
     } catch (error) {
@@ -54,16 +53,13 @@ const ProductManagement: React.FC = () => {
   // Handle create product
   const handleCreate = async (productData: CreateProductRequest | Partial<CreateProductRequest>) => {
     try {
-      console.log('🔥 Creating product:', productData);
-      const response = await adminApi.createProduct(productData as CreateProductRequest);
-      console.log('🔥 Product created successfully:', response.data);
+      await adminApi.createProduct(productData as CreateProductRequest);
       
       setShowForm(false);
       toast.success('Tạo sản phẩm thành công!');
       
       // Reload products from server to get fresh data
       await loadProducts();
-      console.log('🔥 Products reloaded after create');
     } catch (error) {
       console.error('Error creating product:', error);
       toast.error('Không thể tạo sản phẩm');
@@ -75,9 +71,7 @@ const ProductManagement: React.FC = () => {
     if (!editingProduct) return;
     
     try {
-      console.log('🔥 Updating product:', editingProduct.id, productData);
-      const response = await adminApi.updateProduct(editingProduct.id, productData);
-      console.log('🔥 Product updated successfully:', response.data);
+      await adminApi.updateProduct(editingProduct.id, productData);
       
       setShowForm(false);
       setEditingProduct(null);
@@ -85,7 +79,6 @@ const ProductManagement: React.FC = () => {
       
       // Reload products from server to get fresh data
       await loadProducts();
-      console.log('🔥 Products reloaded after update');
     } catch (error) {
       console.error('Error updating product:', error);
       toast.error('Không thể cập nhật sản phẩm');
@@ -110,26 +103,10 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  // Handle toggle status
-  const handleToggleStatus = async (product: AdminProduct) => {
-    try {
-      const response = await adminApi.updateProduct(product.id, { 
-        status: !product.status 
-      });
-      setProducts(products.map(p => p.id === product.id ? response.data : p));
-      toast.success(`${!product.status ? 'Kích hoạt' : 'Vô hiệu hóa'} sản phẩm thành công!`);
-    } catch (error) {
-      console.error('Error toggling status:', error);
-      toast.error('Không thể thay đổi trạng thái sản phẩm');
-    }
-  };
-
   // Open create form
   const openCreateForm = () => {
-    console.log('🔥 Button clicked!');
     setEditingProduct(null);
     setShowForm(true);
-    console.log('🔥 Form state set:', { showForm: true });
   };
 
   // Open edit form
@@ -176,9 +153,9 @@ const ProductManagement: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🚫 NO VARIANTS - CLEANED UP 🚫</h1>
-          <p className="text-red-600 mt-1 font-bold">
-            If you see variants button, wrong file is loading! Current: {filteredProducts.length} products
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
+          <p className="text-gray-600 mt-1">
+            Tổng cộng: {filteredProducts.length} sản phẩm
           </p>
         </div>
         <button
@@ -245,9 +222,6 @@ const ProductManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nhà cung cấp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạng thái
-                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thao tác
                   </th>
@@ -296,18 +270,6 @@ const ProductManagement: React.FC = () => {
                       <div className="text-sm text-gray-900">
                         {product.supplierName || `ID: ${product.supplierId || 'N/A'}`}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleStatus(product)}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          product.status
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                      >
-                        {product.status ? 'Hoạt động' : 'Không hoạt động'}
-                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">

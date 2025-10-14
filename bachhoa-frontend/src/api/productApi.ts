@@ -41,6 +41,7 @@ function toProduct(x: any): Product {
     variantNames: Array.isArray(x.variants)
       ? x.variants.map((v: any) => v.name ?? v.variantName ?? "")
       : [],
+    totalStock: Number(x.totalStock ?? 0), // Thêm trường totalStock
   };
 }
 
