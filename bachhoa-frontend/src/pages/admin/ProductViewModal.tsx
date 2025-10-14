@@ -1,6 +1,6 @@
 import React from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { AdminProduct } from '../../api/adminApi';
+import { AdminProduct } from '../../types/admin';
 
 interface ProductViewModalProps {
   product: AdminProduct;

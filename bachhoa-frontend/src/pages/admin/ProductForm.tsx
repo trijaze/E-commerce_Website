@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import adminApi, { AdminProduct, CreateProductRequest } from '../../api/adminApi';
+import adminApi from '../../api/adminApi';
+import { AdminProduct, CreateProductRequest } from '../../types/admin';
 
 interface ProductFormProps {
   product?: AdminProduct | null;

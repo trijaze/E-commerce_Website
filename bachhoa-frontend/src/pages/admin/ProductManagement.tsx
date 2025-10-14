@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { PencilIcon, TrashIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
-import adminApi, { AdminProduct, CreateProductRequest } from '../../api/adminApi';
+import adminApi from '../../api/adminApi';
+import { AdminProduct, CreateProductRequest } from '../../types/admin';
 import SimpleProductForm from './SimpleProductForm';
 import ProductViewModal from './ProductViewModal';
 import { getImageUrl } from '../../utils/imageUrl';
@@ -175,9 +176,9 @@ const ProductManagement: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
-          <p className="text-gray-600 mt-1">
-            Tổng số sản phẩm: {filteredProducts.length}
+          <h1 className="text-2xl font-bold text-gray-900">🚫 NO VARIANTS - CLEANED UP 🚫</h1>
+          <p className="text-red-600 mt-1 font-bold">
+            If you see variants button, wrong file is loading! Current: {filteredProducts.length} products
           </p>
         </div>
         <button
@@ -324,6 +325,7 @@ const ProductManagement: React.FC = () => {
                         >
                           <PencilIcon className="w-5 h-5" />
                         </button>
+
                         <button
                           onClick={() => handleDelete(product)}
                           className="text-red-600 hover:text-red-900"

@@ -3,6 +3,7 @@ package vn.bachhoa.controller;
 import vn.bachhoa.dao.ProductDAO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
+import vn.bachhoa.model.ProductVariant;
 import vn.bachhoa.model.Category;
 import vn.bachhoa.model.Supplier;
 import vn.bachhoa.util.JsonUtil;
@@ -264,6 +265,20 @@ public class AdminProductServlet extends HttpServlet {
             }
         }
         
+        // 🔧 Tự động tạo default variant với giá = basePrice
+        if (product.getBasePrice() != null) {
+            ProductVariant defaultVariant = new ProductVariant();
+            defaultVariant.setProduct(product);
+            defaultVariant.setAttributes("Mặc định");
+            defaultVariant.setPrice(product.getBasePrice());
+            defaultVariant.setStockQuantity(0); // Admin sẽ update stock sau
+
+            // Tạo danh sách variants và thêm default variant
+            List<ProductVariant> variants = new ArrayList<>();
+            variants.add(defaultVariant);
+            product.setVariants(variants);
+        }
+        
         return product;
     }
 
@@ -281,7 +296,17 @@ public class AdminProductServlet extends HttpServlet {
         if (data.containsKey("basePrice")) {
             Object price = data.get("basePrice");
             if (price instanceof Number) {
-                product.setBasePrice(BigDecimal.valueOf(((Number) price).doubleValue()));
+                BigDecimal newPrice = BigDecimal.valueOf(((Number) price).doubleValue());
+                product.setBasePrice(newPrice);
+                
+                // 🔧 Sync default variant price to match basePrice
+                if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+                    product.getVariants().forEach(variant -> {
+                        if ("Mặc định".equals(variant.getAttributes())) {
+                            variant.setPrice(newPrice);
+                        }
+                    });
+                }
             }
         }
         if (data.containsKey("categoryId")) {

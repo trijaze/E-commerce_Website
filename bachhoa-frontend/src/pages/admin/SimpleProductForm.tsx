@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { AdminProduct, CreateProductRequest } from '../../api/adminApi';
+import { AdminProduct, CreateProductRequest } from '../../types/admin';
 
 interface ProductFormProps {
   product?: AdminProduct | null;
