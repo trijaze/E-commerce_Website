@@ -1,5 +1,5 @@
 // 🛒 API giỏ hàng kết nối tới BE Tomcat
-const BASE_URL = "http://localhost:8080/bachhoa-backend/api/cart";
+const BASE_URL = "http://localhost:8080/bachhoa/api/cart";
 
 //  Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart)
 export async function getCartItems() {
