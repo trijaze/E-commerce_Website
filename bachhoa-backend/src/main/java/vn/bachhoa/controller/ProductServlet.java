@@ -67,19 +67,12 @@ public class ProductServlet extends HttpServlet {
     /** 🔹 Danh sách sản phẩm hoặc theo categoryId */
     private void handleList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String catParam = req.getParameter("categoryId");
-        List<ProductDTO> list;
-        if (catParam != null && !catParam.isBlank()) {
-            // Sử dụng findAllDTO rồi lọc theo category
-            list = productDAO.findAllDTO();
-            int catId = Integer.parseInt(catParam);
-            list = list.stream().filter(p -> {
-                return p.getCategoryName() != null && p.getCategoryName().equalsIgnoreCase(String.valueOf(catId));
-            }).collect(java.util.stream.Collectors.toList());
-        } else {
-            list = productDAO.findAllDTO();
-        }
+        List<ProductDTO> list = (catParam != null && !catParam.isBlank())
+                ? productDAO.findByCategoryDTO(Integer.parseInt(catParam))
+                : productDAO.findAllDTO();
         JsonUtil.ok(resp, wrap(list));
     }
+    
 
     /** 🔹 Chi tiết sản phẩm */
     private void handleDetail(Integer id, HttpServletResponse resp) throws IOException {
