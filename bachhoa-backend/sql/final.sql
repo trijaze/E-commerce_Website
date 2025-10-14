@@ -317,29 +317,24 @@ INSERT INTO `promotion_products` (`promotionId`, `productId`) VALUES (1, 3), (2,
 -- Dữ liệu mẫu này tham chiếu đến variantId không tồn tại (7,8). Đã sửa thành variantId hợp lệ (107, 108).
 INSERT INTO `promotion_variants` (`promotionId`, `variantId`) VALUES (3, 107), (3, 108);
 
-CREATE TABLE `Orders` (
-                          `id` INT AUTO_INCREMENT PRIMARY KEY,
-                          `user_id` INT,
-                          `total` DECIMAL(10,2),
-                          `status` VARCHAR(50) DEFAULT 'pending_payment',
-                          `payment_method` VARCHAR(50),
-                          `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`userId`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE Orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    total DOUBLE NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50),
+    promotion_code VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- =========================
--- BẢNG ORDER ITEMS
--- =========================
-CREATE TABLE `OrderItems` (
-                              `id` INT AUTO_INCREMENT PRIMARY KEY,
-                              `order_id` INT NOT NULL,
-                              `product_id` INT NOT NULL,
-                              `quantity` INT DEFAULT 1,
-                              `price` DECIMAL(10,2) NOT NULL,
-                              `status` VARCHAR(50) DEFAULT 'pending_payment',
-                              FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
-                              FOREIGN KEY (`product_id`) REFERENCES `products`(`productId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE OrderItems (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DOUBLE NOT NULL,
+    status VARCHAR(50),
+    FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE CASCADE
+);
 
 -- ============================================================
 -- (Optional) inventory log + views
