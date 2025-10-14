@@ -2,7 +2,7 @@
  * Utility functions for handling image URLs
  */
 
-const BACKEND_BASE_URL = 'http://localhost:8080/bachhoa-backend';
+const BACKEND_BASE_URL = 'http://localhost:8080/bachhoa';
 
 /**
  * Convert relative image path to full URL
