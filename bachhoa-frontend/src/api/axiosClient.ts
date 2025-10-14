@@ -8,7 +8,7 @@ import {
   clearTokens,
 } from "../utils/token";
 
-const baseURL = "http://localhost:8080/bachhoa-backend/api";
+const baseURL = "http://localhost:8080/bachhoa/api";
 
 const axiosClient = axios.create({
   baseURL,

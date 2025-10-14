@@ -298,7 +298,7 @@ CREATE TABLE `review` (
     `product_id` INT NOT NULL,
     PRIMARY KEY (`reviewID`),
     CONSTRAINT `fk_review_user`
-        FOREIGN KEY (`user_id`) REFERENCES `users` (`userId`)
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `fk_review_product`
         FOREIGN KEY (`product_id`) REFERENCES `products` (`productId`)
