@@ -20,6 +20,7 @@ public class ProductDTO {
     private String supplierName;
     private List<String> imageUrls;
     private List<String> variantNames;
+    private Integer totalStock;
 
     public ProductDTO(Product p) {
         if (p == null) return;
@@ -37,6 +38,7 @@ public class ProductDTO {
                 p.getImages().stream().map(ProductImage::getImageUrl).collect(Collectors.toList())
                 : new ArrayList<>();
 
+
     }
 
     // Getters
@@ -51,5 +53,7 @@ public class ProductDTO {
     public List<String> getImageUrls() { return imageUrls; }
 
     public List<String> getVariantNames() { return variantNames; }
+    
+    public Integer getTotalStock() { return totalStock; }
 
 }

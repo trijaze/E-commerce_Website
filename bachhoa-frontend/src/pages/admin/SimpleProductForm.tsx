@@ -20,6 +20,7 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
     price: 0,
     stock: 0,
     categoryId: 1,
+    supplierId: 1,
     imageUrl: '',
     status: true,
   });
@@ -33,6 +34,7 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
         price: product.price || 0,
         stock: product.stock || 0,
         categoryId: product.categoryId || 1,
+        supplierId: product.supplierId || 1,
         imageUrl: product.imageUrl || '',
         status: product.status ?? true,
       });
@@ -43,6 +45,7 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
         price: 0,
         stock: 0,
         categoryId: 1,
+        supplierId: 1,
         imageUrl: '',
         status: true,
       });
@@ -81,7 +84,9 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
         ? parseFloat(value) || 0
         : type === 'checkbox' 
           ? (e.target as HTMLInputElement).checked 
-          : value
+          : name === 'categoryId' || name === 'supplierId'
+            ? parseInt(value) || 1  // Convert categoryId and supplierId to number
+            : value
     }));
   };
 
@@ -184,11 +189,35 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value={1}>Gạo - Ngũ cốc</option>
-                <option value={2}>Thịt tươi sống</option>
-                <option value={3}>Rau củ quả</option>
-                <option value={4}>Đồ uống</option>
-                <option value={5}>Đồ khô</option>
+                <option value={1}>Thực phẩm tươi sống</option>
+                <option value={2}>Rau củ</option>
+                <option value={3}>Đồ đông lạnh</option>
+                <option value={4}>Gia vị</option>
+                <option value={5}>Thực phẩm đóng gói sẵn</option>
+              </select>
+            </div>
+
+            {/* Supplier */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nhà cung cấp
+              </label>
+              <select
+                name="supplierId"
+                value={formData.supplierId || 1}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={1}>CP Foods</option>
+                <option value={2}>Dalat Farm</option>
+                <option value={3}>Vissan</option>
+                <option value={4}>Acecook Việt Nam</option>
+                <option value={5}>Tường An</option>
+                <option value={6}>Nam Ngư</option>
+                <option value={7}>Hải Châu Food</option>
+                <option value={8}>Milo Nestlé</option>
+                <option value={9}>CP Frozen Food</option>
+                <option value={10}>Oishi Việt Nam</option>
               </select>
             </div>
 
@@ -198,12 +227,12 @@ const SimpleProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCanc
                 URL hình ảnh
               </label>
               <input
-                type="url"
+                type="text"
                 name="imageUrl"
                 value={formData.imageUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://example.com/image.jpg"
+                placeholder="images/product.jpg"
               />
             </div>
 

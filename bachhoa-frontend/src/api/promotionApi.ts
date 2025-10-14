@@ -30,15 +30,23 @@ export async function getAllPromotions(): Promise<PromotionDTO[]> {
 
 export async function getPromotionByCode(code: string): Promise<PromotionDTO | null> {
   try {
-    const { data } = await api.get("/api/promotions", { params: { code } });
+    const response = await api.get("/api/promotions", { params: { code } });
+    const data = response.data;
+    console.log("🔍 Raw API response:", data);
 
-    // Nếu backend trả thẳng object (không bọc trong data)
-    if (data && data.code) return data as PromotionDTO;
+    // ✅ Trường hợp backend trả về object trực tiếp
+    if (data && typeof data === "object" && data.code) {
+      return data as PromotionDTO;
+    }
 
-    // Nếu backend trả bọc trong data
-    if (data?.data) {
-      if (Array.isArray(data.data)) return data.data[0] ?? null;
-      return data.data ?? null;
+    // ✅ Trường hợp backend trả list (nếu không lọc được theo code)
+    if (Array.isArray(data)) {
+      return data[0] ?? null;
+    }
+
+    // ✅ Trường hợp backend bọc trong { data: {...} }
+    if (data?.data && typeof data.data === "object") {
+      return data.data as PromotionDTO;
     }
 
     return null;
@@ -47,6 +55,7 @@ export async function getPromotionByCode(code: string): Promise<PromotionDTO | n
     return null;
   }
 }
+
 
 export async function createPromotion(promo: Partial<PromotionDTO>) {
   const { data } = await api.post("/api/promotions", promo);

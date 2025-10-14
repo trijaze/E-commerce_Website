@@ -4,11 +4,14 @@ import vn.bachhoa.dao.ProductDAO;
 import vn.bachhoa.dto.ProductDTO;
 import vn.bachhoa.dto.ProductDetailDTO;
 import vn.bachhoa.model.Product;
+import vn.bachhoa.model.ProductImage;
+import vn.bachhoa.model.ProductVariant;
 import vn.bachhoa.model.Category;
 import vn.bachhoa.model.Supplier;
 import vn.bachhoa.util.JsonUtil;
 import vn.bachhoa.util.JPAUtil;
 
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 /** ✅ Servlet xử lý API sản phẩm: /api/products, /api/products/{id}, /api/products/{id}/related */
+@WebServlet(urlPatterns = {"/api/products", "/api/products/*"})
 public class ProductServlet extends HttpServlet {
 
     private final ProductDAO productDAO = new ProductDAO();
@@ -63,19 +67,12 @@ public class ProductServlet extends HttpServlet {
     /** 🔹 Danh sách sản phẩm hoặc theo categoryId */
     private void handleList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String catParam = req.getParameter("categoryId");
-        List<ProductDTO> list;
-        if (catParam != null && !catParam.isBlank()) {
-            // Sử dụng findAllDTO rồi lọc theo category
-            list = productDAO.findAllDTO();
-            int catId = Integer.parseInt(catParam);
-            list = list.stream().filter(p -> {
-                return p.getCategoryName() != null && p.getCategoryName().equalsIgnoreCase(String.valueOf(catId));
-            }).collect(java.util.stream.Collectors.toList());
-        } else {
-            list = productDAO.findAllDTO();
-        }
+        List<ProductDTO> list = (catParam != null && !catParam.isBlank())
+                ? productDAO.findByCategoryDTO(Integer.parseInt(catParam))
+                : productDAO.findAllDTO();
         JsonUtil.ok(resp, wrap(list));
     }
+    
 
     /** 🔹 Chi tiết sản phẩm */
     private void handleDetail(Integer id, HttpServletResponse resp) throws IOException {
@@ -156,6 +153,24 @@ public class ProductServlet extends HttpServlet {
                 }
             }
 
+            // Lấy stock từ frontend để tạo default variant
+            Integer stockQuantity = 0;
+            Object stockObj = data.get("stock");
+            if (stockObj != null) {
+                if (stockObj instanceof Number) {
+                    stockQuantity = ((Number) stockObj).intValue();
+                } else if (stockObj instanceof String) {
+                    try {
+                        stockQuantity = Integer.parseInt((String) stockObj);
+                    } catch (NumberFormatException e) {
+                        stockQuantity = 0;
+                    }
+                }
+            }
+
+            // Lấy imageUrl từ frontend
+            String imageUrl = (String) data.get("imageUrl");
+
             // Validate dữ liệu cần thiết
             if (product.getName() == null || product.getName().trim().isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -169,7 +184,7 @@ public class ProductServlet extends HttpServlet {
                 return;
             }
 
-            Product created = productDAO.createProduct(product);
+            Product created = productDAO.createProduct(product, stockQuantity, imageUrl);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             JsonUtil.ok(resp, new ProductDetailDTO(created));
 
@@ -201,6 +216,7 @@ public class ProductServlet extends HttpServlet {
 
             // Parse JSON thành Map để xử lý từng trường riêng biệt
             Map<String, Object> updateData = JsonUtil.fromJson(jsonStr, Map.class);
+            System.out.println("DEBUG: Update data received: " + updateData);
 
             // Sử dụng EntityManager để thực hiện update trong một transaction
             EntityManager em = JPAUtil.getEntityManager();
@@ -296,6 +312,78 @@ public class ProductServlet extends HttpServlet {
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     JsonUtil.ok(resp, new ErrorResponse("Product SKU is required"));
                     return;
+                }
+
+                // Handle imageUrl update
+                if (updateData.containsKey("imageUrl")) {
+                    String imageUrl = (String) updateData.get("imageUrl");
+                    if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                        // Find existing main image or create new one
+                        String jpqlImage = "SELECT pi FROM ProductImage pi WHERE pi.product.productId = :productId AND pi.isMain = true";
+                        List<ProductImage> mainImages = em.createQuery(jpqlImage, ProductImage.class)
+                                                          .setParameter("productId", productId)
+                                                          .getResultList();
+                        
+                        if (!mainImages.isEmpty()) {
+                            // Update existing main image
+                            ProductImage mainImage = mainImages.get(0);
+                            mainImage.setImageUrl(imageUrl);
+                            em.merge(mainImage);
+                        } else {
+                            // Create new main image
+                            ProductImage newImage = new ProductImage();
+                            newImage.setProduct(existing);
+                            newImage.setImageUrl(imageUrl);
+                            newImage.setIsMain(true);
+                            em.persist(newImage);
+                        }
+                    }
+                }
+
+                // Handle stock update - update first variant's stock quantity
+                if (updateData.containsKey("stock")) {
+                    Object stockObj = updateData.get("stock");
+                    System.out.println("DEBUG: Stock field found: " + stockObj);
+                    if (stockObj != null) {
+                        Integer newStock = null;
+                        if (stockObj instanceof Number) {
+                            newStock = ((Number) stockObj).intValue();
+                        } else if (stockObj instanceof String) {
+                            newStock = Integer.parseInt((String) stockObj);
+                        }
+                        
+                        if (newStock != null) {
+                            System.out.println("DEBUG: Updating stock to: " + newStock + " for product: " + productId);
+                            // Get first variant of this product and update its stock
+                            String jpqlVariant = "SELECT pv FROM ProductVariant pv WHERE pv.product.productId = :productId ORDER BY pv.variantId ASC";
+                            List<ProductVariant> variants = em.createQuery(jpqlVariant, ProductVariant.class)
+                                                             .setParameter("productId", productId)
+                                                             .setMaxResults(1)
+                                                             .getResultList();
+                            
+                            System.out.println("DEBUG: Found " + variants.size() + " variants for product " + productId);
+                            if (!variants.isEmpty()) {
+                                ProductVariant firstVariant = variants.get(0);
+                                System.out.println("DEBUG: Updating variant " + firstVariant.getVariantId() + " stock from " + firstVariant.getStockQuantity() + " to " + newStock);
+                                firstVariant.setStockQuantity(newStock);
+                                em.merge(firstVariant);
+                                System.out.println("DEBUG: Stock updated successfully");
+                            } else {
+                                // Create default variant for products without variants
+                                System.out.println("DEBUG: Creating default variant for product " + productId);
+                                ProductVariant defaultVariant = new ProductVariant();
+                                defaultVariant.setProduct(existing);
+                                defaultVariant.setVariantSku(existing.getSku() + "-DEFAULT");
+                                defaultVariant.setAttributes("Mặc định");
+                                defaultVariant.setPrice(existing.getBasePrice());
+                                defaultVariant.setStockQuantity(newStock);
+                                em.persist(defaultVariant);
+                                System.out.println("DEBUG: Created default variant with stock: " + newStock);
+                            }
+                        }
+                    }
+                } else {
+                    System.out.println("DEBUG: No stock field in request data");
                 }
 
                 // Save changes

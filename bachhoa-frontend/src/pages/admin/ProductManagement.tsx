@@ -4,6 +4,7 @@ import { PencilIcon, TrashIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/ou
 import adminApi, { AdminProduct, CreateProductRequest } from '../../api/adminApi';
 import SimpleProductForm from './SimpleProductForm';
 import ProductViewModal from './ProductViewModal';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const ProductManagement: React.FC = () => {
   // console.log('🔥 ProductManagement rendering...');
@@ -33,7 +34,9 @@ const ProductManagement: React.FC = () => {
       }
       
       const response = await adminApi.getAllProducts(params);
-      setProducts(response.data);
+      console.log('🔥 Admin API response:', response);
+      // adminApi đã extract data array sẵn
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error loading products:', error);
       toast.error('Không thể tải danh sách sản phẩm');
@@ -239,6 +242,9 @@ const ProductManagement: React.FC = () => {
                     Danh mục
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nhà cung cấp
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trạng thái
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -254,7 +260,7 @@ const ProductManagement: React.FC = () => {
                         <div className="flex-shrink-0 h-12 w-12">
                           <img
                             className="h-12 w-12 rounded-md object-cover"
-                            src={product.imageUrl || '/images/placeholder.jpg'}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -283,6 +289,11 @@ const ProductManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {product.categoryName || `ID: ${product.categoryId}`}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {product.supplierName || `ID: ${product.supplierId || 'N/A'}`}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

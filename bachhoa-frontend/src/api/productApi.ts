@@ -20,8 +20,8 @@ function normalizeImages(x: any): string[] {
       if (!path) return "";
       if (path.startsWith("http")) return path; // đã đủ URL
       if (path.startsWith("/bachhoa")) return `http://localhost:8080${path}`;
-      if (path.startsWith("images/")) return `/bachhoa/${path}`;
-      return `/bachhoa/images/${path}`;
+      if (path.startsWith("images/")) return `http://localhost:8080/bachhoa/${path}`;
+      return `http://localhost:8080/bachhoa/images/${path}`;
     }).filter(Boolean);
   }
   return [];

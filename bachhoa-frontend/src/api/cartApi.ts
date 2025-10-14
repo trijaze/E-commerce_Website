@@ -1,76 +1,97 @@
 // 🛒 API giỏ hàng kết nối tới BE Tomcat
-const BASE_URL = "http://localhost:8080/bachhoa/api/cart";
+const BASE_URL = "http://localhost:8080/bachhoa/cart";
 
-// 🔹 Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart?userId=1)
-export async function getCartItems(userId: number = 1) {
+//  Lấy danh sách sản phẩm trong giỏ hàng (GET /api/cart)
+export async function getCartItems() {
   try {
-    const res = await fetch(`${BASE_URL}?userId=${userId}`);
-    if (!res.ok) throw new Error("Không thể tải giỏ hàng");
+    const res = await fetch(BASE_URL, {
+      method: "GET",
+      credentials: "include", // GỬI COOKIE SESSION ĐỂ TOMCAT NHẬN userId
+    });
+    if (!res.ok) throw new Error(`Không thể tải giỏ hàng (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.error("❌ Lỗi khi lấy giỏ hàng:", err);
+    console.error(" Lỗi khi lấy giỏ hàng:", err);
     return [];
   }
 }
 
-// 🔹 Thêm sản phẩm vào giỏ (POST /api/cart)
-export async function addToCart(
-  userId: number,
-  productId: number,
-  quantity: number = 1
-) {
+
+//  Thêm sản phẩm vào giỏ (POST /api/cart)
+
+export async function addToCart(productId: number, quantity: number = 1) {
+  try {
+    const form = new URLSearchParams();
+    form.append("productId", String(productId));
+    form.append("quantity", String(quantity));
+
+    const res = await fetch(BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // GỬI COOKIE SESSION
+      body: JSON.stringify({ productId, quantity }),
+    });
+    if (!res.ok) throw new Error(`Không thể thêm sản phẩm (${res.status})`);
+    return await res.json();
+  } catch (err) {
+    console.error(" Lỗi khi thêm vào giỏ:", err);
+    return { message: "Thêm thất bại" };
+  }
+}
+
+//  Xóa 1 sản phẩm khỏi giỏ
+export async function removeFromCart(productId: number) {
   try {
     const res = await fetch(BASE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, variantId: productId, quantity }), // backend dùng variantId
+      credentials: "include",
+      body: JSON.stringify({ productId }),
     });
-
-    if (!res.ok) throw new Error("Không thể thêm sản phẩm vào giỏ");
+    if (!res.ok) throw new Error(`Không thể xóa sản phẩm (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.error("❌ Lỗi thêm vào giỏ hàng:", err);
-    return null;
+    console.error(" Lỗi khi xóa sản phẩm:", err);
+    return { message: "Xóa thất bại" };
   }
 }
 
-// 🔹 Cập nhật số lượng sản phẩm (PUT /api/cart)
-export async function updateQuantity(id: number, quantity: number) {
+//  Xóa toàn bộ giỏ hàng
+export async function clearCart() {
   try {
     const res = await fetch(BASE_URL, {
-      method: "PUT",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, quantity }),
+      credentials: "include",
+      body: JSON.stringify({ action: "clear" }),
     });
-
-    if (!res.ok) throw new Error("Không thể cập nhật số lượng");
+    if (!res.ok) throw new Error(`Không thể xóa giỏ hàng (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.error("❌ Lỗi cập nhật số lượng:", err);
-    return null;
+    console.error(" Lỗi khi xóa giỏ hàng:", err);
+    return { message: "Xóa giỏ thất bại" };
   }
 }
 
-// 🔹 Xóa 1 sản phẩm khỏi giỏ hàng (DELETE /api/cart?id=...)
-export async function deleteCartItem(id: number) {
+
+// 🔄 Cập nhật số lượng sản phẩm trong giỏ
+export async function updateQuantity(productId: number, quantity: number) {
   try {
-    const res = await fetch(`${BASE_URL}?id=${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Không thể xóa sản phẩm");
+    const res = await fetch(BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ productId, quantity, action: "update" }),
+    });
+    if (!res.ok) throw new Error(`Không thể cập nhật số lượng (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.error("❌ Lỗi xóa sản phẩm:", err);
-    return null;
+    console.error(" Lỗi khi cập nhật số lượng:", err);
+    return { message: "Cập nhật thất bại" };
   }
 }
 
-// 🔹 Xóa toàn bộ giỏ hàng (DELETE /api/cart?userId=1)
-export async function clearCart(userId: number = 1) {
-  try {
-    const res = await fetch(`${BASE_URL}?userId=${userId}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Không thể xóa toàn bộ giỏ hàng");
-    return await res.json();
-  } catch (err) {
-    console.error("❌ Lỗi clear giỏ hàng:", err);
-    return null;
-  }
+// 🗑️ Xóa sản phẩm khỏi giỏ (alias cho removeFromCart)
+export async function deleteCartItem(productId: number) {
+  return removeFromCart(productId);
 }

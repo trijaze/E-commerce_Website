@@ -1,39 +1,29 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Product } from "../features/products/productTypes";
 import { formatCurrency, shortText } from "../utils/format";
 
 type Props = {
   product: Product;
-  onBuy?: (p: Product) => void; // hook thêm vào giỏ hàng (tuỳ chọn)
+  onBuy?: (p: Product) => void; // optional: hook vào giỏ hàng
 };
 
 export default function ProductCard({ product, onBuy }: Props) {
-  const navigate = useNavigate();
+  const href = `/products/${product.productId}`;
 
-  // ✅ Xử lý URL ảnh
-  const imageUrl =
-    product.imageUrls?.[0]?.startsWith("http")
-      ? product.imageUrls[0]
-      : `http://localhost:8080${product.imageUrls?.[0] ?? ""}`;
 
-  // ✅ Khi bấm "MUA"
+  // ✅ Xử lý URL ảnh  
+  const imageUrl = product.imageUrls?.[0] || '/images/placeholder.jpg';
+
   const handleBuy = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // không chuyển trang khi bấm MUA
     e.stopPropagation();
-
-    if (onBuy) {
-      // 👉 Nếu có props onBuy => thêm vào giỏ hàng
-      onBuy(product);
-      console.log("🛒 Đã thêm vào giỏ:", product.name);
-    } else {
-      // 👉 Nếu không có => chuyển sang trang checkout
-      navigate("/checkout", { state: { product } });
-    }
+    onBuy?.(product);
+    if (!onBuy) console.log("BUY:", product.productId, product.name);
   };
 
   return (
     <Link
-      to={`/products/${product.productId}`}
+      to={href}
       className="block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 
                  flex flex-col overflow-hidden hover:-translate-y-1 border border-gray-100"
     >
@@ -45,19 +35,20 @@ export default function ProductCard({ product, onBuy }: Props) {
           className="max-h-full w-auto object-contain"
           loading="lazy"
         />
-        {/* Giá hiển thị trên ảnh */}
+        {/* Huy hiệu giá nổi bật trên ảnh */}
         <div className="absolute bottom-2 right-2 bg-green-500 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
           {formatCurrency(product.basePrice)}
         </div>
       </div>
 
-      {/* Nội dung sản phẩm */}
+      {/* Nội dung */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="font-semibold text-base text-gray-800 line-clamp-1">
             {product.name}
           </h3>
 
+          {/* Nếu có thương hiệu hoặc nhà cung cấp */}
           {product.supplierName && (
             <div className="text-sm text-emerald-700 font-medium">
               {product.supplierName}
@@ -69,7 +60,16 @@ export default function ProductCard({ product, onBuy }: Props) {
           </p>
         </div>
 
-       
+        {/* Nút MUA */}
+        <div className="mt-4">
+          <button
+            onClick={handleBuy}
+            className="w-full rounded-xl bg-green-500 text-white py-2
+                       font-semibold hover:bg-emerald-700 active:translate-y-px transition"
+          >
+            MUA
+          </button>
+        </div>
       </div>
     </Link>
   );
