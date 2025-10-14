@@ -496,36 +496,6 @@ INSERT INTO `suppliers` VALUES (1,'CP Foods','Nguyễn Văn A','0901234567'),(2,
 /*!40000 ALTER TABLE `suppliers` ENABLE KEYS */;
 UNLOCK TABLES;
 
--- =========================
--- BẢNG ORDERS
--- =========================
-DROP TABLE IF EXISTS `OrderItems`;
-DROP TABLE IF EXISTS `Orders`;
-
-CREATE TABLE `Orders` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` INT,
-  `total` DECIMAL(10,2),
-  `status` VARCHAR(50) DEFAULT 'pending_payment',
-  `payment_method` VARCHAR(50),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- =========================
--- BẢNG ORDER ITEMS
--- =========================
-CREATE TABLE `OrderItems` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `order_id` INT NOT NULL,
-  `product_id` INT NOT NULL,
-  `quantity` INT DEFAULT 1,
-  `price` DECIMAL(10,2) NOT NULL,
-  `status` VARCHAR(50) DEFAULT 'pending_payment',
-  FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`productId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Dump completed on 2025-10-11 20:30:52
 
 -- ============================================================
 -- (Optional) inventory log + views (compatible with stockQuantity column)
