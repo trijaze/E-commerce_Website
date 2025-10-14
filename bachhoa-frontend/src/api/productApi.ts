@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import type { Product} from "../features/products/productTypes";
+import type { Product } from "../features/products/productTypes";
 
 export interface ProductListQuery {
   take?: number;               // FE -> map sang limit của BE
@@ -16,13 +16,15 @@ export interface ProductListQuery {
 // Chuẩn hóa danh sách ảnh của sản phẩm
 function normalizeImages(x: any): string[] {
   if (Array.isArray(x.imageUrls)) {
-    return x.imageUrls.map((path: string) => {
-      if (!path) return "";
-      if (path.startsWith("http")) return path; // đã đủ URL
-      if (path.startsWith("/bachhoa")) return `http://localhost:8080${path}`;
-      if (path.startsWith("images/")) return `http://localhost:8080/bachhoa/${path}`;
-      return `http://localhost:8080/bachhoa/images/${path}`;
-    }).filter(Boolean);
+    return x.imageUrls
+      .map((path: string) => {
+        if (!path) return "";
+        if (path.startsWith("http")) return path; // đã đủ URL
+        if (path.startsWith("/bachhoa")) return `http://localhost:8080${path}`;
+        if (path.startsWith("images/")) return `http://localhost:8080/bachhoa/${path}`;
+        return `http://localhost:8080/bachhoa/images/${path}`;
+      })
+      .filter(Boolean);
   }
   return [];
 }
@@ -45,9 +47,9 @@ function toProduct(x: any): Product {
   };
 }
 
-// Gọi API sản phẩm
+// API sản phẩm
 export const productApi = {
-  // Lấy danh sách sản phẩm (có thể lọc theo danh mục hoặc tìm kiếm)
+  // Lấy danh sách sản phẩm (có thể lọc theo danh mục, tìm kiếm, sắp xếp...)
   async list(q: ProductListQuery = {}): Promise<Product[]> {
     const params: Record<string, any> = {};
     if (q.take != null) params.limit = q.take;
@@ -60,7 +62,19 @@ export const productApi = {
     if (q.priceRange) params.priceRange = q.priceRange;
     if (q.sort) params.sort = q.sort;
 
-    const res = await axiosClient.get("/products", { params });
+    // Xác định có filter hay không
+    const hasFilter =
+      params.q ||
+      params.categoryId ||
+      params.supplierId ||
+      params.minPrice ||
+      params.maxPrice ||
+      params.priceRange ||
+      params.sort;
+
+    const url = hasFilter ? "/products/filter" : "/products";
+
+    const res = await axiosClient.get(url, { params });
     const data = res.data?.data ?? res.data;
     const arr = Array.isArray(data) ? data : [];
     return arr.map(toProduct);
