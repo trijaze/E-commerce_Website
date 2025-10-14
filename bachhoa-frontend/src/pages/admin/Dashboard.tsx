@@ -1,11 +1,13 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  ShoppingBagIcon, 
-  DocumentTextIcon, 
-  UsersIcon,
-  CurrencyDollarIcon 
-} from '@heroicons/react/24/outline';
+// src/pages/admin/Dashboard.tsx
+import { useState, useEffect } from 'react';
+import { FaBars, FaBell, FaSearch } from 'react-icons/fa';
+import AdminSidebar from '../../components/AdminSidebar';
+import ManageProducts from './ManageProducts';
+import ManageOrders from './ManageOrders';
+import ManageUsers from './ManageUsers';
+import { productApi } from '../../api/productApi';
+import { orderApi } from '../../api/orderApi';
+import { userApi } from '../../api/userApi';
 
 interface Product {
   id: string;

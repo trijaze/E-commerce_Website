@@ -5,132 +5,143 @@ import {
   deleteCartItem,
   clearCart,
 } from "../api/cartApi";
-import { formatCurrency } from "../utils/format";
-import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // ✅ dùng để điều hướng
 
-type CartItem = {
-  id: number;
-  quantity: number;
-  product: {
-    name: string;
-    basePrice: number;
-    imageUrls?: string[];
-  };
-};
-
-export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Cart() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // ✅ khởi tạo hook điều hướng
 
   const loadCart = async () => {
-    setLoading(true);
-    const data = await getCartItems(1); // userId=1
-    setItems(data);
-    setLoading(false);
+    const data = await getCartItems();
+    setItems(data || []);
   };
 
   useEffect(() => {
     loadCart();
   }, []);
 
-  const handleQuantityChange = async (id: number, quantity: number) => {
+  const handleUpdate = async (id: number, quantity: number) => {
+    if (quantity < 1) return;
+    setLoading(true);
     await updateQuantity(id, quantity);
-    toast.info("🔄 Đã cập nhật số lượng");
-    loadCart();
+    await loadCart();
+    setLoading(false);
   };
 
   const handleDelete = async (id: number) => {
+    if (!confirm("Xóa sản phẩm này khỏi giỏ hàng?")) return;
+    setLoading(true);
     await deleteCartItem(id);
-    toast.warning("🗑 Đã xóa sản phẩm khỏi giỏ");
-    loadCart();
+    await loadCart();
+    setLoading(false);
   };
 
   const handleClear = async () => {
-    await clearCart(1);
-    toast.warning("🧹 Đã xóa toàn bộ giỏ hàng");
-    loadCart();
+    if (!confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng không?")) return;
+    setLoading(true);
+    await clearCart();
+    await loadCart();
+    setLoading(false);
+  };  
+
+  const handleCheckout = () => {
+    navigate("/checkout"); // ✅ chuyển sang trang thanh toán
   };
 
-  const total = items.reduce(
-    (sum, i) => sum + i.quantity * i.product.basePrice,
-    0
-  );
-
-  if (loading) return <div className="p-6">⏳ Đang tải giỏ hàng...</div>;
+  const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">🛒 Giỏ hàng của bạn</h1>
+    <div className="max-w-5xl mx-auto p-8 bg-green-50 rounded-lg shadow-sm">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+        🛒 Giỏ hàng của bạn
+      </h1>
 
       {items.length === 0 ? (
-        <p className="text-gray-500">Giỏ hàng trống.</p>
+        <p className="text-gray-600">Giỏ hàng trống.</p>
       ) : (
         <>
-          <ul className="divide-y">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="py-4 flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={`http://localhost:8080${item.product.imageUrls?.[0] ?? ""}`}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-md border"
-                  />
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {item.product.name}
-                    </p>
-                    <p className="text-gray-600">
-                      {formatCurrency(item.product.basePrice)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(item.id, item.quantity - 1)
-                    }
-                    disabled={item.quantity <= 1}
-                    className="px-2 py-1 bg-gray-200 rounded"
-                  >
-                    -
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(item.id, item.quantity + 1)
-                    }
-                    className="px-2 py-1 bg-gray-200 rounded"
-                  >
-                    +
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-500 font-medium ml-3"
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <thead className="bg-green-100 text-gray-700">
+              <tr>
+                <th className="border p-3 text-left">Sản phẩm</th>
+                <th className="border p-3 text-right">Giá</th>
+                <th className="border p-3 text-center">Số lượng</th>
+                <th className="border p-3 text-right">Tổng</th>
+                <th className="border p-3 text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it) => (
+                <tr
+                  key={it.id}
+                  className="hover:bg-green-100 transition-colors duration-150"
+                >
+                  <td className="border p-3 font-medium">{it.name}</td>
+                  <td className="border p-3 text-right text-gray-700">
+                    {it.price.toLocaleString()} ₫
+                  </td>
+                  <td className="border p-3 text-center">
+                    <div className="flex justify-center items-center gap-2">
+                      <button
+                        onClick={() => handleUpdate(it.id, it.quantity - 1)}
+                        className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+                      >
+                        –
+                      </button>
+                      <span className="w-8 text-center">{it.quantity}</span>
+                      <button
+                        onClick={() => handleUpdate(it.id, it.quantity + 1)}
+                        className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </td>
+                  <td className="border p-3 text-right text-green-700 font-semibold">
+                    {(it.price * it.quantity).toLocaleString()} ₫
+                  </td>
+                  <td className="border p-3 text-center">
+                    <button
+                      onClick={() => handleDelete(it.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           <div className="mt-6 flex justify-between items-center">
             <button
               onClick={handleClear}
-              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
             >
-              Xóa tất cả
+              Xóa toàn bộ giỏ hàng
             </button>
-            <div className="text-xl font-bold text-green-700">
-              Tổng: {formatCurrency(total)}
+
+            <div className="text-right">
+              <div className="text-xl font-bold text-green-800 mb-3">
+                Tổng cộng: {total.toLocaleString()} ₫
+              </div>
+
+              <button
+                onClick={handleCheckout}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold shadow-md"
+              >
+                Thanh toán
+              </button>
             </div>
           </div>
         </>
+      )}
+
+      {loading && (
+        <p className="text-gray-500 mt-4 italic animate-pulse">
+          ⏳ Đang cập nhật...
+        </p>
       )}
     </div>
   );

@@ -49,7 +49,7 @@ export const authApi = {
     axiosClient.get('/secure/users/me').then((r) => r.data),
 
   changePassword: (payload: ChangePasswordPayload) =>
-    axiosClient.post('/secure/users/changepassword', payload).then(r => r.data),
+    axiosClient.post('/secure/users/changepasword', payload).then(r => r.data),
 
   logout: () =>
     axiosClient.post('/secure/users/logout').then(r => r.data),
