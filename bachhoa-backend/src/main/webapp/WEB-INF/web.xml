@@ -4,7 +4,7 @@
          version="4.0"
          metadata-complete="false">
          
-  <display-name>bachhoa-backend</display-name>
+  <display-name>bachhoa</display-name>
 
 
   <!-- Filters: chỉ cấu hình ở đây, bỏ @WebFilter trong class -->

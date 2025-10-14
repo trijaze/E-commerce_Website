@@ -12,6 +12,7 @@ export type Product = {
   imageUrls: string[];           // Danh sách ảnh
   variantNames?: string[];       // Danh sách biến thể
   categoryId?: number;
+  totalStock?: number;           // Tổng số lượng tồn kho
 };
 
 export type ProductsState = {

@@ -15,6 +15,7 @@ import ForgotPassword from '../pages/ForgotPassword';
 import AuthLayout from '../components/layout/AuthLayout';
 import MainLayout from '../components/layout/MainLayout';
 import Home from '@/pages/Home';
+import AdminLoginPage from '../pages/admin/LoginPage';
 
 // HOA: Trang "/" dùng ProductList để hiện data thật từ BE (tránh data mock ở Home)
 export default function AppRoutes() {
@@ -36,6 +37,7 @@ export default function AppRoutes() {
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/changePassword" element={<ChangePassword />} />

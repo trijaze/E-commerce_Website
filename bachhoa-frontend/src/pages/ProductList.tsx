@@ -126,9 +126,11 @@ export default function ProductList() {
 
         {!loading && !error && items?.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {items.map((p) => (
-              <ProductCard key={p.productId} product={p} />
-            ))}
+            {items
+              .filter((p) => (p.totalStock ?? 0) > 0) // Chỉ hiển thị sản phẩm còn hàng
+              .map((p) => (
+                <ProductCard key={p.productId} product={p} />
+              ))}
           </div>
         )}
       </section>

@@ -3,13 +3,18 @@ package vn.bachhoa.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import vn.bachhoa.dao.OrderDao;
+import vn.bachhoa.dto.OrderDTO;
+import vn.bachhoa.dto.request.OrderRequest;
 import vn.bachhoa.model.Order;
+
+import vn.bachhoa.converter.OrderConverter;
 import vn.bachhoa.model.OrderItem;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet("/api/orders")
 public class OrderServlet extends HttpServlet {
@@ -17,13 +22,10 @@ public class OrderServlet extends HttpServlet {
 
     private final OrderDao orderDao = new OrderDao();
 
-    // ✅ Cấu hình Gson để loại bỏ vòng lặp
     private final Gson gson = new GsonBuilder()
-            .excludeFieldsWithoutExposeAnnotation()
             .setPrettyPrinting()
             .create();
 
-    // ✅ Hàm CORS cho React
     private void setCors(HttpServletResponse resp) {
         resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -37,111 +39,114 @@ public class OrderServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
-    // 🟢 Lấy danh sách hoặc 1 đơn hàng
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         setCors(resp);
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+
         try {
             String id = req.getParameter("id");
-
             if (id != null) {
                 Order order = orderDao.getById(Integer.parseInt(id));
                 if (order == null) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write("{\"error\": \"Order not found\"}");
+                    resp.getWriter().write("{\"error\":\"Order not found\"}");
                     return;
                 }
-                resp.getWriter().write(gson.toJson(order));
+                // Convert Order sang OrderDTO
+                OrderDTO dto = OrderConverter.toDTO(order);
+                resp.getWriter().write(gson.toJson(dto));
             } else {
                 List<Order> orders = orderDao.getAll();
-                resp.getWriter().write(gson.toJson(orders));
+                // Convert List<Order> sang List<OrderDTO>
+                List<OrderDTO> dtos = orders.stream()
+                                            .map(OrderConverter::toDTO)
+                                            .collect(Collectors.toList());
+                resp.getWriter().write(gson.toJson(dtos));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\": \"❌ Failed to fetch orders\"}");
+            resp.getWriter().write("{\"error\":\"Failed to fetch orders\"}");
         }
     }
 
-    // 🟢 Tạo đơn hàng mới
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         setCors(resp);
         try (BufferedReader reader = req.getReader()) {
-            Map<String, Object> data = gson.fromJson(reader, Map.class);
+            // parse JSON từ FE
+            OrderRequest orderReq = gson.fromJson(reader, OrderRequest.class);
 
-            // ✅ Đọc dữ liệu từ JSON
-            int userId = ((Double) data.get("userId")).intValue();
-            String paymentMethod = (String) data.get("paymentMethod");
-            String promotionCode = (String) data.getOrDefault("promotionCode", null);
-            Double totalPrice = data.get("totalPrice") != null ? (Double) data.get("totalPrice") : 0.0;
+            if (orderReq == null || orderReq.items == null || orderReq.items.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"error\":\"Items cannot be empty\"}");
+                return;
+            }
 
-            List<Map<String, Object>> items = (List<Map<String, Object>>) data.get("items");
-
-            // ✅ Chuẩn bị danh sách sản phẩm
+            // tạo danh sách OrderItem
             List<OrderItem> orderItems = new ArrayList<>();
             double total = 0;
-
-            for (Map<String, Object> item : items) {
-                int productId = ((Double) item.get("productId")).intValue();
-                int quantity = ((Double) item.get("quantity")).intValue();
-                double price = (Double) item.get("price");
-
-                total += price * quantity;
-
+            for (OrderRequest.Item item : orderReq.items) {
                 OrderItem oi = new OrderItem();
-                oi.setProductId(productId);
-                oi.setQuantity(quantity);
-                oi.setPrice(price);
+                oi.setProductId(item.productId);
+                oi.setQuantity(item.quantity);
+                oi.setPrice(item.price);
                 oi.setStatus("pending_payment");
+                total += item.price * item.quantity;
                 orderItems.add(oi);
             }
 
-            // ✅ Tạo order object
+            // tạo order
             Order order = new Order();
-            order.setUserId(userId);
-            order.setPaymentMethod(paymentMethod);
+            order.setPaymentMethod(orderReq.paymentMethod);
             order.setStatus("pending_payment");
             order.setItems(orderItems);
+            order.setTotal(orderReq.totalPrice > 0 ? orderReq.totalPrice : total);
 
-            // Nếu tổng sau giảm khác 0 thì dùng nó, ngược lại dùng tổng gốc
-            order.setTotal(totalPrice > 0 ? totalPrice : total);
+            // promoCode optional
+            if (orderReq.promotionCode != null && !orderReq.promotionCode.isEmpty()) {
+                order.setPromotionCode(orderReq.promotionCode);
+            }
 
+            // liên kết OrderItem với Order
             for (OrderItem oi : orderItems) {
                 oi.setOrder(order);
             }
 
-            // ✅ Lưu vào DB
+            // lưu vào DB
             orderDao.createOrder(order);
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().write("{\"message\": \"✅ Order created successfully\"}");
+            resp.getWriter().write("{\"message\":\"Order created successfully\"}");
 
         } catch (Exception e) {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\": \"❌ Failed to create order\"}");
+            resp.getWriter().write("{\"error\":\"Failed to create order\"}");
         }
     }
 
-    // 🟢 Cập nhật đơn hàng
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         setCors(resp);
         try {
             String id = req.getParameter("id");
             if (id == null) {
-                resp.getWriter().write("{\"error\": \"Missing order id\"}");
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"error\":\"Missing order id\"}");
                 return;
             }
 
             BufferedReader reader = req.getReader();
-            Map<String, Object> data = new Gson().fromJson(reader, Map.class);
+            Map<String, Object> data = gson.fromJson(reader, Map.class);
 
             Order order = orderDao.getById(Integer.parseInt(id));
             if (order == null) {
-                resp.getWriter().write("{\"error\": \"Order not found\"}");
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write("{\"error\":\"Order not found\"}");
                 return;
             }
 
@@ -149,11 +154,11 @@ public class OrderServlet extends HttpServlet {
             if (data.containsKey("paymentMethod")) order.setPaymentMethod((String) data.get("paymentMethod"));
 
             orderDao.update(order);
-            resp.getWriter().write("{\"message\": \"✅ Order updated successfully\"}");
+            resp.getWriter().write("{\"message\":\"Order updated successfully\"}");
         } catch (Exception e) {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\": \"❌ Failed to update order\"}");
+            resp.getWriter().write("{\"error\":\"Failed to update order\"}");
         }
     }
 }

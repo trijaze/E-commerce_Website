@@ -46,13 +46,14 @@ public class ProductDetailDTO {
         public String sku;
         public String name; // ví dụ: "500g", "1kg"
         public BigDecimal price;
+        public Integer stockQuantity;
 
         public VariantDTO(ProductVariant v) {
             this.variantId = v.getVariantId();
             this.sku = v.getVariantSku();
             this.name = v.getAttributes();
             this.price = v.getPrice();
-
+            this.stockQuantity = v.getStockQuantity();
         }
     }
 

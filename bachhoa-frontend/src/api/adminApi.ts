@@ -1,36 +1,5 @@
 import axiosClient from './axiosClient';
-
-// Types for admin operations
-export interface CreateProductRequest {
-  name: string;
-  description?: string;
-  price: number;
-  stock?: number;
-  categoryId: number;
-  supplierId?: number;
-  imageUrl?: string;
-  status?: boolean;
-}
-
-export interface UpdateProductRequest extends Partial<CreateProductRequest> {
-  id: number;
-}
-
-export interface AdminProduct {
-  id: number;
-  name: string;
-  description?: string;
-  price: number;
-  stock: number;
-  categoryId: number;
-  categoryName?: string;
-  supplierId?: number;
-  supplierName?: string;
-  imageUrl?: string;
-  status: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { AdminProduct, CreateProductRequest, UpdateProductRequest } from '../types/admin';
 
 export interface AdminApiResponse<T> {
   data: T;
@@ -65,6 +34,8 @@ export const adminApi = {
       supplierName: item.supplierName,
       imageUrl: item.imageUrls?.[0] || '',
       status: true, // Default active
+      createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: item.updatedAt || new Date().toISOString()
     }));
     return { data: products };
   },
@@ -103,6 +74,8 @@ export const adminApi = {
         supplierName: created.supplierName,
         imageUrl: created.images?.[0]?.imageUrl || '',
         status: true,
+        createdAt: created.createdAt || new Date().toISOString(),
+        updatedAt: created.updatedAt || new Date().toISOString()
       }
     };
   },
@@ -135,6 +108,8 @@ export const adminApi = {
         supplierName: updated.supplierName,
         imageUrl: updated.images?.[0]?.imageUrl || '',
         status: true,
+        createdAt: updated.createdAt || new Date().toISOString(),
+        updatedAt: updated.updatedAt || new Date().toISOString()
       }
     };
   },
@@ -176,6 +151,8 @@ const mockProducts: AdminProduct[] = [
     categoryName: 'Gạo - Ngũ cốc',
     imageUrl: '/images/gao-st25.jpg',
     status: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 2,
@@ -187,6 +164,8 @@ const mockProducts: AdminProduct[] = [
     categoryName: 'Thịt tươi sống',
     imageUrl: '/images/thit-heo.jpg',
     status: false,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
 ];
 
@@ -241,6 +220,8 @@ export const adminApiMock = {
       categoryName: getCategoryName(product.categoryId),
       imageUrl: product.imageUrl || '/images/default.jpg',
       status: product.status ?? true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
     mockProducts.push(newProduct);
