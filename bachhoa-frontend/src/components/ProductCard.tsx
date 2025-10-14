@@ -60,16 +60,7 @@ export default function ProductCard({ product, onBuy }: Props) {
           </p>
         </div>
 
-        {/* Nút MUA */}
-        <div className="mt-4">
-          <button
-            onClick={handleBuy}
-            className="w-full rounded-xl bg-green-500 text-white py-2
-                       font-semibold hover:bg-emerald-700 active:translate-y-px transition"
-          >
-            MUA
-          </button>
-        </div>
+        
       </div>
     </Link>
   );
