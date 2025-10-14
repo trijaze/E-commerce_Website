@@ -31,11 +31,6 @@
       <property name="javax.persistence.jdbc.user" value="root"/>
       <property name="javax.persistence.jdbc.password" value="123456"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
-      <!-- NGỪNG phá/làm lại schema: -->
-      <property name="hibernate.hbm2ddl.auto" value="update"/> 
-
-
-      <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
       <property name="hibernate.hbm2ddl.auto" value="update"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>

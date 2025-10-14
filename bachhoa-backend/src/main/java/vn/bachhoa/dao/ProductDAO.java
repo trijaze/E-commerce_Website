@@ -150,10 +150,50 @@ public class ProductDAO extends GenericDAO<Product> {
 
     /** Tạo sản phẩm mới (từ demo) */
     public Product createProduct(Product product) {
+        return createProduct(product, 0); // Default với stock = 0
+    }
+
+    /** Tạo sản phẩm mới với stock cho default variant */
+    public Product createProduct(Product product, Integer stockQuantity) {
+        return createProduct(product, stockQuantity, null);
+    }
+
+    /** Tạo sản phẩm mới với stock và image */
+    public Product createProduct(Product product, Integer stockQuantity, String imageUrl) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
+            
+            // Persist product trước
             em.persist(product);
+            em.flush(); // Đảm bảo productId được generate
+            
+            // Tạo default ProductVariant nếu có stockQuantity > 0
+            if (stockQuantity != null && stockQuantity > 0) {
+                ProductVariant defaultVariant = new ProductVariant();
+                defaultVariant.setProduct(product);
+                defaultVariant.setVariantSku(product.getSku() + "-DEFAULT");
+                defaultVariant.setAttributes("Mặc định");
+                defaultVariant.setPrice(product.getBasePrice());
+                defaultVariant.setStockQuantity(stockQuantity);
+                
+                em.persist(defaultVariant);
+            }
+            
+            // Tạo ProductImage nếu có imageUrl
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                ProductImage image = new ProductImage();
+                image.setProduct(product);
+                image.setImageUrl(imageUrl.trim());
+                image.setIsMain(true); // Đây là ảnh chính
+                
+                em.persist(image);
+            }
+            
+            // Refresh để load lại variants và images
+            em.flush();
+            em.refresh(product);
+            
             em.getTransaction().commit();
             return product;
         } catch (Exception e) {

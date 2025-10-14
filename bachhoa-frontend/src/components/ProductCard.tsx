@@ -10,11 +10,9 @@ type Props = {
 export default function ProductCard({ product, onBuy }: Props) {
   const href = `/products/${product.productId}`;
 
-  // Xử lý URL ảnh (đã được chuẩn hóa từ productApi)
-  const imageUrl =
-    product.imageUrls?.[0]?.startsWith("http")
-      ? product.imageUrls[0]
-      : `http://localhost:8080${product.imageUrls?.[0] ?? ""}`;
+
+  // ✅ Xử lý URL ảnh  
+  const imageUrl = product.imageUrls?.[0] || '/images/placeholder.jpg';
 
   const handleBuy = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault(); // không chuyển trang khi bấm MUA

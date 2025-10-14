@@ -50,7 +50,6 @@ export default function Checkout() {
       setCheckingPromo(true);
       const promo = await getPromotionByCode(promoCode.trim());
       console.log("🧩 Promotion API:", promo);
-      console.log("🔥 Extracted promo:", promo);
       console.log("📂 promo.active =", promo?.active);
 
 

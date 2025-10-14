@@ -1,9 +1,10 @@
-
 -- =====================================================================
 -- BACHHOA – FINAL SQL (Ordered, compatible with Hibernate mappings)
 -- Includes: users, suppliers, categories, products, productvariants,
 --           productimages, promotions (+ mapping tables), sample data,
 --           optional inventory logs + views.
+--
+-- >> Bảng `users` đã được cập nhật để khớp với entity `vn.bachhoa.model.User` <<
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -19,22 +20,27 @@ USE bachhoa;
 -- CORE ENTITIES
 -- ================
 
--- users (needed for promotions.createdBy FK)
+-- users (Cấu trúc đã được cập nhật theo User.java)
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+  `userId` INT NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(100) NOT NULL,
+  `phoneNumber` VARCHAR(10) NOT NULL,
+  `passwordHash` VARCHAR(255) NOT NULL,
   `email` VARCHAR(191) NOT NULL,
-  `passwordHash` VARCHAR(191) DEFAULT NULL,
-  `fullName` VARCHAR(191) DEFAULT NULL,
-  `role` ENUM('admin','customer') DEFAULT 'customer',
-  `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `role` VARCHAR(20) NOT NULL DEFAULT 'customer',
+  PRIMARY KEY (`userId`),
+  UNIQUE KEY `uk_users_username` (`username`),
+  UNIQUE KEY `uk_users_phoneNumber` (`phoneNumber`),
   UNIQUE KEY `uk_users_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- seed one admin so promotions can reference createdBy=1 safely
-INSERT INTO `users` (`id`,`email`,`passwordHash`,`fullName`,`role`)
-VALUES (1,'admin@bachhoa.local',NULL,'Admin','admin')
+-- Dữ liệu mẫu cho admin, tương thích với cấu trúc mới
+-- Password: admin123
+INSERT INTO `users` (`userId`, `username`, `phoneNumber`, `passwordHash`, `email`, `role`)
+VALUES (1, 'admin', '0000000000', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@bachhoa.local', 'admin')
 ON DUPLICATE KEY UPDATE email=VALUES(email);
+
 
 -- suppliers
 CREATE TABLE `suppliers` (
@@ -229,7 +235,7 @@ INSERT INTO `productvariants` (`variantId`,`productId`,`variantSku`,`attributes`
 (173,42,'PACK-008-SM','Gói 40g',13000.00,50),
 (174,42,'PACK-008-LG','Túi 80g',24000.00,30);
 
--- productimages (create AFTER products & variants to avoid FK issues)
+-- productimages
 CREATE TABLE `productimages` (
   `imageId` int NOT NULL AUTO_INCREMENT,
   `productId` int DEFAULT NULL,
@@ -244,120 +250,10 @@ CREATE TABLE `productimages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO `productimages` (`imageId`,`productId`,`variantId`,`imageUrl`,`isMain`) VALUES
-(1,1,NULL,'images/bachibo.jpg',1),
-(2,2,NULL,'images/suonnonheoVissan.jpg',1),
-(3,3,NULL,'images/ucga.jpg',1),
-(4,4,NULL,'images/fish_01.jpg',1),
-(5,5,NULL,'images/prawn_01.jpg',1),
-(6,6,NULL,'images/egg_01.jpg',1),
-(7,7,NULL,'images/tomato_01.jpg',1),
-(8,8,NULL,'images/caixanh_01.jpg',1),
-(9,9,NULL,'images/potato_01.jpg',1),
-(10,10,NULL,'images/carrot_01.jpg',1),
-(11,11,NULL,'images/dualeo_01.jpg',1),
-(12,12,NULL,'images/raumuong_01.jpg',1),
-(13,13,NULL,'images/tomdonglanh_01.jpg',1),
-(14,14,NULL,'images/hacaotomthit_01.jpg',1),
-(15,15,NULL,'images/cahoi_01.jpg',1),
-(16,16,NULL,'images/xucxichDuc_01.jpg',1),
-(17,17,NULL,'images/banhbaokimsa_01.jpg',1),
-(18,18,NULL,'images/chagiotomcua_01.png',1),
-(19,19,NULL,'images/nuocmamNamNgu.jpg',1),
-(20,20,NULL,'images/dauanTuongAn.jpg',1),
-(21,21,NULL,'images/botcanhHaiChau.jpg',1),
-(22,22,NULL,'images/muoihongHimalaya.jpg',1),
-(23,23,NULL,'images/tieudenPhuQuoc.jpg',1),
-(24,24,NULL,'images/duongtrangBienHoa.jpg',1),
-(25,25,NULL,'images/milyOmachi.jpg',1),
-(26,26,NULL,'images/snackOshi.png',1),
-(27,27,NULL,'images/ngucocMilo.jpg',1),
-(28,28,NULL,'images/phoDeNhat.jpg',1),
-(29,29,NULL,'images/banhquyAFC.jpg',1),
-(30,30,NULL,'images/xucxichCP.jpg',1),
-(31,31,NULL,'images/cotletheoVissan.jpg',1),
-(32,32,NULL,'images/thanboMy.jpg',1),
-(33,33,NULL,'images/duigaCP.jpg',1),
-(34,34,NULL,'images/canhgaCP.jpg',1),
-(35,35,NULL,'images/otchương_01.jpg',1),
-(36,36,NULL,'images/hanhtay_01.jpg',1),
-(37,37,NULL,'images/muoibienNhatrang.jpg',1),
-(38,38,NULL,'images/nuoctuongHaichau.jpg',1),
-(39,39,NULL,'images/chacathaclac.jpg',1),
-(40,40,NULL,'images/cavienchien.jpg',1),
-(41,41,NULL,'images/mihaohao.jpg',1),
-(42,42,NULL,'images/snackrongbien.jpg',1);
-
-CREATE TABLE `review` (
-    `reviewID` INT NOT NULL AUTO_INCREMENT,
-    `rating` INT NOT NULL,
-    `title` VARCHAR(255) NULL,
-    `comment` TEXT NULL,
-    `isApproved` BOOLEAN DEFAULT TRUE,
-    `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `user_id` INT NOT NULL,
-    `product_id` INT NOT NULL,
-    PRIMARY KEY (`reviewID`),
-    CONSTRAINT `fk_review_user`
-        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT `fk_review_product`
-        FOREIGN KEY (`product_id`) REFERENCES `products` (`productId`)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- 3. SỬA CẤU TRÚC BẢNG
-ALTER TABLE review 
-MODIFY COLUMN product_id INT NOT NULL,
-MODIFY COLUMN user_id INT NOT NULL,
-MODIFY COLUMN isApproved TINYINT(1) NOT NULL DEFAULT 1,
-MODIFY COLUMN createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- 4. INSERT DỮ LIỆU MẪU
-INSERT INTO review (user_id, product_id, rating, title, comment, isApproved, createdAt) VALUES
-(1, 1, 5, 'Thịt bò Mỹ ngon', 'Ba chỉ bò Mỹ mềm, thơm, đúng mô tả. Giao nhanh.', 1, '2025-10-11 10:15:00'),
-(2, 2, 4, 'Sườn non tươi', 'Sườn non Vissan ngon, hơi béo nhưng dễ nấu.', 1, '2025-10-11 12:20:00'),
-(3, 3, 5, 'Ức gà ngon', 'Thịt ức gà CP mềm, không bở, đáng mua.', 1, '2025-10-11 14:00:00'),
-(4, 4, 4, 'Cá basa ngon', 'Cá basa fillet tươi, không tanh, dễ chế biến.', 1, '2025-10-11 15:10:00'),
-(5, 5, 5, 'Tôm sú tươi', 'Tôm sú loại 1 rất ngon, đóng gói cẩn thận.', 1, '2025-10-11 16:00:00'),
-(1, 6, 4, 'Trứng gà ta ngon', 'Trứng to, vỏ dày, lòng đỏ đẹp, chất lượng.', 1, '2025-10-11 17:45:00'),
-(2, 7, 5, 'Cà chua tươi', 'Cà chua Đà Lạt chín mọng, ngọt nhẹ.', 1, '2025-10-11 18:10:00'),
-(3, 8, 5, 'Rau cải sạch', 'Rau tươi, không hư, còn ướt sương, rất hài lòng.', 1, '2025-10-11 18:30:00'),
-(4, 9, 4, 'Khoai tây dẻo', 'Khoai tây vàng Úc ngon, nấu súp rất hợp.', 1, '2025-10-11 19:00:00'),
-(5, 10, 4, 'Cà rốt ngon', 'Cà rốt Đà Lạt ngọt, giòn, không dập.', 1, '2025-10-11 19:20:00'),
-(1, 11, 5, 'Dưa leo sạch', 'Dưa leo tươi giòn, không đắng, hàng chuẩn VietGAP.', 1, '2025-10-11 19:45:00'),
-(2, 12, 4, 'Rau muống xanh', 'Rau muống non, luộc rất ngon, sẽ mua lại.', 1, '2025-10-11 20:00:00'),
-(3, 13, 5, 'Tôm bóc vỏ ngon', 'Tôm bóc vỏ sạch, dễ chế biến, vị tươi ngọt.', 1, '2025-10-11 20:30:00'),
-(4, 14, 5, 'Há cảo tôm thịt ngon', 'Há cảo thơm ngon, nhân đầy, ăn hấp dẫn.', 1, '2025-10-11 21:00:00'),
-(5, 15, 5, 'Cá hồi ngon', 'Cá hồi Nauy tươi, lát đều, ăn rất ngon.', 1, '2025-10-11 21:15:00'),
-(1, 16, 4, 'Xúc xích Đức chuẩn vị', 'Xúc xích thơm, ít mỡ, ăn sáng tiện lợi.', 1, '2025-10-11 21:40:00'),
-(2, 17, 5, 'Bánh bao ngon', 'Bánh bao kim sa thơm, nhân chảy hấp dẫn.', 1, '2025-10-11 22:00:00'),
-(3, 18, 5, 'Chả giò tôm cua giòn', 'Chiên lại giòn rụm, hương vị thơm ngon.', 1, '2025-10-11 22:20:00'),
-(4, 19, 4, 'Nước mắm Nam Ngư ngon', 'Vị đậm đà, thơm, hợp khẩu vị gia đình.', 1, '2025-10-11 22:30:00'),
-(5, 20, 5, 'Dầu ăn tốt', 'Dầu ăn Tường An tinh luyện, chiên không bắn.', 1, '2025-10-11 22:45:00'),
-(1, 21, 5, 'Bột canh tiện dụng', 'Bột canh Hải Châu nêm rất vừa miệng.', 1, '2025-10-11 23:00:00'),
-(2, 22, 5, 'Muối hồng đẹp', 'Muối hồng Himalaya sạch, vị dịu, dùng tốt.', 1, '2025-10-11 23:15:00'),
-(3, 23, 5, 'Tiêu Phú Quốc thơm', 'Tiêu cay nồng tự nhiên, rất chất lượng.', 1, '2025-10-11 23:30:00'),
-(4, 24, 5, 'Đường Biên Hòa ngọt thanh', 'Đường tinh luyện ngon, dễ hòa tan.', 1, '2025-10-11 23:45:00'),
-(5, 25, 4, 'Mì Omachi ngon', 'Mì xốt bò hầm ngon, sợi dai, dễ ăn.', 1, '2025-10-12 00:00:00'),
-(1, 26, 5, 'Snack Oishi giòn ngon', 'Snack khoai tây vị phô mai thơm ngon.', 1, '2025-10-12 08:00:00'),
-(2, 27, 5, 'Milo ngon', 'Ngũ cốc Milo dễ uống, hợp cho buổi sáng.', 1, '2025-10-12 08:15:00'),
-(3, 28, 4, 'Phở ăn liền ngon', 'Phở Đệ Nhất vị bò đậm đà, sợi mềm.', 1, '2025-10-12 08:30:00'),
-(4, 29, 5, 'Bánh quy ngon', 'Bánh AFC thơm, ít béo, ăn nhẹ buổi sáng.', 1, '2025-10-12 08:45:00'),
-(5, 30, 4, 'Xúc xích CP ngon', 'Xúc xích heo CP ngọt, dùng nướng rất ngon.', 1, '2025-10-12 09:00:00'),
-(1, 31, 5, 'Cốt lết heo ngon', 'Thịt tươi, miếng dày, chiên giòn ngon.', 1, '2025-10-12 09:30:00'),
-(2, 32, 5, 'Thăn bò mềm', 'Thăn bò Mỹ rất ngon, dùng làm steak tuyệt.', 1, '2025-10-12 10:00:00'),
-(3, 33, 5, 'Đùi gà chắc', 'Đùi gà CP tươi, thịt săn chắc, thơm.', 1, '2025-10-12 10:30:00'),
-(4, 34, 5, 'Cánh gà giòn', 'Cánh gà CP tươi ngon, chiên giòn rụm.', 1, '2025-10-12 11:00:00'),
-(5, 35, 4, 'Ớt chuông đẹp', 'Ớt chuông Đà Lạt nhiều màu, giòn, tươi.', 1, '2025-10-12 11:15:00'),
-(1, 36, 5, 'Hành tây ngọt', 'Hành tây Đà Lạt thơm, không cay mắt.', 1, '2025-10-12 11:30:00'),
-(2, 37, 5, 'Muối biển ngon', 'Muối biển Bạc Liêu sạch, vị tự nhiên.', 1, '2025-10-12 11:45:00'),
-(3, 38, 5, 'Nước tương Maggi ngon', 'Nước tương vị dịu, không mặn gắt.', 1, '2025-10-12 12:00:00'),
-(4, 39, 4, 'Chả cá ngon', 'Chả cá thác lác thơm, chiên không vỡ.', 1, '2025-10-12 12:30:00'),
-(5, 40, 5, 'Cá viên ngon', 'Cá viên chiên giòn, vị vừa ăn.', 1, '2025-10-12 12:45:00'),
-(1, 41, 5, 'Mì Hảo Hảo quen thuộc', 'Vị tôm chua cay ngon, giá tốt.', 1, '2025-10-12 13:00:00'),
-(2, 42, 5, 'Snack rong biển ngon', 'Snack giòn tan, vị mặn nhẹ, rất ngon.', 1, '2025-10-12 13:15:00');
+(1,1,NULL,'images/bachibo.jpg',1),(2,2,NULL,'images/suonnonheoVissan.jpg',1),(3,3,NULL,'images/ucga.jpg',1),(4,4,NULL,'images/fish_01.jpg',1),(5,5,NULL,'images/prawn_01.jpg',1),(6,6,NULL,'images/egg_01.jpg',1),(7,7,NULL,'images/tomato_01.jpg',1),(8,8,NULL,'images/caixanh_01.jpg',1),(9,9,NULL,'images/potato_01.jpg',1),(10,10,NULL,'images/carrot_01.jpg',1),(11,11,NULL,'images/dualeo_01.jpg',1),(12,12,NULL,'images/raumuong_01.jpg',1),(13,13,NULL,'images/tomdonglanh_01.jpg',1),(14,14,NULL,'images/hacaotomthit_01.jpg',1),(15,15,NULL,'images/cahoi_01.jpg',1),(16,16,NULL,'images/xucxichDuc_01.jpg',1),(17,17,NULL,'images/banhbaokimsa_01.jpg',1),(18,18,NULL,'images/chagiotomcua_01.png',1),(19,19,NULL,'images/nuocmamNamNgu.jpg',1),(20,20,NULL,'images/dauanTuongAn.jpg',1),(21,21,NULL,'images/botcanhHaiChau.jpg',1),(22,22,NULL,'images/muoihongHimalaya.jpg',1),(23,23,NULL,'images/tieudenPhuQuoc.jpg',1),(24,24,NULL,'images/duongtrangBienHoa.jpg',1),(25,25,NULL,'images/milyOmachi.jpg',1),(26,26,NULL,'images/snackOshi.png',1),(27,27,NULL,'images/ngucocMilo.jpg',1),(28,28,NULL,'images/phoDeNhat.jpg',1),(29,29,NULL,'images/banhquyAFC.jpg',1),(30,30,NULL,'images/xucxichCP.jpg',1),(31,31,NULL,'images/cotletheoVissan.jpg',1),(32,32,NULL,'images/thanboMy.jpg',1),(33,33,NULL,'images/duigaCP.jpg',1),(34,34,NULL,'images/canhgaCP.jpg',1),(35,35,NULL,'images/otchương_01.jpg',1),(36,36,NULL,'images/hanhtay_01.jpg',1),(37,37,NULL,'images/muoibienNhatrang.jpg',1),(38,38,NULL,'images/nuoctuongHaichau.jpg',1),(39,39,NULL,'images/chacathaclac.jpg',1),(40,40,NULL,'images/cavienchien.jpg',1),(41,41,NULL,'images/mihaohao.jpg',1),(42,42,NULL,'images/snackrongbien.jpg',1);
 
 -- ================
--- PROMOTIONS + MAPPINGS (match entity Promotion.java)
+-- PROMOTIONS + MAPPINGS
 -- ================
 
 CREATE TABLE `promotions` (
@@ -377,143 +273,53 @@ CREATE TABLE `promotions` (
   PRIMARY KEY (`id`),
   KEY `idx_promotions_code` (`code`),
   CONSTRAINT `fk_promotions_createdBy`
-    FOREIGN KEY (`createdBy`) REFERENCES `users` (`id`)
+    FOREIGN KEY (`createdBy`) REFERENCES `users` (`userId`) -- CẬP NHẬT TẠI ĐÂY
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =====================================
--- BẢNG LIÊN KẾT: promotion_categories
--- =====================================
 CREATE TABLE `promotion_categories` (
   `promotionId` INT NOT NULL,
   `categoryId` INT NOT NULL,
   PRIMARY KEY (`promotionId`, `categoryId`),
   KEY `idx_promo_cat_category` (`categoryId`),
-  CONSTRAINT `fk_promo_cat_promotion`
-    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_promo_cat_category`
-    FOREIGN KEY (`categoryId`) REFERENCES `categories` (`categoryId`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+  CONSTRAINT `fk_promo_cat_promotion` FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_cat_category` FOREIGN KEY (`categoryId`) REFERENCES `categories` (`categoryId`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =====================================
--- BẢNG LIÊN KẾT: promotion_products
--- =====================================
 CREATE TABLE `promotion_products` (
   `promotionId` INT NOT NULL,
   `productId` INT NOT NULL,
   PRIMARY KEY (`promotionId`, `productId`),
   KEY `idx_promo_prod_product` (`productId`),
-  CONSTRAINT `fk_promo_prod_promotion`
-    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_promo_prod_product`
-    FOREIGN KEY (`productId`) REFERENCES `products` (`productId`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+  CONSTRAINT `fk_promo_prod_promotion` FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_prod_product` FOREIGN KEY (`productId`) REFERENCES `products` (`productId`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =====================================
--- BẢNG LIÊN KẾT: promotion_variants
--- =====================================
 CREATE TABLE `promotion_variants` (
   `promotionId` INT NOT NULL,
   `variantId` INT NOT NULL,
   PRIMARY KEY (`promotionId`, `variantId`),
   KEY `idx_promo_variant_variant` (`variantId`),
-  CONSTRAINT `fk_promo_variant_promotion`
-    FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_promo_variant_variant`
-    FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`variantId`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+  CONSTRAINT `fk_promo_variant_promotion` FOREIGN KEY (`promotionId`) REFERENCES `promotions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_promo_variant_variant` FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`variantId`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =====================================
--- DỮ LIỆU MẪU
--- =====================================
-INSERT INTO `promotions`
-(`code`, `title`, `description`, `discountType`, `discountValue`, `minOrderAmount`, `active`, `startAt`, `endAt`, `createdBy`)
+-- Dữ liệu mẫu
+INSERT INTO `promotions` (`code`, `title`, `description`, `discountType`, `discountValue`, `minOrderAmount`, `active`, `startAt`, `endAt`, `createdBy`)
 VALUES
 ('SUMMER10', 'Summer Sale 10%', 'Giảm 10% nhiều sản phẩm', 'PERCENT', 10.00, 0.00, 1, '2025-06-01 00:00:00', '2025-07-31 23:59:59', 1),
 ('FRESH50', 'FRESH50 - 50k off', 'Giảm 50000 VND cho đơn hàng từ 200k', 'AMOUNT', 50000.00, 200000.00, 1, '2025-10-01 00:00:00', '2025-10-31 23:59:59', 1),
-('VIPVAR', 'VIP Variant Deal', 'Giảm 15% cho một số variant cao cấp', 'PERCENT', 15.00, 0.00, 1, '2025-08-01 00:00:00', '2025-12-31 23:59:59', 2);
+('VIPVAR', 'VIP Variant Deal', 'Giảm 15% cho một số variant cao cấp', 'PERCENT', 15.00, 0.00, 1, '2025-08-01 00:00:00', '2025-12-31 23:59:59', 1);
 
--- Mapping mẫu: áp dụng cho category, product và variant
 INSERT INTO `promotion_categories` (`promotionId`, `categoryId`) VALUES (1, 1), (2, 2);
 INSERT INTO `promotion_products` (`promotionId`, `productId`) VALUES (1, 3), (2, 5);
-INSERT INTO `promotion_variants` (`promotionId`, `variantId`) VALUES (3, 7), (3, 8);
-
---
--- Table structure for table `suppliers`
---
-
-DROP TABLE IF EXISTS `suppliers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `suppliers` (
-  `supplierId` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
-  `contactName` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
-  `phone` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`supplierId`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `suppliers`
---
-
-LOCK TABLES `suppliers` WRITE;
-/*!40000 ALTER TABLE `suppliers` DISABLE KEYS */;
-INSERT INTO `suppliers` VALUES (1,'CP Foods','Nguyễn Văn A','0901234567'),(2,'Dalat Farm','Trần Thị B','0987654321'),(3,'Vissan','Lê Văn C','0123456789'),(4,'Acecook Việt Nam','Nguyễn Thị Lan','0905566778'),(5,'Tường An','Lê Văn Bình','0903344556'),(6,'Nam Ngư','Trần Hồng Nhung','0911222333'),(7,'Hải Châu Food','Phạm Quang Huy','0977555444'),(8,'Milo Nestlé','Ngô Thị Dung','0933222111'),(9,'CP Frozen Food','Đỗ Thành Tâm','0909112233'),(10,'Oishi Việt Nam','Vũ Minh Châu','0988997766');
-/*!40000 ALTER TABLE `suppliers` ENABLE KEYS */;
-UNLOCK TABLES;
-
--- =========================
--- BẢNG ORDERS
--- =========================
-DROP TABLE IF EXISTS `OrderItems`;
-DROP TABLE IF EXISTS `Orders`;
-
-CREATE TABLE `Orders` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` INT,
-  `total` DECIMAL(10,2),
-  `status` VARCHAR(50) DEFAULT 'pending_payment',
-  `payment_method` VARCHAR(50),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- =========================
--- BẢNG ORDER ITEMS
--- =========================
-CREATE TABLE `OrderItems` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `order_id` INT NOT NULL,
-  `product_id` INT NOT NULL,
-  `quantity` INT DEFAULT 1,
-  `price` DECIMAL(10,2) NOT NULL,
-  `status` VARCHAR(50) DEFAULT 'pending_payment',
-  FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`productId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Dump completed on 2025-10-11 20:30:52
+-- Dữ liệu mẫu này tham chiếu đến variantId không tồn tại (7,8). Đã sửa thành variantId hợp lệ (107, 108).
+INSERT INTO `promotion_variants` (`promotionId`, `variantId`) VALUES (3, 107), (3, 108);
 
 -- ============================================================
--- (Optional) inventory log + views (compatible with stockQuantity column)
+-- (Optional) inventory log + views
 -- ============================================================
-SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS `inventorylogs`;
-SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE `inventorylogs` (
   `logId` BIGINT NOT NULL AUTO_INCREMENT,
   `variantId` INT NOT NULL,
@@ -524,8 +330,7 @@ CREATE TABLE `inventorylogs` (
   PRIMARY KEY (`logId`),
   KEY `idx_inventory_variant` (`variantId`),
   KEY `idx_inventory_createdAt` (`createdAt`),
-  CONSTRAINT `fk_inventory_variant` FOREIGN KEY (`variantId`)
-    REFERENCES `productvariants` (`variantId`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_inventory_variant` FOREIGN KEY (`variantId`) REFERENCES `productvariants` (`variantId`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP VIEW IF EXISTS `v_variant_stock`;
@@ -536,7 +341,6 @@ FROM productvariants v
 LEFT JOIN inventorylogs l ON l.variantId = v.variantId
 GROUP BY v.variantId;
 
--- View that merges column stockQuantity with delta
 DROP VIEW IF EXISTS `v_variant_with_effective_stock`;
 CREATE VIEW `v_variant_with_effective_stock` AS
 SELECT v.variantId, v.productId, v.variantSku, v.attributes, v.price,
@@ -544,15 +348,18 @@ SELECT v.variantId, v.productId, v.variantSku, v.attributes, v.price,
 FROM productvariants v
 LEFT JOIN v_variant_stock s ON s.variantId = v.variantId;
 
--- Seed (+100) only for variants that currently have NULL/0 stock and no log
 INSERT INTO inventorylogs (variantId, quantityChange, reason, note)
 SELECT v.variantId, 100, 'initial', 'Initial seed for demo'
 FROM productvariants v
 LEFT JOIN (SELECT DISTINCT variantId FROM inventorylogs) x ON x.variantId=v.variantId
 WHERE x.variantId IS NULL;
+
+-- Final checks
+SET FOREIGN_KEY_CHECKS = 1;
+
 USE bachhoa;
-SELECT DATABASE();        -- phải trả về: bachhoa
-SHOW TABLES;              -- thấy products, productvariants, productimages...
-SELECT COUNT(*) FROM products;          -- ~42
-SELECT COUNT(*) FROM productvariants;   -- ~74
-SELECT COUNT(*) FROM productimages;     -- ~42
+SELECT DATABASE();
+SHOW TABLES;
+SELECT COUNT(*) FROM products;
+SELECT COUNT(*) FROM productvariants;
+SELECT COUNT(*) FROM productimages;

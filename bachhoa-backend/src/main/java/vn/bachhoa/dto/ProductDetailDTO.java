@@ -22,6 +22,7 @@ public class ProductDetailDTO {
     public String categoryName;
     public Integer supplierId;
     public String supplierName;
+    public Integer totalStock; // Tổng stock từ tất cả variants
 
     public List<ImageDTO> images;
     public List<VariantDTO> variants;
@@ -77,5 +78,12 @@ public class ProductDetailDTO {
         this.variants = (p.getVariants() != null)
                 ? p.getVariants().stream().map(VariantDTO::new).collect(Collectors.toList())
                 : List.of();
+        
+        // Tính tổng stock từ tất cả variants
+        this.totalStock = (p.getVariants() != null && !p.getVariants().isEmpty()) 
+                ? p.getVariants().stream()
+                        .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                        .sum()
+                : 0;
     }
 }

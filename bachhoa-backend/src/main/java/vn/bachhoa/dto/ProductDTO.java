@@ -20,6 +20,7 @@ public class ProductDTO {
     private String supplierName;
     private List<String> imageUrls;
     private List<String> variantNames;
+    private Integer totalStock;
 
     public ProductDTO(Product p) {
         if (p == null) return;
@@ -37,9 +38,16 @@ public class ProductDTO {
                 p.getImages().stream().map(ProductImage::getImageUrl).collect(Collectors.toList())
                 : new ArrayList<>();
 
-       // this.variantNames = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
-               // p.getVariants().stream().map(ProductVariant::getAttributes).collect(Collectors.toList())
-               // : new ArrayList<>();
+        this.variantNames = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
+                p.getVariants().stream().map(ProductVariant::getAttributes).collect(Collectors.toList())
+                : new ArrayList<>();
+
+        // Tính tổng stock từ tất cả variants
+        this.totalStock = (p.getVariants() != null && !p.getVariants().isEmpty()) ?
+                p.getVariants().stream()
+                        .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                        .sum()
+                : 0;
     }
 
     // Getters
@@ -54,5 +62,7 @@ public class ProductDTO {
     public List<String> getImageUrls() { return imageUrls; }
 
     public List<String> getVariantNames() { return variantNames; }
+    
+    public Integer getTotalStock() { return totalStock; }
 
 }

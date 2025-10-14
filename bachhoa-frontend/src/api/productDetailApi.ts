@@ -1,10 +1,5 @@
 // src/api/productDetailApi.ts
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/bachhoa",
-  headers: { "Content-Type": "application/json" },
-});
+import axiosClient from "./axiosClient";
 
 export type VariantDTO = {
   variantId: number;
@@ -45,12 +40,12 @@ export type RelatedItem = {
 };
 
 export async function getProductDetail(id: number): Promise<ProductDetail> {
-  const { data } = await api.get(`/api/products/${id}`);
+  const { data } = await axiosClient.get(`/products/${id}`);
   return data.data as ProductDetail; // BE bọc trong {data: ...}
 }
 
 // trả về danh sách rút gọn cho related
 export async function getRelated(id: number, limit = 8): Promise<RelatedItem[]> {
-  const { data } = await api.get(`/api/products/${id}/related`, { params: { limit } });
+  const { data } = await axiosClient.get(`/products/${id}/related`, { params: { limit } });
   return data.data as RelatedItem[];
 }
