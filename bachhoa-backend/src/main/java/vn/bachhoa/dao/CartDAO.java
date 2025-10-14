@@ -37,7 +37,7 @@ public class CartDAO {
             Product product = em.find(Product.class, productId);
 
             if (user == null || product == null) {
-                System.out.println("⚠️ User hoặc Product không tồn tại!");
+                System.out.println(" User hoặc Product không tồn tại!");
                 em.getTransaction().rollback();
                 return;
             }
